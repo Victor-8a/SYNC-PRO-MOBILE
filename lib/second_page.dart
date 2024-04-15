@@ -10,7 +10,7 @@ class second_page extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Inicio Super Sistemas'),
+        title: const Text('Inicio'),
       ),
       body: const Center( 
       ),
