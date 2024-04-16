@@ -6,7 +6,7 @@ class PaginaCliente extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: Text('Página de Cliente'),
+      child: Text('Cliente'),
     );
   }
 }
