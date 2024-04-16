@@ -11,6 +11,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  // ignore: use_key_in_widget_constructors
   const MyApp({Key? key});
 
   @override
@@ -22,9 +23,11 @@ class MyApp extends StatelessWidget {
 }
 
 class SecondPage extends StatefulWidget {
+  // ignore: use_key_in_widget_constructors
   const SecondPage({Key? key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SecondPageState createState() => _SecondPageState();
 }
 
@@ -32,7 +35,7 @@ class _SecondPageState extends State<SecondPage> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = <Widget>[
-    const PaginaInventario(),
+    const  PaginaInventario(),
     const PaginaPedidos(),
     const PaginaVendedores(),
     const PaginaRegistrar(),
