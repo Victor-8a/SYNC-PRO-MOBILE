@@ -1,4 +1,3 @@
-// Importa el paquete 'dart:convert' y 'package:flutter/material.dart'
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -9,8 +8,7 @@ void main() {
 }
 
 class LoginApp extends StatelessWidget {
-  // ignore: use_key_in_widget_constructors
-  const LoginApp({Key? key});
+  const LoginApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +20,7 @@ class LoginApp extends StatelessWidget {
 }
 
 class LoginPage extends StatefulWidget {
-  // ignore: use_key_in_widget_constructors
-  const LoginPage({Key? key});
+  const LoginPage({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -33,7 +30,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usuarioController = TextEditingController();
   final TextEditingController _contrasenaController = TextEditingController();
-  bool _mostrarError = false; // Variable para controlar el mensaje de error
+  bool _mostrarError = false;
 
   Future<void> _login() async {
     String usuario = _usuarioController.text;
@@ -51,23 +48,20 @@ class _LoginPageState extends State<LoginPage> {
     );
 
     if (response.statusCode == 200) {
-      // Autenticación exitosa, puedes navegar a la segunda pagina
       Navigator.push(
         // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (context) => const SecondPage()),
       );
     } else {
-      // Error en la autenticación
       setState(() {
         _mostrarError = true;
       });
 
-      // Mostrar el SnackBar
       // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
-       const  SnackBar(
-          content: Text('Datos invalidos'),
+        const SnackBar(
+          content: Text('Datos inválidos'),
           backgroundColor: Colors.red,
         ),
       );
@@ -96,30 +90,64 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 30),
-              TextField(
-                controller: _usuarioController,
-                decoration: const InputDecoration(
-                  labelText: 'Usuario',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.emoji_people_rounded),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.3),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: TextField(
+                  controller: _usuarioController,
+                  decoration: const InputDecoration(
+                    labelText: 'Usuario',
+                    border: InputBorder.none,
+                    prefixIcon: Icon(Icons.emoji_people_rounded),
+                  ),
+                  onEditingComplete: () => FocusScope.of(context).nextFocus(),
                 ),
               ),
               const SizedBox(height: 15.0),
-              TextField(
-                controller: _contrasenaController,
-                decoration: const InputDecoration(
-                  labelText: 'Contraseña',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.lock_outline),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.3),
+                      spreadRadius: 2,
+                      blurRadius: 5,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
-                obscureText: true,
+                child: TextField(
+                  controller: _contrasenaController,
+                  decoration: const InputDecoration(
+                    labelText: 'Contraseña',
+                    border: InputBorder.none,
+                    prefixIcon: Icon(Icons.lock_outline),
+                  ),
+                  obscureText: true,
+                ),
               ),
               const SizedBox(height: 50.0),
               ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
-                  minimumSize: const Size(double.infinity, 60),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.all(16),
                 ),
                 child: const Text(
                   'INICIAR SESIÓN',
@@ -127,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 20.0),
-             const  Padding(
+              const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
                   'Super Sistemas 2024 ©',

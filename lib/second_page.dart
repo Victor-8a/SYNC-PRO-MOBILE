@@ -4,13 +4,13 @@ import 'pagina_pedidos.dart';
 import 'pagina_vendedores.dart';
 import 'pagina_registrar.dart';
 import 'pagina_cliente.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // ignore: use_key_in_widget_constructors
   const MyApp({Key? key});
 
   @override
@@ -22,10 +22,9 @@ class MyApp extends StatelessWidget {
 }
 
 class SecondPage extends StatefulWidget {
-  const SecondPage({super.key});
+  const SecondPage({Key? key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _SecondPageState createState() => _SecondPageState();
 }
 
@@ -53,32 +52,21 @@ class _SecondPageState extends State<SecondPage> {
         title: const Text('Super Sistemas'),
       ),
       body: _pages.elementAt(_selectedIndex),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.inventory),
-            label: 'Inventario',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.sell_outlined),
-            label: 'Pedidos',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Vendedores',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.select_all_sharp),
-            label: 'Registar',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Cliente',
-          ),
+      bottomNavigationBar: CurvedNavigationBar(
+        index: _selectedIndex,
+        height: 50,
+        items: const  <Widget>[
+          Icon(Icons.inventory),
+          Icon(Icons.sell_outlined),
+          Icon(Icons.search),
+          Icon(Icons.select_all_sharp),
+          Icon(Icons.person),
         ],
+        onTap: _onItemTapped,
+        color: Colors.blueAccent,
+        backgroundColor: Colors.white,
+        animationCurve: Curves.easeInOut,
+        animationDuration: const Duration(milliseconds: 300),
       ),
     );
   }
