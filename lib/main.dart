@@ -55,7 +55,7 @@ class _LoginPageState extends State<LoginPage> {
       Navigator.push(
         // ignore: use_build_context_synchronously
         context,
-        MaterialPageRoute(builder: (context) =>  const second_page()),
+        MaterialPageRoute(builder: (context) => const SecondPage()),
       );
     } else {
       // Error en la autenticación
