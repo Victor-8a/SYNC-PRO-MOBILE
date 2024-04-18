@@ -61,8 +61,8 @@ class _SecondPageState extends State<SecondPage> {
         items: const  <Widget>[
           Icon(Icons.inventory),
           Icon(Icons.sell_outlined),
-          Icon(Icons.search),
-          Icon(Icons.select_all_sharp),
+          Icon(Icons.store_sharp),
+          Icon(Icons.person_add_alt),
           Icon(Icons.person),
         ],
         onTap: _onItemTapped,
