@@ -1,14 +1,43 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'seleccionar_producto.dart';
-import 'seleccionar_clientes.dart'; // Importa las clases SeleccionarProducto y SeleccionarCliente
+import 'package:http/http.dart' as http;
 
+// Definición de la clase Product
 class Product {
+  final int id;
+  final String barras;
   final String name;
   final double price;
 
-  Product(this.name, this.price);
+  Product(this.id, this.barras, this.name, this.price);
 }
 
+// Definición de la clase SeleccionarProducto
+// Definición de la clase SeleccionarProducto
+class SeleccionarProducto extends StatelessWidget {
+  final List<Product> productos;
+
+  SeleccionarProducto({Key? key, required this.productos}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: ListView.builder(
+        itemCount: productos.length,
+        itemBuilder: (BuildContext context, int index) {
+          return ListTile(
+            title: Text(productos[index].name),
+            onTap: () {
+              print(productos[index].id);
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+// Clase PaginaPedidos
 class PaginaPedidos extends StatefulWidget {
   const PaginaPedidos({Key? key}) : super(key: key);
 
@@ -43,8 +72,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                   _selectedSalesperson = newValue!;
                 });
               },
-              items: ['Vendedor 1', 'Vendedor 2', 'Vendedor 3']
-                  .map((vendedor) {
+              items: ['Vendedor 1', 'Vendedor 2', 'Vendedor 3'].map((vendedor) {
                 return DropdownMenuItem(
                   value: vendedor,
                   child: Text(vendedor),
@@ -128,7 +156,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                 // a tu sistema o enviarlo a tu API
               },
               child: const Text('Agregar Pedido'),
-                      child: Colors.blue
             ),
           ],
         ),
@@ -165,24 +192,68 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   }
 
   void _navigateToSeleccionarProducto(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SeleccionarProducto()),
-      ).then((selectedProduct) {
-      if (selectedProduct != null) {
-        setState(() {
-          if (_selectedProducts.contains(selectedProduct)) {
-            _selectedProductQuantities[selectedProduct] =
-                _selectedProductQuantities[selectedProduct]! + 1;
-          } else {
-            _selectedProducts.add(selectedProduct);
-            _selectedProductQuantities[selectedProduct] = 1;
+    // Realizar la solicitud HTTP a la API para obtener los productos
+    http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
+      if (response.statusCode == 200) {
+        // Si la solicitud es exitosa, decodifica la respuesta JSON
+        List<dynamic> jsonResponse = json.decode(response.body);
+        List<Product> products = [];
+
+        // Convierte los datos decodificados en objetos Product
+        for (var productData in jsonResponse) {
+          products.add(Product(
+            productData['id'],
+            productData['barras'],
+            productData['name'],
+            productData['price'].toDouble(),
+          ));
+        }
+
+        // Navega a la pantalla SeleccionarProducto con la lista de productos obtenidos
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => SeleccionarProducto(productos: products)),
+        ).then((selectedProduct) {
+          if (selectedProduct != null) {
+            setState(() {
+              if (_selectedProducts.contains(selectedProduct)) {
+                _selectedProductQuantities[selectedProduct] =
+                    _selectedProductQuantities[selectedProduct]! + 1;
+              } else {
+                _selectedProducts.add(selectedProduct);
+                _selectedProductQuantities[selectedProduct] = 1;
+              }
+            });
           }
         });
+      } else {
+        // Si la solicitud falla, imprime el mensaje de error
+        print('Failed to load products: ${response.statusCode}');
       }
+    }).catchError((error) {
+      // Si ocurre un error durante la solicitud, imprime el error
+      print('Error loading products: $error');
     });
   }
-  
- 
-  
+}
+
+class SeleccionarCliente extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    // Aquí iría la implementación para seleccionar cliente
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Seleccionar Cliente'),
+      ),
+      body: Center(
+        child: Text('Pantalla de Seleccionar Cliente'),
+      ),
+    );
+  }
+}
+
+void main() {
+  runApp(MaterialApp(
+    home: PaginaPedidos(),
+  ));
 }

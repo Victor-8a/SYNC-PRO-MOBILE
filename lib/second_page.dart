@@ -51,9 +51,6 @@ class _SecondPageState extends State<SecondPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('SS Super Sistemas'),
-      ),
       body: _pages.elementAt(_selectedIndex),
       bottomNavigationBar: CurvedNavigationBar(
         index: _selectedIndex,
