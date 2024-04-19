@@ -1,16 +1,34 @@
 import 'package:flutter/material.dart';
 import 'seleccionar_producto.dart';
+import 'seleccionar_clientes.dart'; // Importa las clases SeleccionarProducto y SeleccionarCliente
 
-class PaginaPedidos extends StatelessWidget {
+class Product {
+  final String name;
+  final double price;
+
+  Product(this.name, this.price);
+}
+
+class PaginaPedidos extends StatefulWidget {
   const PaginaPedidos({Key? key}) : super(key: key);
 
   @override
+  _PaginaPedidosState createState() => _PaginaPedidosState();
+}
+
+class _PaginaPedidosState extends State<PaginaPedidos> {
+  String _selectedSalesperson = 'Vendedor 1';
+  String _selectedClient = 'Cliente 1';
+  DateTime _selectedDate = DateTime.now();
+  List<Product> _selectedProducts = [];
+  Map<Product, int> _selectedProductQuantities = {};
+  String _observations = '';
+
+  @override
   Widget build(BuildContext context) {
-    String _selectedSalesperson = 'Vendedor 1';
-    String _selectedClient = 'Cliente 1';
-    DateTime _selectedDate = DateTime.now();
-    final List<String> _selectedProducts = [];
-    String _observations = '';
+    double totalPrice = _selectedProducts.fold(0, (sum, product) {
+      return sum + (product.price * _selectedProductQuantities[product]!);
+    });
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -21,38 +39,28 @@ class PaginaPedidos extends StatelessWidget {
             DropdownButtonFormField<String>(
               value: _selectedSalesperson,
               onChanged: (newValue) {
-                // Aquí puedes manejar el cambio de vendedor seleccionado
+                setState(() {
+                  _selectedSalesperson = newValue!;
+                });
               },
               items: ['Vendedor 1', 'Vendedor 2', 'Vendedor 3']
                   .map((vendedor) {
-                    return DropdownMenuItem(
-                      value: vendedor,
-                      child: Text(vendedor),
-                    );
-                  }).toList(),
+                return DropdownMenuItem(
+                  value: vendedor,
+                  child: Text(vendedor),
+                );
+              }).toList(),
               decoration: const InputDecoration(
                 labelText: 'Vendedor',
               ),
             ),
             const SizedBox(height: 16.0),
-            DropdownButtonFormField<String>(
-              value: _selectedClient,
-              onChanged: (newValue) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => seleccionar_producto()), // Navega a la pantalla de selección de productos
-                );
+            Text('Cliente: $_selectedClient'), // Etiqueta de cliente
+            ElevatedButton(
+              onPressed: () {
+                _navigateToSeleccionarCliente(context); // Navega a SeleccionarCliente
               },
-              items: ['Cliente 1', 'Cliente 2', 'Cliente 3']
-                  .map((cliente) {
-                    return DropdownMenuItem(
-                      value: cliente,
-                      child: Text(cliente),
-                    );
-                  }).toList(),
-              decoration: const InputDecoration(
-                labelText: 'Cliente',
-              ),
+              child: Text('Agregar Cliente'),
             ),
             const SizedBox(height: 16.0),
             Row(
@@ -74,26 +82,30 @@ class PaginaPedidos extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16.0),
-            DropdownButtonFormField<String>(
-              value: null,
-              onChanged: (newValue) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => seleccionar_producto()), // Navega a la pantalla de selección de productos
-                );
+            Text('Productos seleccionados:'), // Etiqueta de productos
+            ElevatedButton(
+              onPressed: () {
+                _navigateToSeleccionarProducto(context); // Navega a SeleccionarProducto
               },
-              items: ['Producto 1', 'Producto 2', 'Producto 3']
-                  .map((producto) {
-                    return DropdownMenuItem(
-                      value: producto,
-                      child: Text(producto),
-                    );
-                  }).toList(),
-              decoration: const InputDecoration(
-                labelText: 'Producto',
-              ),
+              child: Text('Agregar Producto'),
             ),
-            // Resto del contenido del segundo código
+            // Mostrar los productos seleccionados con su precio y cantidad
+            const SizedBox(height: 16.0),
+            if (_selectedProducts.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _selectedProducts.map((product) {
+                  int quantity = _selectedProductQuantities[product]!;
+                  double subtotal = product.price * quantity;
+                  return Row(
+                    children: [
+                      Text('${product.name} - \$${product.price} x $quantity'),
+                      const SizedBox(width: 8.0),
+                      Text('- Subtotal: \$${subtotal.toStringAsFixed(2)}'),
+                    ],
+                  );
+                }).toList(),
+              ),
             const SizedBox(height: 16.0),
             TextField(
               onChanged: (value) {
@@ -105,12 +117,18 @@ class PaginaPedidos extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16.0),
+            Text(
+              'Total: \$${totalPrice.toStringAsFixed(2)}',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16.0),
             ElevatedButton(
               onPressed: () {
                 // Aquí puedes agregar la lógica para agregar el pedido
                 // a tu sistema o enviarlo a tu API
               },
               child: const Text('Agregar Pedido'),
+                      child: Colors.blue
             ),
           ],
         ),
@@ -127,8 +145,44 @@ class PaginaPedidos extends StatelessWidget {
     );
 
     if (pickedDate != null) {
-      // Actualiza la fecha seleccionada
-     
+      setState(() {
+        _selectedDate = pickedDate;
+      });
     }
   }
+
+  void _navigateToSeleccionarCliente(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SeleccionarCliente()),
+    ).then((selectedClient) {
+      if (selectedClient != null) {
+        setState(() {
+          _selectedClient = selectedClient;
+        });
+      }
+    });
+  }
+
+  void _navigateToSeleccionarProducto(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SeleccionarProducto()),
+      ).then((selectedProduct) {
+      if (selectedProduct != null) {
+        setState(() {
+          if (_selectedProducts.contains(selectedProduct)) {
+            _selectedProductQuantities[selectedProduct] =
+                _selectedProductQuantities[selectedProduct]! + 1;
+          } else {
+            _selectedProducts.add(selectedProduct);
+            _selectedProductQuantities[selectedProduct] = 1;
+          }
+        });
+      }
+    });
+  }
+  
+ 
+  
 }
