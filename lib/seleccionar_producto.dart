@@ -41,7 +41,7 @@ class SeleccionarProducto extends StatelessWidget {
         itemBuilder: (context, index) {
           return ListTile(
             title: Text(productos[index].descripcion),
-            subtitle: Text('Precio: \$${productos[index].precioFinal.toStringAsFixed(2)}'),
+            subtitle: Text('Precio: \Q${productos[index].precioFinal.toStringAsFixed(2)}'),
             onTap: () {
               Navigator.pop(context, productos[index]);
             },
@@ -52,66 +52,6 @@ class SeleccionarProducto extends StatelessWidget {
   }
 }
 
-class SearchWidget extends StatefulWidget {
-  final List<String> data;
-  final Function(String)? onItemSelected;
-
-  const SearchWidget({
-    Key? key,
-    required this.data,
-    this.onItemSelected,
-  }) : super(key: key);
-
-  @override
-  _SearchWidgetState createState() => _SearchWidgetState();
-}
-
-class _SearchWidgetState extends State<SearchWidget> {
-  late List<String> filteredData;
-
-  @override
-  void initState() {
-    super.initState();
-    filteredData = widget.data;
-  }
-
-  void filterData(String query) {
-    setState(() {
-      filteredData = widget.data.where((item) => item.toLowerCase().contains(query.toLowerCase())).toList();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        TextField(
-          onChanged: filterData,
-          decoration: InputDecoration(
-            hintText: 'Buscar...',
-            prefixIcon: Icon(Icons.search),
-          ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: filteredData.length,
-            itemBuilder: (context, index) {
-              final item = filteredData[index];
-              return ListTile(
-                title: Text(item),
-                onTap: () {
-                  if (widget.onItemSelected != null) {
-                    widget.onItemSelected!(item);
-                  }
-                },
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class PaginaPedidos extends StatefulWidget {
   const PaginaPedidos({Key? key}) : super(key: key);
@@ -124,25 +64,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   List<Product> _selectedProducts = [];
   Map<Product, int> _selectedProductQuantities = {};
   String _observations = '';
-  List<Product> _allProducts = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProducts();
-  }
-
-  Future<void> _loadProducts() async {
-    final response = await http.get(Uri.parse('http://192.168.1.169:3500/dashboard'));
-    if (response.statusCode == 200) {
-      List<dynamic> jsonResponse = json.decode(response.body);
-      setState(() {
-        _allProducts = jsonResponse.map((data) => Product.fromJson(data)).toList();
-      });
-    } else {
-      print('Failed to load products: ${response.statusCode}');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +80,8 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16.0),
+        
+        const SizedBox(height: 16.0),
             Text('Productos seleccionados:'),
             ElevatedButton(
               onPressed: () {
@@ -168,24 +90,43 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
               child: Text('Agregar Producto'),
             ),
             const SizedBox(height: 16.0),
-            // Agregar el widget de búsqueda con la lista de descripciones de productos
-            SearchWidget(
-              data: _allProducts.map((product) => product.descripcion).toList(),
-              onItemSelected: (selectedDescription) {
-                final selectedProduct = _allProducts.firstWhere(
-                  (product) => product.descripcion == selectedDescription,
-                  orElse: () => Product(codigo: 0, barras: '', descripcion: '', precioFinal: 0.0),
-                );
-                setState(() {
-                  if (_selectedProducts.contains(selectedProduct)) {
-                    _selectedProductQuantities[selectedProduct] =
-                        (_selectedProductQuantities[selectedProduct] ?? 0) + 1;
-                  } else {
-                    _selectedProducts.add(selectedProduct);
-                    _selectedProductQuantities[selectedProduct] = 1;
-                  }
-                });
+            if (_selectedProducts.isNotEmpty)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _selectedProducts.map((product) {
+                  int quantity = _selectedProductQuantities[product]!;
+                  double subtotal = product.precioFinal * quantity;
+                  return Row(
+                    children: [
+                      Text('${product.descripcion} - \Q${product.precioFinal} x $quantity'),
+                      const SizedBox(width: 8.0),
+                      Text('- Subtotal: \Q${subtotal.toStringAsFixed(2)}'),
+                    ],
+                  );
+                }).toList(),
+              ),
+            const SizedBox(height: 16.0),
+            TextField(
+              onChanged: (value) {
+                _observations = value;
               },
+              decoration: const InputDecoration(
+                labelText: 'Observaciones',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16.0),
+            Text(
+              'Total: \Q${totalPrice.toStringAsFixed(2)}',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16.0),
+            ElevatedButton(
+              onPressed: () {
+                // Aquí puedes agregar la lógica para agregar el pedido
+                // a tu sistema o enviarlo a tu API
+              },
+              child: const Text('Agregar Pedido'),
             ),
           ],
         ),
@@ -227,4 +168,5 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     });
   }
 }
+
 
