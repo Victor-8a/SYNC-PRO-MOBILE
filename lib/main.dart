@@ -37,7 +37,7 @@ String usuario = _usuarioController.text;
 String contrasena = _contrasenaController.text;
 
 final response = await http.post(
-Uri.parse('http://192.168.1.212:3000/auth/signin'),
+Uri.parse('http://192.168.1.169:3500/auth/signin'),
 headers: <String, String>{
 'Content-Type': 'application/json; charset=UTF-8',
 },

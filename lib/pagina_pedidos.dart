@@ -35,20 +35,28 @@ class SeleccionarProducto extends StatelessWidget {
   // Constructor de SeleccionarProducto
   SeleccionarProducto({Key? key, required this.productos}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Seleccionar Producto'),
-      ),
-      body: ListView.builder(
-        itemCount: productos.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(productos[index].descripcion),
-            subtitle: Text('Precio: \Q${productos[index].precioFinal.toStringAsFixed(2)}'),
-            onTap: () {
-              Navigator.pop(context, productos[index]);
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: Text('Seleccionar Producto'),
+      actions: <Widget>[
+        IconButton(
+          icon: Icon(Icons.search),
+          onPressed: () {
+            // Aquí puedes agregar la lógica para manejar la búsqueda
+          },
+        ),
+      ],
+    ),
+    body: ListView.builder(
+      itemCount: productos.length,
+      itemBuilder: (context, index) {
+        return ListTile(
+          title: Text(productos[index].descripcion),
+          subtitle: Text('Precio: \Q${productos[index].precioFinal.toStringAsFixed(2)}'),
+          onTap: () {
+            Navigator.pop(context, productos[index]);
             },
           );
         },
