@@ -2,18 +2,29 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-// Definición de la clase Product
 class Product {
-  final int id;
+  final int codigo;
   final String barras;
-  final String name;
-  final double price;
+  final String descripcion;
+  final double precioFinal;
 
-  Product(this.id, this.barras, this.name, this.price);
+  Product({
+    required this.codigo,
+    required this.barras,
+    required this.descripcion,
+    required this.precioFinal,
+  });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      codigo: json['codigo'],
+      barras: json['Barras'],
+      descripcion: json['Descripcion'],
+      precioFinal: json['PrecioFinal'].toDouble(),
+    );
+  }
 }
 
-// Definición de la clase SeleccionarProducto
-// Definición de la clase SeleccionarProducto
 class SeleccionarProducto extends StatelessWidget {
   final List<Product> productos;
 
@@ -22,13 +33,17 @@ class SeleccionarProducto extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Seleccionar Producto'),
+      ),
       body: ListView.builder(
         itemCount: productos.length,
-        itemBuilder: (BuildContext context, int index) {
+        itemBuilder: (context, index) {
           return ListTile(
-            title: Text(productos[index].name),
+            title: Text(productos[index].descripcion),
+            subtitle: Text('Precio: \$${productos[index].precioFinal.toStringAsFixed(2)}'),
             onTap: () {
-              print(productos[index].id);
+              Navigator.pop(context, productos[index]);
             },
           );
         },
@@ -37,7 +52,20 @@ class SeleccionarProducto extends StatelessWidget {
   }
 }
 
-// Clase PaginaPedidos
+class SeleccionarCliente extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Seleccionar Cliente'),
+      ),
+      body: Center(
+        child: Text('Pantalla de Seleccionar Cliente'),
+      ),
+    );
+  }
+}
+
 class PaginaPedidos extends StatefulWidget {
   const PaginaPedidos({Key? key}) : super(key: key);
 
@@ -56,10 +84,13 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   @override
   Widget build(BuildContext context) {
     double totalPrice = _selectedProducts.fold(0, (sum, product) {
-      return sum + (product.price * _selectedProductQuantities[product]!);
+      return sum + (product.precioFinal * _selectedProductQuantities[product]!);
     });
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Pedidos'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -83,10 +114,10 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
               ),
             ),
             const SizedBox(height: 16.0),
-            Text('Cliente: $_selectedClient'), // Etiqueta de cliente
+            Text('Cliente: $_selectedClient'),
             ElevatedButton(
               onPressed: () {
-                _navigateToSeleccionarCliente(context); // Navega a SeleccionarCliente
+                _navigateToSeleccionarCliente(context);
               },
               child: Text('Agregar Cliente'),
             ),
@@ -110,30 +141,30 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
               ],
             ),
             const SizedBox(height: 16.0),
-            Text('Productos seleccionados:'), // Etiqueta de productos
+            Text('Productos seleccionados:'),
             ElevatedButton(
               onPressed: () {
-                _navigateToSeleccionarProducto(context); // Navega a SeleccionarProducto
+                _navigateToSeleccionarProducto(context);
               },
               child: Text('Agregar Producto'),
             ),
-            // Mostrar los productos seleccionados con su precio y cantidad
-            const SizedBox(height: 16.0),
-            if (_selectedProducts.isNotEmpty)
+            if (_selectedProducts.isNotEmpty) ...[
+              const SizedBox(height: 16.0),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: _selectedProducts.map((product) {
                   int quantity = _selectedProductQuantities[product]!;
-                  double subtotal = product.price * quantity;
+                  double subtotal = product.precioFinal * quantity;
                   return Row(
                     children: [
-                      Text('${product.name} - \$${product.price} x $quantity'),
+                      Text('${product.descripcion} - \$${product.precioFinal} x $quantity'),
                       const SizedBox(width: 8.0),
                       Text('- Subtotal: \$${subtotal.toStringAsFixed(2)}'),
                     ],
                   );
                 }).toList(),
               ),
+            ],
             const SizedBox(height: 16.0),
             TextField(
               onChanged: (value) {
@@ -192,24 +223,15 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   }
 
   void _navigateToSeleccionarProducto(BuildContext context) {
-    // Realizar la solicitud HTTP a la API para obtener los productos
     http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
       if (response.statusCode == 200) {
-        // Si la solicitud es exitosa, decodifica la respuesta JSON
         List<dynamic> jsonResponse = json.decode(response.body);
         List<Product> products = [];
 
-        // Convierte los datos decodificados en objetos Product
         for (var productData in jsonResponse) {
-          products.add(Product(
-            productData['id'],
-            productData['barras'],
-            productData['name'],
-            productData['price'].toDouble(),
-          ));
+          products.add(Product.fromJson(productData));
         }
 
-        // Navega a la pantalla SeleccionarProducto con la lista de productos obtenidos
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => SeleccionarProducto(productos: products)),
@@ -227,33 +249,11 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           }
         });
       } else {
-        // Si la solicitud falla, imprime el mensaje de error
         print('Failed to load products: ${response.statusCode}');
       }
     }).catchError((error) {
-      // Si ocurre un error durante la solicitud, imprime el error
       print('Error loading products: $error');
     });
   }
 }
 
-class SeleccionarCliente extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // Aquí iría la implementación para seleccionar cliente
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Seleccionar Cliente'),
-      ),
-      body: Center(
-        child: Text('Pantalla de Seleccionar Cliente'),
-      ),
-    );
-  }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: PaginaPedidos(),
-  ));
-}
