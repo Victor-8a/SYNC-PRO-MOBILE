@@ -26,9 +26,9 @@ class Product {
 }
 
 class SeleccionarProducto extends StatelessWidget {
-  final List<Product> productos;
+  final List<Product> productosDisponibles;
 
-  SeleccionarProducto({Key? key, required this.productos}) : super(key: key);
+  SeleccionarProducto({Key? key, required this.productosDisponibles}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -37,13 +37,14 @@ class SeleccionarProducto extends StatelessWidget {
         title: Text('Seleccionar Producto'),
       ),
       body: ListView.builder(
-        itemCount: productos.length,
+        itemCount: productosDisponibles.length,
         itemBuilder: (context, index) {
+          final product = productosDisponibles[index];
           return ListTile(
-            title: Text(productos[index].descripcion),
-            subtitle: Text('Precio: \Q${productos[index].precioFinal.toStringAsFixed(2)}'),
+            title: Text(product.descripcion),
+            subtitle: Text('Precio: \Q${product.precioFinal.toStringAsFixed(2)}'),
             onTap: () {
-              Navigator.pop(context, productos[index]);
+              Navigator.pop(context, product);
             },
           );
         },
@@ -51,7 +52,6 @@ class SeleccionarProducto extends StatelessWidget {
     );
   }
 }
-
 
 class PaginaPedidos extends StatefulWidget {
   const PaginaPedidos({Key? key}) : super(key: key);
@@ -63,8 +63,13 @@ class PaginaPedidos extends StatefulWidget {
 class _PaginaPedidosState extends State<PaginaPedidos> {
   List<Product> _selectedProducts = [];
   Map<Product, int> _selectedProductQuantities = {};
+  // ignore: unused_field
   String _observations = '';
+  late List<Product> _allProducts;
+  late List<Product> _filteredProducts;
+  TextEditingController _searchController = TextEditingController();
 
+ 
   @override
   Widget build(BuildContext context) {
     double totalPrice = _selectedProducts.fold(0, (sum, product) {
@@ -80,8 +85,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-        
-        const SizedBox(height: 16.0),
+            const SizedBox(height: 16.0),
             Text('Productos seleccionados:'),
             ElevatedButton(
               onPressed: () {
@@ -135,38 +139,21 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   }
 
   void _navigateToSeleccionarProducto(BuildContext context) {
-    http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
-      if (response.statusCode == 200) {
-        List<dynamic> jsonResponse = json.decode(response.body);
-        List<Product> products = [];
-
-        for (var productData in jsonResponse) {
-          products.add(Product.fromJson(productData));
-        }
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SeleccionarProducto(productos: products)),
-        ).then((selectedProduct) {
-          if (selectedProduct != null) {
-            setState(() {
-              if (_selectedProducts.contains(selectedProduct)) {
-                _selectedProductQuantities[selectedProduct] =
-                    _selectedProductQuantities[selectedProduct]! + 1;
-              } else {
-                _selectedProducts.add(selectedProduct);
-                _selectedProductQuantities[selectedProduct] = 1;
-              }
-            });
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => SeleccionarProducto(productosDisponibles: _filteredProducts)),
+    ).then((selectedProduct) {
+      if (selectedProduct != null) {
+        setState(() {
+          if (_selectedProducts.contains(selectedProduct)) {
+            _selectedProductQuantities[selectedProduct] =
+                _selectedProductQuantities[selectedProduct]! + 1;
+          } else {
+            _selectedProducts.add(selectedProduct);
+            _selectedProductQuantities[selectedProduct] = 1;
           }
         });
-      } else {
-        print('Failed to load products: ${response.statusCode}');
       }
-    }).catchError((error) {
-      print('Error loading products: $error');
     });
   }
 }
-
-

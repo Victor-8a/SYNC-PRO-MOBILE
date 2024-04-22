@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:sync_pro_mobile/seleccionar_clientes.dart';
 
-// Definición de la clase Product
 class Product {
   final int codigo;
   final String barras;
   final String descripcion;
   final double precioFinal;
 
-  // Constructor de la clase Product
   Product({
     required this.codigo,
     required this.barras,
@@ -17,7 +16,6 @@ class Product {
     required this.precioFinal,
   });
 
-  // Factory constructor para convertir un mapa JSON en una instancia de Product
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       codigo: json['codigo'],
@@ -28,59 +26,86 @@ class Product {
   }
 }
 
-// Widget para seleccionar un producto
-class SeleccionarProducto extends StatelessWidget {
+class SeleccionarProducto extends StatefulWidget {
   final List<Product> productos;
 
-  // Constructor de SeleccionarProducto
   SeleccionarProducto({Key? key, required this.productos}) : super(key: key);
 
- @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text('Seleccionar Producto'),
-      actions: <Widget>[
-        IconButton(
-          icon: Icon(Icons.search),
-          onPressed: () {
-            // Aquí puedes agregar la lógica para manejar la búsqueda
-          },
-        ),
-      ],
-    ),
-    body: ListView.builder(
-      itemCount: productos.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          title: Text(productos[index].descripcion),
-          subtitle: Text('Precio: \Q${productos[index].precioFinal.toStringAsFixed(2)}'),
-          onTap: () {
-            Navigator.pop(context, productos[index]);
-            },
-          );
-        },
-      ),
-    );
-  }
+  @override
+  _SeleccionarProductoState createState() => _SeleccionarProductoState();
 }
 
-// Widget para seleccionar un cliente
-class SeleccionarCliente extends StatelessWidget {
+class _SeleccionarProductoState extends State<SeleccionarProducto> {
+  List<bool> _productSelected = [];
+  late List<Product> _filteredProducts;
+
+  TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _productSelected = List<bool>.filled(widget.productos.length, false);
+    _filteredProducts = List.from(widget.productos);
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    String searchTerm = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredProducts = widget.productos.where((product) {
+        return product.descripcion.toLowerCase().contains(searchTerm);
+      }).toList();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Seleccionar Cliente'),
-      ),
-      body: Center(
-        child: Text('Pantalla de Seleccionar Cliente'),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                labelText: 'Buscar producto',
+                prefixIcon: Icon(Icons.search),
+              ),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _filteredProducts.length,
+              itemBuilder: (context, index) {
+                final product = _filteredProducts[index];
+                return ListTile(
+                  title: Text(product.descripcion),
+                  subtitle: Text(
+                      'Precio: \Q${product.precioFinal.toStringAsFixed(2)}'),
+                  onTap: _productSelected[index]
+                      ? null
+                      : () {
+                          Navigator.pop(context, product);
+                          setState(() {
+                            _productSelected[index] = true;
+                          });
+                        },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-// StatefulWidget para la página principal de pedidos
 class PaginaPedidos extends StatefulWidget {
   const PaginaPedidos({Key? key}) : super(key: key);
 
@@ -88,18 +113,17 @@ class PaginaPedidos extends StatefulWidget {
   _PaginaPedidosState createState() => _PaginaPedidosState();
 }
 
-// Estado de PaginaPedidos
 class _PaginaPedidosState extends State<PaginaPedidos> {
   String _selectedSalesperson = 'Vendedor 1';
   String _selectedClient = 'Cliente 1';
   DateTime _selectedDate = DateTime.now();
   List<Product> _selectedProducts = [];
+  Map<Product, int> _selectedProductQuantities = {};
   String _observations = '';
-  double _totalPrice = 0;
 
   @override
   Widget build(BuildContext context) {
-    _totalPrice = _calculateTotalPrice();
+    double _totalPrice = _calculateTotalPrice();
 
     return Scaffold(
       appBar: AppBar(
@@ -163,24 +187,44 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
               child: Text('Agregar Producto'),
             ),
             if (_selectedProducts.isNotEmpty)
-              ListView.builder(
-                shrinkWrap: true,
-                itemCount: _selectedProducts.length,
-                itemBuilder: (context, index) {
-                  final product = _selectedProducts[index];
-
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: _selectedProducts.map((product) {
+                  int quantity = _selectedProductQuantities[product]!;
+                  double subtotal = product.precioFinal * quantity;
                   return ListTile(
-                    title: Text('${product.descripcion} - \Q${product.precioFinal.toStringAsFixed(2)}'),
-                    trailing: IconButton(
-                      icon: Icon(Icons.remove_circle),
-                      onPressed: () {
-                        setState(() {
-                          _selectedProducts.removeAt(index);
-                        });
-                      },
+                    title: Text(
+                      '${product.descripcion} - \Q${product.precioFinal.toStringAsFixed(2)} x $quantity',
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(Icons.remove_circle),
+                          onPressed: () {
+                            setState(() {
+                              if (quantity > 1) {
+                                _selectedProductQuantities[product] = quantity - 1;
+                              } else {
+                                _selectedProducts.remove(product);
+                                _selectedProductQuantities.remove(product);
+                              }
+                            });
+                          },
+                        ),
+                        Text(quantity.toString()),
+                        IconButton(
+                          icon: Icon(Icons.add_box),
+                          onPressed: () {
+                            setState(() {
+                              _selectedProductQuantities[product] = quantity + 1;
+                            });
+                          },
+                        ),
+                      ],
                     ),
                   );
-                },
+                }).toList(),
               ),
             const SizedBox(height: 16.0),
             TextField(
@@ -211,7 +255,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     );
   }
 
-  // Método para seleccionar una fecha
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
@@ -227,7 +270,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     }
   }
 
-  // Método para navegar a la pantalla de seleccionar cliente
   void _navigateToSeleccionarCliente(BuildContext context) {
     Navigator.push(
       context,
@@ -241,7 +283,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     });
   }
 
-  // Método para navegar a la pantalla de seleccionar producto
   void _navigateToSeleccionarProducto(BuildContext context) {
     http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
       if (response.statusCode == 200) {
@@ -259,6 +300,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           if (selectedProduct != null) {
             setState(() {
               _selectedProducts.add(selectedProduct);
+              _selectedProductQuantities[selectedProduct] = 1;
             });
           }
         });
@@ -270,10 +312,11 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     });
   }
 
-  // Método para calcular el precio total de los productos seleccionados
   double _calculateTotalPrice() {
-    return _selectedProducts.fold(0, (sum, product) {
-      return sum + product.precioFinal;
+    double total = 0;
+    _selectedProductQuantities.forEach((product, quantity) {
+      total += product.precioFinal * quantity;
     });
+    return total;
   }
 }
