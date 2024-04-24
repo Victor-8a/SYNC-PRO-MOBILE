@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -25,7 +27,7 @@ class Product {
     );
   }
 }
-
+//aqui inicia el widget 
 class SeleccionarProducto extends StatefulWidget {
   final List<Product> productos;
 
@@ -67,6 +69,13 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Productos',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue,
+      ),
       body: Column(
         children: [
           Padding(
@@ -74,30 +83,49 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
                 labelText: 'Buscar producto',
                 prefixIcon: Icon(Icons.search),
+                prefixIconColor: Colors.blue,
               ),
+              cursorColor: Colors.blue,
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _filteredProducts.length,
-              itemBuilder: (context, index) {
-                final product = _filteredProducts[index];
-                return ListTile(
-                  title: Text(product.descripcion),
-                  subtitle: Text(
-                      'Precio: \Q${product.precioFinal.toStringAsFixed(2)}'),
-                  onTap: _productSelected[index]
-                      ? null
-                      : () {
-                          Navigator.pop(context, product);
-                          setState(() {
-                            _productSelected[index] = true;
-                          });
-                        },
-                );
-              },
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                color: Colors.blue.withOpacity(0),
+              ),
+              child: ListView.builder(
+                itemCount: _filteredProducts.length,
+                itemBuilder: (context, index) {
+                  final product = _filteredProducts[index];
+                  return ListTile(
+                    title: Text(
+                      product.descripcion,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(
+                      'Precio: \Q${product.precioFinal.toStringAsFixed(2)}',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    onTap: _productSelected[index]
+                        ? null
+                        : () {
+                      Navigator.pop(context, product);
+                      setState(() {
+                        _productSelected[index] = true;
+                      });
+                    },
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -121,13 +149,19 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   Map<Product, int> _selectedProductQuantities = {};
   String _observations = '';
 
+  Color _buttonColor = Colors.blue; // Color para los botones
+
   @override
   Widget build(BuildContext context) {
     double _totalPrice = _calculateTotalPrice();
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pedidos'),
+        title: Text(
+          'Pedidos',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -147,50 +181,93 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                   child: Text(vendedor),
                 );
               }).toList(),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Vendedor',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
             ),
-            const SizedBox(height: 16.0),
-            Text('Cliente: $_selectedClient'),
+            SizedBox(height: 20.0),
+            Text(
+              'Cliente: $_selectedClient',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             ElevatedButton(
               onPressed: () {
                 _navigateToSeleccionarCliente(context);
               },
-              child: Text('Agregar Cliente'),
-            ),
-            const SizedBox(height: 16.0),
-            Row(
-              children: [
-                const Text('Fecha de Entrega: '),
-                const SizedBox(width: 8.0),
-                InkWell(
-                  onTap: () {
-                    _selectDate(context);
-                  },
-                  child: Text(
-                    '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                  ),
+              child: Text(
+                'Agregar Cliente',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _buttonColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
                 ),
-              ],
+                 minimumSize: Size(double.infinity, 50),
+              ),
             ),
-            const SizedBox(height: 16.0),
-            Text('Productos seleccionados:'),
+          SizedBox(height: 20.0),
+Row(
+  mainAxisAlignment: MainAxisAlignment.center,
+  children: [
+    Icon(
+      Icons.calendar_today, // Aquí puedes cambiar el icono por el que desees
+      color: Colors.blue, // Color del icono
+    ),
+    SizedBox(width: 8.0),
+    Text(
+      'Fecha de Entrega: ',
+      style: TextStyle(fontWeight: FontWeight.bold),
+    ),
+    SizedBox(width: 8.0),
+    InkWell(
+      onTap: () {
+        _selectDate(context);
+      },
+      child: Text(
+        '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+        style: TextStyle(
+          color: Colors.blue,
+          decoration: TextDecoration.underline,
+        ),
+      ),
+    ),
+  ],
+
+            ),
+            SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () {
                 _navigateToSeleccionarProducto(context);
               },
-              child: Text('Agregar Producto'),
+              child: Text(
+                'Agregar Producto',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _buttonColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  
+                ),
+                 minimumSize: Size(double.infinity, 50),
+              
+              ),
+            ),
+            SizedBox(height: 20.0),
+            Text(
+              'Productos seleccionados:',
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             if (_selectedProducts.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: _selectedProducts.map((product) {
                   int quantity = _selectedProductQuantities[product]!;
+                  // ignore: unused_local_variable
                   double subtotal = product.precioFinal * quantity;
                   return ListTile(
                     title: Text(
@@ -214,7 +291,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                         ),
                         Text(quantity.toString()),
                         IconButton(
-                          icon: Icon(Icons.add_box),
+                          icon: Icon(Icons.add_circle),
                           onPressed: () {
                             setState(() {
                               _selectedProductQuantities[product] = quantity + 1;
@@ -226,34 +303,48 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                   );
                 }).toList(),
               ),
-            const SizedBox(height: 16.0),
+            SizedBox(height: 20.0),
             TextField(
               onChanged: (value) {
                 _observations = value;
               },
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Observaciones',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
               ),
             ),
-            const SizedBox(height: 16.0),
+            SizedBox(height: 20.0),
             Text(
               'Total: \Q${_totalPrice.toStringAsFixed(2)}',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
             ),
-            const SizedBox(height: 16.0),
+            SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () {
                 // Aquí puedes agregar la lógica para agregar el pedido
                 // a tu sistema o enviarlo a tu API
               },
-              child: const Text('Agregar Pedido'),
+              child: Text(
+                'Agregar Pedido',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _buttonColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                 minimumSize: Size(double.infinity, 50),
+              ),
             ),
           ],
         ),
       ),
     );
   }
+
+  //aqui termina el widget 
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -273,7 +364,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   void _navigateToSeleccionarCliente(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SeleccionarCliente()),
+      MaterialPageRoute(builder: (context) => SeleccionarCliente(clientes: [],)),
     ).then((selectedClient) {
       if (selectedClient != null) {
         setState(() {
