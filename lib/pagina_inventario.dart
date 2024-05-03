@@ -73,15 +73,15 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   }
 
   void _filterProducts(String query) {
-  futureProducts.then((products) {
-    setState(() {
-      displayedProducts = products
-          .where((product) =>
-              product.descripcion.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+    futureProducts.then((products) {
+      setState(() {
+        displayedProducts = products
+            .where((product) =>
+                product.descripcion.toLowerCase().contains(query.toLowerCase()))
+            .toList();
+      });
     });
-  });
-}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +103,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                 border: OutlineInputBorder(),
                 labelText: 'Buscar producto',
                 prefixIcon: Icon(Icons.search),
-                 prefixIconColor: Colors.blue,
+                prefixIconColor: Colors.blue,
               ),
               cursorColor: Colors.blue,
             ),
@@ -125,7 +125,16 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                       final product = products[index];
                       return ListTile(
                         title: Text(product.descripcion),
-                        subtitle: Text('Código: ${product.codigo}'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Código: ${product.codigo}'),
+                            Text('Barras: ${product.barras}'),
+                            Text('Costo: ${product.costo.toStringAsFixed(2)}'),
+                            Text('Precio Final: ${product.precioFinal.toStringAsFixed(2)}'),
+                            Text('Marca: ${product.marcas}'),
+                          ],
+                        ),
                         // Otros detalles del producto según necesites
                       );
                     },

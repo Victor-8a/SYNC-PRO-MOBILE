@@ -1,16 +1,17 @@
-// ignore_for_file: unused_field
-
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/seleccionar_clientes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class Product {
   final int codigo;
   final String barras;
   final String descripcion;
   final double precioFinal;
-
+ 
   Product({
     required this.codigo,
     required this.barras,
@@ -26,7 +27,38 @@ class Product {
       precioFinal: json['PrecioFinal'].toDouble(),
     );
   }
+
+  Map<String, dynamic> toJson(int cantidad) {
+    return {
+      'codigo': codigo,
+      'Barras': barras,
+      'Descripcion': descripcion,
+      'PrecioFinal': precioFinal,
+      'Cantidad': cantidad, // Agregar la cantidad al mapa JSON
+    };
+  }
 }
+
+class Vendedor {
+  final int value;
+  final String nombre;
+
+  Vendedor({
+    required this.value,
+    required this.nombre,
+    
+  });
+
+  factory Vendedor.fromJson(Map<String, dynamic> json) {
+    return Vendedor(
+      value: json['value'],
+      nombre: json['nombre'],
+     
+    );
+  }
+}
+
+
 //aqui inicia el widget 
 class SeleccionarProducto extends StatefulWidget {
   final List<Product> productos;
@@ -49,6 +81,7 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
     _productSelected = List<bool>.filled(widget.productos.length, false);
     _filteredProducts = List.from(widget.productos);
     _searchController.addListener(_onSearchChanged);
+    
   }
 
   @override
@@ -142,19 +175,66 @@ class PaginaPedidos extends StatefulWidget {
 }
 
 class _PaginaPedidosState extends State<PaginaPedidos> {
-  String _selectedSalesperson = 'Vendedor 1';
+void _loadSelectedProducts() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  List<String>? selectedProductsJson = prefs.getStringList('selectedProducts');
+
+  if (selectedProductsJson != null) {
+    setState(() {
+      _selectedProducts = selectedProductsJson.map((jsonString) {
+        Map<String, dynamic> productMap = json.decode(jsonString);
+        return Product.fromJson(productMap);
+      }).toList();
+
+      _selectedProductQuantities = Map.fromIterable(_selectedProducts,
+          key: (product) => product,
+          value: (product) => prefs.getInt(product.codigo.toString()) ?? 1);
+    });
+  }
+}
+
+  
+  // En la clase _PaginaPedidosState
+void _loadSelectedClientName() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? selectedClient = prefs.getString('selectedClient');
+  if (selectedClient != null) {
+    setState(() {
+      _selectedClient = selectedClient;
+    });
+  }
+}
+  
+  List<Vendedor> _vendedores = [];
   String _selectedClient = 'Cliente 1';
   DateTime _selectedDate = DateTime.now();
   List<Product> _selectedProducts = [];
   Map<Product, int> _selectedProductQuantities = {};
+  // ignore: unused_field
   String _observations = '';
 
   Color _buttonColor = Colors.blue; // Color para los botones
+@override
+void initState() {
+  super.initState();
+  _loadSelectedClientName();
+  _loadSelectedProducts(); // Agregar esta línea para cargar los productos seleccionados guardados
+  fetchVendedores().then((vendedores) {
+    setState(() {
+      _vendedores = vendedores;
+    });
+    print('Vendedores cargados: $_vendedores');
+  }).catchError((error) {
+    print('Error cargando vendedores: $error');
+  });
+}
+
+
 
   @override
   Widget build(BuildContext context) {
     double _totalPrice = _calculateTotalPrice();
-
+    var _selectedSalesperson;
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -168,37 +248,53 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            DropdownButtonFormField<String>(
-              value: _selectedSalesperson,
-              onChanged: (newValue) {
-                setState(() {
-                  _selectedSalesperson = newValue!;
-                });
-              },
-              items: ['Vendedor 1', 'Vendedor 2', 'Vendedor 3'].map((vendedor) {
-                return DropdownMenuItem(
-                  value: vendedor,
-                  child: Text(vendedor),
-                );
-              }).toList(),
-              decoration: InputDecoration(
-                labelText: 'Vendedor',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20),
-                ),
+          // Ahora puedes usar _vendedores en tu DropdownButtonFormField
+DropdownButtonFormField<Vendedor>(
+            value: _selectedSalesperson,
+            onChanged: (newValue) {
+              setState(() {
+                _selectedSalesperson = newValue!;
+              });
+            },
+            items: _vendedores.map((vendedor) {
+              return DropdownMenuItem<Vendedor>(
+                value: vendedor,
+                child: Text(vendedor.nombre,),
+                
+              );
+            }).toList(),
+            decoration: InputDecoration(
+              labelText: 'Vendedor',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(50),
               ),
             ),
+            iconSize: 12, // Tamaño del ícono desplegable
+  dropdownColor: Colors.white, // Color de fondo de la lista desplegable
+  elevation: 100,
+   borderRadius: BorderRadius.circular(50),
+   menuMaxHeight: 300,
+   style: TextStyle(
+    fontWeight: FontWeight.bold,
+    fontSize: 14,
+    color: Colors.black,
+ 
+   ),
+   
+  // Elevación de la lista desplegable
+          ),
             SizedBox(height: 20.0),
             Text(
               'Cliente: $_selectedClient',
               style: TextStyle(fontWeight: FontWeight.bold),
+               textAlign: TextAlign.center,
             ),
             ElevatedButton(
               onPressed: () {
                 _navigateToSeleccionarCliente(context);
               },
               child: Text(
-                'Agregar Cliente',
+                'Seleccionar Cliente',
                 style: TextStyle(color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
@@ -244,7 +340,7 @@ Row(
                 _navigateToSeleccionarProducto(context);
               },
               child: Text(
-                'Agregar Producto',
+                'Seleccionar Producto',
                 style: TextStyle(color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
@@ -345,6 +441,7 @@ Row(
   }
 
   //aqui termina el widget 
+  
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -360,49 +457,89 @@ Row(
       });
     }
   }
-
-  void _navigateToSeleccionarCliente(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => SeleccionarCliente(clientes: [],)),
-    ).then((selectedClient) {
-      if (selectedClient != null) {
-        setState(() {
-          _selectedClient = selectedClient;
-        });
-      }
-    });
+  Future<List<Vendedor>> fetchVendedores() async {
+  final response = await http.get(Uri.parse('http://192.168.1.212:3000/vendedor'));
+  if (response.statusCode == 200) {
+    List<dynamic> jsonResponse = json.decode(response.body);
+    return jsonResponse.map((data) => Vendedor.fromJson(data)).toList();
+  } else {
+    throw Exception('Failed to load vendedores');
   }
+}
 
-  void _navigateToSeleccionarProducto(BuildContext context) {
-    http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
-      if (response.statusCode == 200) {
-        List<dynamic> jsonResponse = json.decode(response.body);
-        List<Product> products = [];
+void _navigateToSeleccionarCliente(BuildContext context) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => SeleccionarCliente(clientes: [])),
+  ).then((selectedClient) {
+    if (selectedClient != null) {
+      _saveSelectedClientName(selectedClient.nombre); // Guardar el nombre del cliente seleccionado
+      setState(() {
+        _selectedClient = selectedClient.nombre; // Actualizar el nombre del cliente seleccionado
+      });
+    }
+  });
+}
 
-        for (var productData in jsonResponse) {
-          products.add(Product.fromJson(productData));
-        }
+Future<void> _saveSelectedClientName(String clientName) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('selectedClient', clientName); // Guardar el nombre del cliente en SharedPreferences
+}
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => SeleccionarProducto(productos: products)),
-        ).then((selectedProduct) {
-          if (selectedProduct != null) {
-            setState(() {
-              _selectedProducts.add(selectedProduct);
+
+void _navigateToSeleccionarProducto(BuildContext context) {
+  http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
+    if (response.statusCode == 200) {
+      List<dynamic> jsonResponse = json.decode(response.body);
+      List<Product> products = [];
+
+      for (var productData in jsonResponse) {
+        products.add(Product.fromJson(productData));
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SeleccionarProducto(productos: products)),
+      ).then((selectedProduct) {
+        if (selectedProduct != null) {
+          setState(() {
+            _selectedProducts.add(selectedProduct);
+            if (_selectedProductQuantities.containsKey(selectedProduct)) {
+              // Si el producto ya está en la lista, aumentar la cantidad
+              _selectedProductQuantities[selectedProduct] =
+                  _selectedProductQuantities[selectedProduct]! + 1;
+            } else {
+              // Si es un nuevo producto, establecer la cantidad en 1
               _selectedProductQuantities[selectedProduct] = 1;
-            });
-          }
-        });
-      } else {
-        print('Failed to load products: ${response.statusCode}');
-      }
-    }).catchError((error) {
-      print('Error loading products: $error');
-    });
-  }
+            }
+          });
 
+          _saveSelectedProducts(); // Aquí se guarda automáticamente la cantidad actualizada
+        }
+      });
+    } else {
+      print('Failed to load products: ${response.statusCode}');
+    }
+  }).catchError((error) {
+    print('Error loading products: $error');
+  });
+}
+
+
+Future<void> _saveSelectedProducts() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  List<String> selectedProductsJson = _selectedProducts.map((product) {
+    // Serializar el producto junto con su cantidad
+    Map<String, dynamic> productData = product.toJson(_selectedProductQuantities[product] ?? 1);
+    // Convertir el mapa en una cadena JSON
+    return json.encode(productData);
+  }).toList();
+  // Guardar la lista de productos serializados en las preferencias compartidas
+  await prefs.setStringList('selectedProducts', selectedProductsJson);
+  _selectedProducts.forEach((product) {
+    prefs.setInt(product.codigo.toString(), _selectedProductQuantities[product] ?? 1);
+  });
+}
   double _calculateTotalPrice() {
     double total = 0;
     _selectedProductQuantities.forEach((product, quantity) {
@@ -411,3 +548,4 @@ Row(
     return total;
   }
 }
+

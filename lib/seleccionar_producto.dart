@@ -1,7 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
 class Product {
   final int codigo;
   final String barras;
@@ -65,8 +62,10 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   Map<Product, int> _selectedProductQuantities = {};
   // ignore: unused_field
   String _observations = '';
+  // ignore: unused_field
   late List<Product> _allProducts;
   late List<Product> _filteredProducts;
+  // ignore: unused_field
   TextEditingController _searchController = TextEditingController();
 
  
