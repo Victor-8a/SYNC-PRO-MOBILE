@@ -16,7 +16,7 @@ Future<String> getTokenFromStorage() async {
   return token;
 }
 // Función para guardar el pedido en la base de datos
-Future<int?> saveOrder(int selectedClient, String observations, int value) async {
+Future<int?> saveOrder(int selectedClient, String observations) async {
   try {
     String? token = await getTokenFromStorage();
     // ignore: unnecessary_null_comparison
@@ -42,7 +42,7 @@ Future<int?> saveOrder(int selectedClient, String observations, int value) async
       "CodMoneda": 1,
       "TipoCambio": 1,
       "Anulado": false,
-      "idVendedor": value,
+      "idVendedor": 1,
     };
     var body = jsonEncode(dataPedido);
     print('Guardando pedido: $body');
@@ -257,13 +257,13 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     }
   }
 
-  List<Vendedor> _vendedores = 
-  Vendedor(value: 0, nombre: '') as List<Vendedor>;
+  List<Vendedor> _vendedores = [];
   Cliente _selectedClient =
       Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
   DateTime _selectedDate = DateTime.now();
   List<Product> _selectedProducts = [];
   Map<Product, int> _selectedProductQuantities = {};
+  // ignore: unused_field
   String _observations = '';
 
   Color _buttonColor = Colors.blue; // Color para los botones
@@ -475,7 +475,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
             ElevatedButton(
               onPressed: () async {
                 int? idPedido = await saveOrder(
-                     _selectedClient.codCliente, _observations, _selectedSalesperson!.value);
+                     _selectedClient.codCliente, _observations, );
                 if (idPedido != null) {
                   saveOrderDetail(
                       idPedido, _selectedProducts, _selectedProductQuantities);
@@ -641,37 +641,3 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     return total;
   }
 }
-
-// Future<void> _addProductToApi(Product product, int quantity) async {
-//   try {
-//     String? token = await getTokenFromStorage();
-//     if (token == null) {
-//       throw Exception('Token de autorización no válido');
-//     }
-
-//     var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
-//     var headers = {
-//       'Content-Type': 'application/json; charset=UTF-8',
-//       'Authorization': 'Bearer $token',
-//     };
-//     var body = jsonEncode(<String, dynamic>{
-//       'codigo': product.codigo,
-//       'Barras': product.barras,
-//       'Descripcion': product.descripcion,
-//       'PrecioFinal': product.precioFinal,
-//       'Cantidad': quantity,
-//     });
-
-//     var response = await http.post(url, headers: headers, body: body);
-
-//     if (response.statusCode == 200) {
-//       print('Producto agregado a la API exitosamente.');
-//     } else {
-//       throw Exception(
-//           'Error al agregar el producto a la API: ${response.statusCode}');
-//     }
-//   } catch (error) {
-//     print('Hubo un error al agregar el producto a la API: $error');
-//     // Manejar el error según sea necesario
-//   }
-// }
