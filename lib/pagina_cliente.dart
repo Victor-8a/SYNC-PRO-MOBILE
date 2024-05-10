@@ -2,33 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-
-class Cliente {
-  final int codigo;
-  final String cedula;
-  final String nombre;
-  final String direccion;
-  final bool credito;
-
-  Cliente({
-    required this.codigo,
-    required this.cedula,
-    required this.nombre,
-    required this.direccion,
-    required this.credito,
-  });
-
-  factory Cliente.fromJson(Map<String, dynamic> json) {
-    return Cliente(
-      codigo: json['CodCliente'],
-      cedula: json['Cedula'],
-      nombre: json['Nombre'],
-      direccion: json['Direccion'],
-      credito: json['Credito'],
-    );
-  }
-}
-
 class PaginaCliente extends StatefulWidget {
   const PaginaCliente({Key? key}) : super(key: key);
 
@@ -51,7 +24,7 @@ class _PaginaClienteState extends State<PaginaCliente> {
         Uri.parse('http://192.168.1.212:3000/clientes'),
         headers: {
           'Authorization':
-              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiaWF0IjoxNzE0NDk0NDgxLCJleHAiOjE3MTQ1MDg4ODF9.hcfVD-6alB-H0SZMXMY0HVDM0g5cpfFuLYCeAnLqIJI',
+              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiaWF0IjoxNzE1MzU4NzY5LCJleHAiOjE3MTU0MzA3Njl9.s5r4TgiM14tFlPiQQy2PTGMype0Gs_TWLO3lGsx0DtU',
         },
       );
       if (response.statusCode == 200) {

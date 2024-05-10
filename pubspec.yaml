@@ -21,6 +21,7 @@ dependencies:
   shared_preferences: ^2.2.3
   connect_to_sql_server_directly: ^0.0.1
   flutter_widget_from_html: ^0.14.11
+  fluttertoast: ^8.2.5
 curved_navigation_bar: ^1.0.3 #latest version
 flutter_widget_from_html: ^0.6.2
 

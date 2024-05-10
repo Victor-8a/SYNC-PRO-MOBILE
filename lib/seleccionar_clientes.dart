@@ -1,29 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-
-class Cliente {
-  final int codCliente;
-  final String nombre;
-  final String cedula;
-  final String direccion;
-
-  Cliente({
-    required this.codCliente,
-    required this.nombre,
-    required this.cedula,
-    required this.direccion,
-  });
-
-  factory Cliente.fromJson(Map<String, dynamic> json) {
-    return Cliente(
-      codCliente: json['CodCliente'],
-      nombre: json['Nombre'],
-      cedula: json['Cedula'],
-      direccion: json['Direccion'],
-    );
-  }
-}
+import 'Models/Cliente.dart';
 
 class SeleccionarCliente extends StatefulWidget {
   const SeleccionarCliente({Key? key, required List clientes}) : super(key: key);
@@ -41,8 +20,14 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
     _fetchClientes(); // Llama al método para obtener los clientes al iniciar la pantalla
   }
 
-  void _fetchClientes() {
-    final String token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiaWF0IjoxNzE0NDk0NDgxLCJleHAiOjE3MTQ1MDg4ODF9.hcfVD-6alB-H0SZMXMY0HVDM0g5cpfFuLYCeAnLqIJI'; // Reemplaza 'tu_token_aqui' con tu token real
+  Future<String> _getTokenFromStorage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.getString('token') ?? "";
+    return token;
+  }
+
+  void _fetchClientes() async {
+    final String token = await _getTokenFromStorage();
 
     http.get(
       Uri.parse('http://192.168.1.212:3000/cliente'),
