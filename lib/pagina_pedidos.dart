@@ -8,22 +8,32 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'Models/Producto.dart';
 import 'Models/Vendedor.dart';
+import 'services/local_storage.dart';
 
-
+LocalStorage localStorage = LocalStorage();
 Future<String> getTokenFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String token = prefs.getString('token') ?? ""; // Si el token no existe, devuelve una cadena vacía
   return token;
 }
+Future<String> getIdFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String userId= prefs.getString('userId') ?? ""; // Si el id no existe, devuelve una cadena vacía
+  return userId;
+}
+
 // Función para guardar el pedido en la base de datos
-Future<int?> saveOrder(int selectedClient, String observations) async {
+Future<int?> saveOrder(int selectedClient, String observations, int _selectedSalespersonId) async {
   try {
     String? token = await getTokenFromStorage();
+    String userId = await getIdFromStorage();
     // ignore: unnecessary_null_comparison
     if (token == null) {
       print('return null pedido...');
       return null;
+    
     }
+
 
     print('INGRESO A SAVEORDER...');
     var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
@@ -37,12 +47,12 @@ Future<int?> saveOrder(int selectedClient, String observations) async {
       "CodCliente": selectedClient,
       "Fecha": DateTime.now().toIso8601String(),
       "Observaciones": observations,
-      "IdUsuario": 3,
+      "IdUsuario": userId,
       "FechaEntrega": DateTime.now().add(Duration(days: 7)).toIso8601String(),
       "CodMoneda": 1,
       "TipoCambio": 1,
       "Anulado": false,
-      "idVendedor": 1,
+      "idVendedor": _selectedSalespersonId,
     };
     var body = jsonEncode(dataPedido);
     print('Guardando pedido: $body');
@@ -256,16 +266,14 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           direccion: clientData['direccion']!);
     }
   }
-
+  int? _selectedSalespersonId; // ID del vendedor seleccionado
   List<Vendedor> _vendedores = [];
   Cliente _selectedClient =
-      Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
+  Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
   DateTime _selectedDate = DateTime.now();
   List<Product> _selectedProducts = [];
   Map<Product, int> _selectedProductQuantities = {};
-  // ignore: unused_field
   String _observations = '';
-
   Color _buttonColor = Colors.blue; // Color para los botones
   @override
   void initState() {
@@ -306,6 +314,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedSalesperson = newValue!;
+                   _selectedSalespersonId = newValue.value; // Actualizar para almacenar el ID del vendedor seleccionado
                 });
               },
               items: _vendedores.map((vendedor) {
@@ -313,7 +322,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                   value: vendedor,
                   child: Text(
                     
-                    vendedor.nombre, maxLines: vendedor.value,
+                    vendedor.nombre,
                   ),
                 );
               }).toList(),
@@ -475,7 +484,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
             ElevatedButton(
               onPressed: () async {
                 int? idPedido = await saveOrder(
-                     _selectedClient.codCliente, _observations, );
+                     _selectedClient.codCliente, _observations,_selectedSalespersonId ?? 0);
                 if (idPedido != null) {
                   saveOrderDetail(
                       idPedido, _selectedProducts, _selectedProductQuantities);
@@ -488,6 +497,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                     textColor: Colors.white,
                     fontSize: 16.0,
                   );
+                   _resetState();
                 } else {
                   Fluttertoast.showToast(
                     msg: 'Error al guardar el pedido.',
@@ -519,6 +529,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   }
 
   //aqui termina el widget
+  
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -576,6 +587,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     await prefs.setStringList('selectedClient',
        selectedClientJson); // Guardar el nombre del cliente en SharedPreferences
   }
+  
 
   void _navigateToSeleccionarProducto(BuildContext context) {
     http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
@@ -639,5 +651,16 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
       total += product.precioFinal * quantity;
     });
     return total;
+  }
+  
+  void _resetState() {
+    setState(() {
+      _selectedClient = Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
+      _selectedSalespersonId = null;
+      _selectedDate = DateTime.now();
+      _selectedProducts = [];
+      _selectedProductQuantities = {};
+      _observations = '';
+    });
   }
 }

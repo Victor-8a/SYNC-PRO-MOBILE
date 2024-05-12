@@ -7,7 +7,7 @@ class Vendedor {
     required this.nombre,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toJson() {
     return {
       'value': value,
       'nombre': nombre,
