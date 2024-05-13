@@ -9,11 +9,13 @@ import 'package:sync_pro_mobile/second_page.dart';
 void main() {
   runApp(const LoginApp());
 }
+
 Future<void> saveTokenToStorage(String token) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   await prefs.setString('token', token);
   print('Token guardado en el almacenamiento: $token');
 }
+
 Future<void> saveIdToStorage(String userId) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   await prefs.setString('userId', userId);
@@ -36,7 +38,6 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-// ignore: library_private_types_in_public_api
   _LoginPageState createState() => _LoginPageState();
 }
 
@@ -46,10 +47,9 @@ class _LoginPageState extends State<LoginPage> {
   bool _mostrarError = false;
 
   Future<void> _login() async {
-        int id = 0; 
+    int id = 0;
     String usuario = _usuarioController.text;
     String contrasena = _contrasenaController.text;
-
 
     final response = await http.post(
       Uri.parse('http://192.168.1.169:3500/auth/signin'),
@@ -61,26 +61,19 @@ class _LoginPageState extends State<LoginPage> {
         'Nombre': usuario,
         'password': contrasena,
       }),
-      
     );
     print('prueba de id para ver si devuelve algo');
-        print('id: $id');
+    print('id: $id');
 
-    // print('INICIO DE SESION');
-    //  print('Usuario: $usuario');
-    //  print('Contraseña: $contrasena');
-    //  print('Respuesta: ${response.body}');
-    //  print('Código de estado: ${response.statusCode}');
     if (response.statusCode == 200) {
-       String token = jsonDecode(response.body)['token'];  
-       id = jsonDecode(response.body)['user']['id'];  
-       saveTokenToStorage(token);
-        print('Token: $token');
-        //guardar el id
-        saveIdToStorage(id.toString());
-        print('id: $id');
+      String token = jsonDecode(response.body)['token'];
+      id = jsonDecode(response.body)['user']['id'];
+      saveTokenToStorage(token);
+      print('Token: $token');
+      //guardar el id
+      saveIdToStorage(id.toString());
+      print('id: $id');
       Navigator.push(
-// ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(builder: (context) => const SecondPage()),
       );
@@ -89,7 +82,6 @@ class _LoginPageState extends State<LoginPage> {
         _mostrarError = true;
       });
 
-// ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Datos inválidos'),

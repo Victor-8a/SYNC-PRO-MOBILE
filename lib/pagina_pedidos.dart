@@ -23,7 +23,7 @@ Future<String> getIdFromStorage() async {
 }
 
 // Función para guardar el pedido en la base de datos
-Future<int?> saveOrder(int selectedClient, String observations, int _selectedSalespersonId) async {
+Future<int?> saveOrder(int selectedClient, String observations, int _selectedSalespersonId, DateTime selectedDate ) async {
   try {
     String? token = await getTokenFromStorage();
     String userId = await getIdFromStorage();
@@ -48,7 +48,7 @@ Future<int?> saveOrder(int selectedClient, String observations, int _selectedSal
       "Fecha": DateTime.now().toIso8601String(),
       "Observaciones": observations,
       "IdUsuario": userId,
-      "FechaEntrega": DateTime.now().add(Duration(days: 7)).toIso8601String(),
+      "FechaEntrega": selectedDate.toIso8601String(),
       "CodMoneda": 1,
       "TipoCambio": 1,
       "Anulado": false,
@@ -281,9 +281,11 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     _loadSelectedClientName();
     _loadSelectedProducts(); // Agregar esta línea para cargar los productos seleccionados guardados
     fetchVendedores().then((vendedores) {
-      setState(() {
-        _vendedores = vendedores;
-      });
+       if (mounted) {
+        setState(() {
+          _vendedores = vendedores;
+        });
+      }
       print('Vendedores cargados: $_vendedores');
     }).catchError((error) {
       print('Error cargando vendedores: $error');
@@ -388,7 +390,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                     _selectDate(context);
                   },
                   child: Text(
-                    '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                    '${_selectedDate.year}/${_selectedDate.month}/${_selectedDate.day}',
                     style: TextStyle(
                       color: Colors.blue,
                       decoration: TextDecoration.underline,
@@ -484,7 +486,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
             ElevatedButton(
               onPressed: () async {
                 int? idPedido = await saveOrder(
-                     _selectedClient.codCliente, _observations,_selectedSalespersonId ?? 0);
+                     _selectedClient.codCliente, _observations,_selectedSalespersonId ?? 0, _selectedDate);
                 if (idPedido != null) {
                   saveOrderDetail(
                       idPedido, _selectedProducts, _selectedProductQuantities);
@@ -653,14 +655,16 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     return total;
   }
   
-  void _resetState() {
-    setState(() {
-      _selectedClient = Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
-      _selectedSalespersonId = null;
-      _selectedDate = DateTime.now();
-      _selectedProducts = [];
-      _selectedProductQuantities = {};
-      _observations = '';
-    });
-  }
+void _resetState() {
+  if (mounted) 
+  setState(() {
+    _selectedClient = Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
+    _selectedSalespersonId = null;
+    _selectedDate = DateTime.now();
+    _selectedProducts = [];
+    _selectedProductQuantities = {};
+    _observations = '';
+    
+  });
+}
 }

@@ -13,11 +13,16 @@ class SeleccionarCliente extends StatefulWidget {
 
 class _SeleccionarClienteState extends State<SeleccionarCliente> {
   List<Cliente> _clientes = [];
+  List<Cliente> _filteredClientes = [];
+
+  TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _fetchClientes(); // Llama al método para obtener los clientes al iniciar la pantalla
+    _fetchClientes();
+    _filteredClientes = _clientes;
+    _searchController.addListener(_onSearchChanged);
   }
 
   Future<String> _getTokenFromStorage() async {
@@ -31,10 +36,9 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
 
     http.get(
       Uri.parse('http://192.168.1.212:3000/cliente'),
-      headers: {'Authorization': 'Bearer $token'}, // Agrega el encabezado Authorization con el token
+      headers: {'Authorization': 'Bearer $token'},
     ).then((response) {
       if (response.statusCode == 200) {
-        // La respuesta fue exitosa, procesa los datos aquí
         List<dynamic> jsonResponse = json.decode(response.body);
         List<Cliente> clientes = [];
         for (var clienteData in jsonResponse) {
@@ -42,14 +46,22 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
         }
         setState(() {
           _clientes = clientes;
+          _filteredClientes = clientes;
         });
       } else {
-        // Hubo un error al hacer la solicitud
         print('Error al cargar clientes: ${response.statusCode}');
       }
     }).catchError((error) {
-      // Error al realizar la solicitud
       print('Error al cargar clientes: $error');
+    });
+  }
+
+  void _onSearchChanged() {
+    String searchTerm = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredClientes = _clientes.where((cliente) =>
+          cliente.nombre.toLowerCase().contains(searchTerm) ||
+          cliente.cedula.toLowerCase().contains(searchTerm)).toList();
     });
   }
 
@@ -57,26 +69,50 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Seleccionar Cliente'),
+        title: Text('Seleccionar Cliente',      
+        style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue, // Cambia el color del AppBar a azul
       ),
-      body: _clientes.isEmpty
-          ? Center(
-              child: CircularProgressIndicator(), // Muestra un indicador de carga si la lista de clientes está vacía
-            )
-          : ListView.builder(
-              itemCount: _clientes.length,
-              itemBuilder: (context, index) {
-                final cliente = _clientes[index];
-                return ListTile(
-                  title: Text(cliente.nombre),
-                  subtitle: Text(cliente.cedula),
-                  onTap: () {
-                    // Aquí puedes manejar la selección del cliente, por ejemplo, puedes devolver el cliente seleccionado
-                    Navigator.pop(context, cliente);
-                  },
-                );
-              },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => _onSearchChanged(),
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+                labelText: 'Buscar cliente',
+                prefixIcon: Icon(Icons.search),
+                prefixIconColor: Colors.blue,
+              ),
+              cursorColor: Colors.blue,
             ),
+          ),
+          Expanded(
+            child: _filteredClientes.isEmpty
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : ListView.builder(
+                    itemCount: _filteredClientes.length,
+                    itemBuilder: (context, index) {
+                      final cliente = _filteredClientes[index];
+                      return ListTile(
+                        title: Text(cliente.nombre),
+                        subtitle: Text(cliente.cedula),
+                        onTap: () {
+                          Navigator.pop(context, cliente);
+                        },
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
