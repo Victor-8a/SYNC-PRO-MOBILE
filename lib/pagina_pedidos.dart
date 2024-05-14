@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/seleccionar_clientes.dart';
@@ -518,24 +519,27 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                           ],
                         ),
                         Expanded(
-                          child: TextField(
-                            onChanged: (value) {
-                              setState(() {
-                                _discounts[product] =
-                                    double.tryParse(value) ?? 0;
-                              });
-                            },
-                            decoration: InputDecoration(
-                              labelText: '% Desc',
-                              hintText: '',
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 5.0,
-                                horizontal: 10.0,
-                              ),
-                              isDense: true,
+      child: TextField(
+        keyboardType: TextInputType.number,
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'^\d{1,2}$')),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _discounts[product] = double.tryParse(value) ?? 0;
+          });
+        },
+        decoration: InputDecoration(
+          labelText: '% Desc',
+          floatingLabelStyle: TextStyle(color: Colors.blue),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          contentPadding: EdgeInsets.symmetric(
+            vertical: 5.0,
+            horizontal: 10.0,
+          ),
+          isDense: true,
                             ),
                           ),
                         ),
@@ -551,11 +555,14 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
             SizedBox(height: 20.0),
             TextField(
+
               onChanged: (value) {
                 _observations = value;
               },
               decoration: InputDecoration(
+                suffixText: 'Opcional',
                 labelText: 'Observaciones',
+  
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
@@ -684,7 +691,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   }
 
   void _navigateToSeleccionarProducto(BuildContext context) {
-    print(_selectedProducts);
     http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
@@ -711,7 +717,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                 _selectedProductQuantities[selectedProduct] = 1;
               }
             });
-            print(selectedProduct.descripcion);
 
             _saveSelectedProducts(); // Aquí se guarda automáticamente la cantidad actualizada
           }
@@ -755,7 +760,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     if (mounted)
       setState(() {
         _selectedClient =
-            Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
+            Cliente(codCliente: 0, nombre: 'CONSUMIDOR FINAL ', cedula: 'CF', direccion: 'CIUDAD');
         _selectedSalespersonId = null;
         _selectedDate = DateTime.now();
         _selectedProducts = [];
@@ -765,11 +770,12 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     _resetInfo();
   }
 
-  void _resetInfo() async {
+   void _resetInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    _saveSelectedClient(Cliente(codCliente: 0, nombre: 'CONSUMIDOR FINAL ', cedula: 'CF', direccion: 'CIUDAD'));
+    await prefs.remove('selectedProducts');
     List<String>? selectedProductsJson = [];
     await prefs.setStringList('selectedProducts', selectedProductsJson);
-
-    _resetState();
+   
   }
 }
