@@ -13,17 +13,21 @@ import 'services/local_storage.dart';
 LocalStorage localStorage = LocalStorage();
 Future<String> getTokenFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String token = prefs.getString('token') ?? ""; // Si el token no existe, devuelve una cadena vacía
+  String token = prefs.getString('token') ??
+      ""; // Si el token no existe, devuelve una cadena vacía
   return token;
 }
+
 Future<String> getIdFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String userId= prefs.getString('userId') ?? ""; // Si el id no existe, devuelve una cadena vacía
+  String userId = prefs.getString('userId') ??
+      ""; // Si el id no existe, devuelve una cadena vacía
   return userId;
 }
 
 // Función para guardar el pedido en la base de datos
-Future<int?> saveOrder(int selectedClient, String observations, int _selectedSalespersonId, DateTime selectedDate ) async {
+Future<int?> saveOrder(int selectedClient, String observations,
+    int _selectedSalespersonId, DateTime selectedDate) async {
   try {
     String? token = await getTokenFromStorage();
     String userId = await getIdFromStorage();
@@ -31,9 +35,7 @@ Future<int?> saveOrder(int selectedClient, String observations, int _selectedSal
     if (token == null) {
       print('return null pedido...');
       return null;
-    
     }
-
 
     print('INGRESO A SAVEORDER...');
     var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
@@ -69,11 +71,9 @@ Future<int?> saveOrder(int selectedClient, String observations, int _selectedSal
       throw Exception('Failed to save order: ${response.statusCode}');
     }
   } catch (error) {
-
     return null;
   }
 }
-
 
 Future<void> saveOrderDetail(int idPedido, List<Product> selectedProducts,
     Map<Product, int> selectedProductQuantities) async {
@@ -225,6 +225,8 @@ class PaginaPedidos extends StatefulWidget {
 }
 
 class _PaginaPedidosState extends State<PaginaPedidos> {
+  // Porcentaje de descuento
+
   void _loadSelectedProducts() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     List<String>? selectedProductsJson =
@@ -266,22 +268,48 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           direccion: clientData['direccion']!);
     }
   }
+
   int? _selectedSalespersonId; // ID del vendedor seleccionado
   List<Vendedor> _vendedores = [];
   Cliente _selectedClient =
-  Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
+      Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
   DateTime _selectedDate = DateTime.now();
   List<Product> _selectedProducts = [];
   Map<Product, int> _selectedProductQuantities = {};
+  Map<Product, double> _discounts =
+      {}; // Mapa que guarda el descuento asociado con cada producto
   String _observations = '';
   Color _buttonColor = Colors.blue; // Color para los botones
+  double _calculateTotal() {
+    double total = 0;
+    for (var product in _selectedProducts) {
+      int quantity = _selectedProductQuantities[product]!;
+      double unitPrice = product.precioFinal;
+      total += unitPrice * quantity;
+    }
+    return total;
+  }
+
+  double _calculateTotalWithDiscount() {
+    double total = 0.0;
+    // Itera sobre los productos seleccionados y calcula el precio total con descuento
+    _selectedProducts.forEach((product) {
+      int quantity = _selectedProductQuantities[product] ?? 0;
+      double unitPrice = product.precioFinal;
+      double discount = _discounts[product] ?? 0;
+      double subtotal = unitPrice * quantity * (1 - (discount / 100));
+      total += subtotal;
+    });
+    return total;
+  }
+
   @override
   void initState() {
     super.initState();
     _loadSelectedClientName();
     _loadSelectedProducts(); // Agregar esta línea para cargar los productos seleccionados guardados
     fetchVendedores().then((vendedores) {
-       if (mounted) {
+      if (mounted) {
         setState(() {
           _vendedores = vendedores;
         });
@@ -294,6 +322,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: unused_local_variable
     double _totalPrice = _calculateTotalPrice();
     Vendedor? _selectedSalesperson;
 
@@ -316,14 +345,14 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
               onChanged: (newValue) {
                 setState(() {
                   _selectedSalesperson = newValue!;
-                   _selectedSalespersonId = newValue.value; // Actualizar para almacenar el ID del vendedor seleccionado
+                  _selectedSalespersonId = newValue
+                      .value; // Actualizar para almacenar el ID del vendedor seleccionado
                 });
               },
               items: _vendedores.map((vendedor) {
                 return DropdownMenuItem<Vendedor>(
                   value: vendedor,
                   child: Text(
-                    
                     vendedor.nombre,
                   ),
                 );
@@ -417,53 +446,103 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
               ),
             ),
             SizedBox(height: 20.0),
-            Text(
-              'Productos seleccionados:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            if (_selectedProducts.isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: _selectedProducts.map((product) {
-                  int quantity = _selectedProductQuantities[product]!;
-                  // ignore: unused_local_variable
-                  double subtotal = product.precioFinal * quantity;
-                  return ListTile(
-                    title: Text(
-                      '${product.descripcion} - \Q${product.precioFinal.toStringAsFixed(2)} x $quantity',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.remove_circle),
-                          onPressed: () {
-                            setState(() {
-                              if (quantity > 1) {
-                                _selectedProductQuantities[product] =
-                                    quantity - 1;
-                              } else {
-                                _selectedProducts.remove(product);
-                                _selectedProductQuantities.remove(product);
-                              }
-                            });
-                          },
-                        ),
-                        Text(quantity.toString()),
-                        IconButton(
-                          icon: Icon(Icons.add_circle),
-                          onPressed: () {
-                            setState(() {
-                              _selectedProductQuantities[product] =
-                                  quantity + 1;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                }).toList(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              child: Text(
+                'Productos seleccionados:',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
+            ),
+            Container(
+  padding: EdgeInsets.all(10.0),
+  margin: EdgeInsets.symmetric(vertical: 10.0),
+  decoration: BoxDecoration(
+    border: Border.all(color: Colors.grey),
+    borderRadius: BorderRadius.circular(10.0),
+  ),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: _selectedProducts.map((product) {
+      int quantity = _selectedProductQuantities[product]!;
+      double unitPrice = product.precioFinal;
+      double discount = _discounts[product] ?? 0;
+      double subtotalBeforeDiscount = unitPrice * quantity;
+      double discountAmount = subtotalBeforeDiscount * (discount / 100);
+      double subtotal = subtotalBeforeDiscount - discountAmount;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${product.descripcion} - \Q${unitPrice.toStringAsFixed(2)} x $quantity',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SizedBox(width: 10),
+                IconButton(
+                  icon: Icon(Icons.remove_circle),
+                  onPressed: () {
+                    setState(() {
+                      if (quantity > 1) {
+                        _selectedProductQuantities[product] = quantity - 1;
+                      } else {
+                        _selectedProducts.remove(product);
+                        _selectedProductQuantities.remove(product);
+                        _discounts.remove(product);
+                      }
+                    });
+                  },
+                ),
+                Text(quantity.toString()),
+                IconButton(
+                  icon: Icon(Icons.add_circle),
+                  onPressed: () {
+                    setState(() {
+                      _selectedProductQuantities[product] = quantity + 1;
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _discounts[product] = double.tryParse(value) ?? 0;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: '% Desc',
+                    hintText: '',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(
+                      vertical: 5.0,
+                      horizontal: 10.0,
+                    ),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              SizedBox(width: 10),
+              Text('Subtotal: \Q${subtotal.toStringAsFixed(2)}'),
+            ],
+          ),
+          Divider(), // Agregando la línea divisoria
+        ],
+      );
+    }).toList(),
+              ),
+            ),
+
             SizedBox(height: 20.0),
             TextField(
               onChanged: (value) {
@@ -476,17 +555,26 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                 ),
               ),
             ),
-            SizedBox(height: 20.0),
+            SizedBox(height: 20),
             Text(
-              'Total: \Q${_totalPrice.toStringAsFixed(2)}',
+              'Subtotal: \Q${(_calculateTotal()).toStringAsFixed(2)}',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.0),
+            ),
+            SizedBox(height: 10.0),
+            Text(
+              'Descuento: \Q${(_calculateTotal() - _calculateTotalWithDiscount()).toStringAsFixed(2)}', // Diferencia entre el subtotal y el total con descuento
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.0),
+            ),
+            SizedBox(height: 10.0),
+            Text(
+              'Total: \Q${(_calculateTotalWithDiscount()).toStringAsFixed(2)}', // Precio total con descuento
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
             ),
-            SizedBox(height: 20.0),
 
             ElevatedButton(
               onPressed: () async {
-                int? idPedido = await saveOrder(
-                     _selectedClient.codCliente, _observations,_selectedSalespersonId ?? 0, _selectedDate);
+                int? idPedido = await saveOrder(_selectedClient.codCliente,
+                    _observations, _selectedSalespersonId ?? 0, _selectedDate);
                 if (idPedido != null) {
                   saveOrderDetail(
                       idPedido, _selectedProducts, _selectedProductQuantities);
@@ -495,11 +583,11 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                     toastLength: Toast.LENGTH_SHORT,
                     gravity: ToastGravity.BOTTOM,
                     timeInSecForIosWeb: 1,
-                    backgroundColor: Colors.green,
+                    backgroundColor: Colors.blue,
                     textColor: Colors.white,
                     fontSize: 16.0,
                   );
-                   _resetState();
+                  _resetState();
                 } else {
                   Fluttertoast.showToast(
                     msg: 'Error al guardar el pedido.',
@@ -531,7 +619,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   }
 
   //aqui termina el widget
-  
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -585,11 +672,10 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     List<String> selectedClientJson = clientData.entries.map((entry) {
       return '${entry.key}: ${entry.value.toString()}';
     }).toList();
- 
+
     await prefs.setStringList('selectedClient',
-       selectedClientJson); // Guardar el nombre del cliente en SharedPreferences
+        selectedClientJson); // Guardar el nombre del cliente en SharedPreferences
   }
-  
 
   void _navigateToSeleccionarProducto(BuildContext context) {
     http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
@@ -654,17 +740,25 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     });
     return total;
   }
-  
-void _resetState() {
-  if (mounted) 
-  setState(() {
-    _selectedClient = Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
-    _selectedSalespersonId = null;
-    _selectedDate = DateTime.now();
-    _selectedProducts = [];
-    _selectedProductQuantities = {};
-    _observations = '';
-    
-  });
-}
+
+  void _resetState() {
+    if (mounted)
+      setState(() {
+        _selectedClient =
+            Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
+        _selectedSalespersonId = null;
+        _selectedDate = DateTime.now();
+        _selectedProducts = [];
+        _selectedProductQuantities = {};
+        _observations = '';
+      });
+    _resetInfo();
+  }
+
+  void _resetInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('selectedClient');
+    await prefs.remove('selectedProducts');
+    _resetState();
+  }
 }

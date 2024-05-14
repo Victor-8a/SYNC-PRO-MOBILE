@@ -11,7 +11,8 @@ class LocalStorage {
     await prefs.setString(name, value);
   }
 
-  static String? getString(String name) {
+  static Future<String?> getString(String name) async {
+    await configurePrefs();
     return prefs.getString(name);
   }
 
