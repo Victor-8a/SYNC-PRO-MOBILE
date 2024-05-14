@@ -453,94 +453,100 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            Container(
-  padding: EdgeInsets.all(10.0),
-  margin: EdgeInsets.symmetric(vertical: 10.0),
-  decoration: BoxDecoration(
-    border: Border.all(color: Colors.grey),
-    borderRadius: BorderRadius.circular(10.0),
-  ),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: _selectedProducts.map((product) {
-      int quantity = _selectedProductQuantities[product]!;
-      double unitPrice = product.precioFinal;
-      double discount = _discounts[product] ?? 0;
-      double subtotalBeforeDiscount = unitPrice * quantity;
-      double discountAmount = subtotalBeforeDiscount * (discount / 100);
-      double subtotal = subtotalBeforeDiscount - discountAmount;
 
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    '${product.descripcion} - \Q${unitPrice.toStringAsFixed(2)} x $quantity',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                SizedBox(width: 10),
-                IconButton(
-                  icon: Icon(Icons.remove_circle),
-                  onPressed: () {
-                    setState(() {
-                      if (quantity > 1) {
-                        _selectedProductQuantities[product] = quantity - 1;
-                      } else {
-                        _selectedProducts.remove(product);
-                        _selectedProductQuantities.remove(product);
-                        _discounts.remove(product);
-                      }
-                    });
-                  },
-                ),
-                Text(quantity.toString()),
-                IconButton(
-                  icon: Icon(Icons.add_circle),
-                  onPressed: () {
-                    setState(() {
-                      _selectedProductQuantities[product] = quantity + 1;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _discounts[product] = double.tryParse(value) ?? 0;
-                    });
-                  },
-                  decoration: InputDecoration(
-                    labelText: '% Desc',
-                    hintText: '',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: _selectedProducts.map((product) {
+                int quantity = _selectedProductQuantities[product]!;
+                double unitPrice = product.precioFinal;
+                double discount = _discounts[product] ?? 0;
+                double subtotalBeforeDiscount = unitPrice * quantity;
+                double discountAmount =
+                    subtotalBeforeDiscount * (discount / 100);
+                double subtotal = subtotalBeforeDiscount - discountAmount;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    ListTile(
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              '${product.descripcion} - \Q${unitPrice.toStringAsFixed(2)}',
+                              overflow: TextOverflow.values[1],
+                              
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    contentPadding: EdgeInsets.symmetric(
-                      vertical: 5.0,
-                      horizontal: 10.0,
+                    Row(
+                      children: [
+                        Column(
+                          children: [
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.remove_circle),
+                                  onPressed: () {
+                                    setState(() {
+                                      if (quantity > 1) {
+                                        _selectedProductQuantities[product] =
+                                            quantity - 1;
+                                      } else {
+                                        _selectedProducts.remove(product);
+                                        _selectedProductQuantities
+                                            .remove(product);
+                                        _discounts.remove(product);
+                                      }
+                                    });
+                                  },
+                                ),
+                                Text(quantity.toString()),
+                                IconButton(
+                                  icon: Icon(Icons.add_circle),
+                                  onPressed: () {
+                                    setState(() {
+                                      _selectedProductQuantities[product] =
+                                          quantity + 1;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Expanded(
+                          child: TextField(
+                            onChanged: (value) {
+                              setState(() {
+                                _discounts[product] =
+                                    double.tryParse(value) ?? 0;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              labelText: '% Desc',
+                              hintText: '',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 5.0,
+                                horizontal: 10.0,
+                              ),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Text(' \Q${subtotal.toStringAsFixed(2)}'),
+                      ],
                     ),
-                    isDense: true,
-                  ),
-                ),
-              ),
-              SizedBox(width: 10),
-              Text('Subtotal: \Q${subtotal.toStringAsFixed(2)}'),
-            ],
-          ),
-          Divider(), // Agregando la línea divisoria
-        ],
-      );
-    }).toList(),
-              ),
+                    Divider(), // Agregando la línea divisoria
+                  ],
+                );
+              }).toList(),
             ),
 
             SizedBox(height: 20.0),
@@ -678,6 +684,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   }
 
   void _navigateToSeleccionarProducto(BuildContext context) {
+    print(_selectedProducts);
     http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
@@ -704,6 +711,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                 _selectedProductQuantities[selectedProduct] = 1;
               }
             });
+            print(selectedProduct.descripcion);
 
             _saveSelectedProducts(); // Aquí se guarda automáticamente la cantidad actualizada
           }
@@ -727,6 +735,8 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     }).toList();
     // Guardar la lista de productos serializados en las preferencias compartidas
     await prefs.setStringList('selectedProducts', selectedProductsJson);
+    print('PRODUCTOS SELECCIONADOS');
+    print(selectedProductsJson);
     _selectedProducts.forEach((product) {
       prefs.setInt(
           product.codigo.toString(), _selectedProductQuantities[product] ?? 1);
@@ -757,8 +767,9 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   void _resetInfo() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('selectedClient');
-    await prefs.remove('selectedProducts');
+    List<String>? selectedProductsJson = [];
+    await prefs.setStringList('selectedProducts', selectedProductsJson);
+
     _resetState();
   }
 }
