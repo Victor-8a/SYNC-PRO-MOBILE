@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'Models/Producto.dart';
+
 class PaginaInventario extends StatefulWidget {
   const PaginaInventario({Key? key}) : super(key: key);
 
@@ -76,8 +77,9 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                 } else if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
                 } else {
-                  final products =
-                      displayedProducts.isNotEmpty ? displayedProducts : snapshot.data!;
+                  final products = displayedProducts.isNotEmpty
+                      ? displayedProducts
+                      : snapshot.data!;
                   return ListView.builder(
                     itemCount: products.length,
                     itemBuilder: (context, index) {
@@ -90,7 +92,12 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                             Text('Código: ${product.codigo}'),
                             Text('Barras: ${product.barras}'),
                             Text('Costo: ${product.costo.toStringAsFixed(2)}'),
-                            Text('Precio Final: ${product.precioFinal.toStringAsFixed(2)}'),
+                            Text(
+                                'Precio Final: ${product.precioFinal.toStringAsFixed(2)}'),
+                            Divider(
+                              color: Colors.blue,
+                            ),
+
                             // Text('Marca: ${product.marcas}'),
                           ],
                         ),

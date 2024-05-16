@@ -358,39 +358,64 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     double _totalPrice = _calculateTotalPrice();
     Vendedor? _selectedSalesperson;
 
-    return Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Pedidos',
-            style: TextStyle(color: Colors.white),
+   // ignore: deprecated_member_use
+   return WillPopScope(
+  onWillPop: () async {
+    // Mostrar diálogo de confirmación antes de retroceder
+    bool confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('¿Está seguro?'),
+        content: Text('Puede perder algunos datos si retrocede.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Sí'),
           ),
-          backgroundColor: Colors.blue,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Ahora puedes usar _vendedores en tu DropdownButtonFormField
-              DropdownButtonFormField<Vendedor>(
-                value: _selectedSalesperson,
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedSalesperson = newValue!;
-                    _selectedSalespersonId = newValue
-                        .value; // Actualizar para almacenar el ID del vendedor seleccionado
-                    // Guardar el vendedor seleccionado
-                  });
-                  // saveSalesperson(_selectedSalesperson!);
-                },
-                items: _vendedores.map((vendedor) {
-                  return DropdownMenuItem<Vendedor>(
-                    value: vendedor,
-                    child: Text(
-                      vendedor.nombre,
-                    ),
-                  );
-                }).toList(),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('No'),
+          ),
+        ],
+      ),
+    );
+
+    // Devolver true si el usuario confirma, false si cancela
+    return confirm;
+  },
+  child: Scaffold(
+    appBar: AppBar(
+      title: Text(
+        'Pedidos',
+        style: TextStyle(color: Colors.white),
+      ),
+      backgroundColor: Colors.blue,
+    ),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Ahora puedes usar _vendedores en tu DropdownButtonFormField
+          DropdownButtonFormField<Vendedor>(
+            value: _selectedSalesperson,
+            onChanged: (newValue) {
+              setState(() {
+                _selectedSalesperson = newValue!;
+                _selectedSalespersonId = newValue.value;
+                // Actualizar para almacenar el ID del vendedor seleccionado
+                // Guardar el vendedor seleccionado
+              });
+              // saveSalesperson(_selectedSalesperson!);
+            },
+            items: _vendedores.map((vendedor) {
+              return DropdownMenuItem<Vendedor>(
+                value: vendedor,
+                child: Text(
+                  vendedor.nombre,
+                ),
+              );
+            }).toList(),
 
                 decoration: InputDecoration(
                   labelText: 'Vendedor',
@@ -620,72 +645,78 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
               ),
 
-              ElevatedButton(
-                onPressed: () async {
-                  int? idPedido = await saveOrder(
-                      _selectedClient.codCliente,
-                      _observations,
-                      _selectedSalespersonId ?? 0,
-                      _selectedDate);
-                  if (idPedido != null) {
-                    saveOrderDetail(idPedido, _selectedProducts,
-                        _selectedProductQuantities);
-                    Fluttertoast.showToast(
-                      msg: 'Pedido guardado exitosamente.',
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      timeInSecForIosWeb: 1,
-                      backgroundColor: Colors.blue,
-                      textColor: Colors.white,
-                      fontSize: 16.0,
-                    );
-                    _resetState();
-                  } else {
-                    Fluttertoast.showToast(
-                      msg: 'Error al guardar el pedido.',
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      timeInSecForIosWeb: 1,
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                      fontSize: 16.0,
-                    );
-                  }
-                },
-                child: Text(
-                  'Agregar Pedido',
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _buttonColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  minimumSize: Size(double.infinity, 50),
+            Padding(
+  padding: const EdgeInsets.only(bottom: 10.0), // Agrega espacio entre los botones
+  child: ElevatedButton(
+    onPressed: () async {
+      int? idPedido = await saveOrder(
+        _selectedClient.codCliente,
+        _observations,
+        _selectedSalespersonId ?? 0,
+        _selectedDate,
+      );
+      if (idPedido != null) {
+        saveOrderDetail(idPedido, _selectedProducts, _selectedProductQuantities);
+        Fluttertoast.showToast(
+          msg: 'Pedido guardado exitosamente.',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.blue,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+        _resetState();
+      } else {
+        Fluttertoast.showToast(
+          msg: 'Error al guardar el pedido.',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+      }
+    },
+    child: Text(
+      'Agregar Pedido',
+      style: TextStyle(color: Colors.white),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: _buttonColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      minimumSize: Size(double.infinity, 50),
+    ),
+  ),
+),
+Padding(
+  padding: const EdgeInsets.only(top: 10.0), // Agrega espacio entre los botones
+  child: ElevatedButton(
+    onPressed: () async {
+      _resetState();
+      _resetInfo();
+    },
+    child: Text(
+      'Cancelar Pedido',
+      style: TextStyle(color: Colors.white),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.red,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      minimumSize: Size(double.infinity, 50),
+      fixedSize: Size(100, 50),
                 ),
               ),
-
-              ElevatedButton(
-                onPressed: () async {
-                  _resetState();
-                  _resetInfo();
-                },
-                child: Text('Cancelar Pedido',
-                   style: TextStyle(color: Colors.white),
-                 ),
-                style: ElevatedButton.styleFrom(
-               
-                  
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  minimumSize: Size(double.infinity, 50),
-                ),
-              ),
+),
             ],
-          ),
-        ));
+        ))
+    )
+   );
   }
 
   //aqui termina el widget

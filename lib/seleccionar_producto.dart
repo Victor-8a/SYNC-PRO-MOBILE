@@ -18,14 +18,18 @@ class SeleccionarProducto extends StatelessWidget {
           final product = productosDisponibles[index];
           return ListTile(
             title: Text(product.descripcion),
-            subtitle: Text('Precio: \Q${product.precioFinal.toStringAsFixed(2)}'),
+            subtitle: Text('Precio: \Q${product.precioFinal.toStringAsFixed(2)}',
+            ),
+             
             onTap: () {
               Navigator.pop(context, product);
+            
             },
           );
         },
       ),
     );
+    
   }
 }
 
@@ -83,6 +87,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                       Text('${product.descripcion} - \Q${product.precioFinal} x $quantity'),
                       const SizedBox(width: 8.0),
                       Text('- Subtotal: \Q${subtotal.toStringAsFixed(2)}'),
+                       
                     ],
                   );
                 }).toList(),

@@ -25,9 +25,9 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      codigo: json['codigo'],
-      barras: json['Barras'],
-      descripcion: json['Descripcion'],
+      codigo:(json['codigo']==null) ? 0:json['codigo'],
+      barras:(json['Barras']== null) ? '' :json['Barras'],
+      descripcion:(json['Descripcion']== null) ? '': json['Descripcion'],
       costo: (json['Costo'] == null) ? 0 : json['Costo'].toDouble(),
       precioFinal: (json['PrecioFinal'] == null) ? 0 : json['PrecioFinal'].toDouble(),
       precioB: (json['PRECIOB'] == null) ? 0 : json['PRECIOB'].toDouble(),
