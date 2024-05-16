@@ -47,4 +47,6 @@ class LocalStorage {
   static List<String>? getStringList(String name) {
     return prefs.getStringList(name);
   }
+
+  
 }

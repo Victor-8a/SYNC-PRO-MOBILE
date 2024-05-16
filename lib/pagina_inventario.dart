@@ -1,48 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
-class Product {
-  final int codigo;
-  final String barras;
-  final String descripcion;
-  final double costo;
-  final double precioFinal;
-  final double precioB;
-  final double precioC;
-  final double precioD;
-  final String marcas;
-  final String categoriaSubCategoria;
-
-  Product({
-    required this.codigo,
-    required this.barras,
-    required this.descripcion,
-    required this.costo,
-    required this.precioFinal,
-    required this.precioB,
-    required this.precioC,
-    required this.precioD,
-    required this.marcas,
-    required this.categoriaSubCategoria,
-  });
-
-  factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
-      codigo: json['codigo'],
-      barras: json['Barras'],
-      descripcion: json['Descripcion'],
-      costo: json['Costo'].toDouble(),
-      precioFinal: json['PrecioFinal'].toDouble(),
-      precioB: json['PRECIOB'].toDouble(),
-      precioC: json['PRECIOC'].toDouble(),
-      precioD: json['PRECIOD'].toDouble(),
-      marcas: json['Marcas'],
-      categoriaSubCategoria: json['Categoria_SubCategoria'],
-    );
-  }
-}
-
+import 'Models/Producto.dart';
 class PaginaInventario extends StatefulWidget {
   const PaginaInventario({Key? key}) : super(key: key);
 
@@ -132,7 +91,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                             Text('Barras: ${product.barras}'),
                             Text('Costo: ${product.costo.toStringAsFixed(2)}'),
                             Text('Precio Final: ${product.precioFinal.toStringAsFixed(2)}'),
-                            Text('Marca: ${product.marcas}'),
+                            // Text('Marca: ${product.marcas}'),
                           ],
                         ),
                         // Otros detalles del producto según necesites

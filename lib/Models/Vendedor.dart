@@ -18,6 +18,7 @@ class Vendedor {
     return Vendedor(
       value: json['value'],
       nombre: json['nombre'],
+      
     );
   }
 }
