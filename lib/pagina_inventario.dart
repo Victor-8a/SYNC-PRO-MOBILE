@@ -47,7 +47,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Inventario',
           style: TextStyle(color: Colors.white),
         ),

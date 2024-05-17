@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sync_pro_mobile/nuevo_pedido.dart';
 import 'pagina_inventario.dart';
 import 'pagina_pedidos.dart';
 import 'pagina_vendedores.dart';
@@ -36,7 +37,7 @@ class _SecondPageState extends State<SecondPage> {
 
   final List<Widget> _pages = <Widget>[
     const  PaginaInventario(),
-    const PaginaPedidos(),
+          NuevoPedido(),
     const PaginaVendedores(),
     const PaginaRegistrar(),
     const PaginaCliente(),

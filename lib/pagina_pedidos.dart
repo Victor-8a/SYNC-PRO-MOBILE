@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
+import 'package:sync_pro_mobile/nuevo_pedido.dart';
+import 'package:sync_pro_mobile/second_page.dart';
 import 'package:sync_pro_mobile/seleccionar_clientes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -358,8 +360,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     double _totalPrice = _calculateTotalPrice();
     Vendedor? _selectedSalesperson;
 
-   // ignore: deprecated_member_use
-   return WillPopScope(
+  return WillPopScope(
   onWillPop: () async {
     // Mostrar diálogo de confirmación antes de retroceder
     bool confirm = await showDialog(
@@ -369,7 +370,9 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         content: Text('Puede perder algunos datos si retrocede.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () {
+              Navigator.of(context).pop(true); // Close the dialog
+            },
             child: Text('Sí'),
           ),
           TextButton(
@@ -379,6 +382,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         ],
       ),
     );
+
 
     // Devolver true si el usuario confirma, false si cancela
     return confirm;
