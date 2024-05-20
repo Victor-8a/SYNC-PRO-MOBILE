@@ -16,9 +16,9 @@ Future<void> saveTokenToStorage(String token) async {
   print('Token guardado en el almacenamiento: $token');
 }
 
-Future<void> saveIdToStorage(String userId) async {
+Future<void> saveIdToStorage(String userId, int opcion) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setString('userId', userId);
+  opcion == 1 ? await prefs.setString('userId', userId) :await prefs.setString('idVendedor', userId);
   print('id guardado en el almacenamiento: $userId');
 }
 
@@ -71,7 +71,9 @@ class _LoginPageState extends State<LoginPage> {
       saveTokenToStorage(token);
       print('Token: $token');
       //guardar el id
-      saveIdToStorage(id.toString());
+      saveIdToStorage(id.toString(), 1);
+      saveIdToStorage(jsonDecode(response.body)['user']['idVendedor'].toString(), 2);
+    print('prueba de id para ver si devuelve algo');
       print('id: $id');
       Navigator.push(
         context,

@@ -7,6 +7,7 @@ class NuevoPedido extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
+widthFactor: double.infinity,
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
             foregroundColor: Colors.white, 
@@ -26,7 +27,7 @@ class NuevoPedido extends StatelessWidget {
               Icon(Icons.shopping_cart, color: Colors.white),
               SizedBox(width: 8), // Espacio entre el icono y el texto
               Text(
-                'Ir a Pedidos',
+                'Realizar Nuevo Pedido',
                 style: TextStyle(fontSize: 16),
               ),
             ],

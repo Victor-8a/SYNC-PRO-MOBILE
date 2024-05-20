@@ -285,20 +285,42 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     }
   }
 
-  void loadSalesperson() async {
+  Future<Vendedor> loadSalesperson() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? salespersonJson = prefs.getString('salesperson');
-    if (salespersonJson != null) {
-      Map<String, dynamic> salespersonMap = jsonDecode(salespersonJson);
-      Vendedor vendedor = Vendedor.fromJson(salespersonMap);
-      _vendedores = [
-        vendedor
-      ]; // Actualizar para almacenar el vendedor en la lista
-      _selectedSalespersonId = vendedor
-          .value; // Actualizar para almacenar el ID del vendedor seleccionado
-    }
-  }
+  String? idVendedor = prefs.getString('idVendedor');
+  print('http://192.168.1.212:3000/vendedor/id/$idVendedor');
+  if (idVendedor != null) {
+    try {
+      final response = await http.get(Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
+      print(response.body);
+      if (response.statusCode == 200) {
 
+        vendedor = Vendedor.fromJson(jsonDecode(response.body));
+        print(vendedor.value);
+        print(vendedor.nombre);
+        return vendedor;
+      } else {
+        print('Failed to load salesperson: ${response.statusCode}');
+        return Vendedor(value: 1, nombre: 'Vendedor 1');
+      }
+    } catch (error) {
+      print('Error loading salesperson: $error');
+      throw Exception('Failed to load salesperson: $error');
+    }
+  } else {
+    throw Exception('Failed to load salesperson: idVendedor is null');
+  }
+    // if (salespersonJson != null) {
+    //   Map<String, dynamic> salespersonMap = jsonDecode(salespersonJson);
+    //   Vendedor vendedor = Vendedor.fromJson(salespersonMap);
+    //   _vendedores = [
+    //     vendedor
+    //   ]; // Actualizar para almacenar el vendedor en la lista
+    //   _selectedSalespersonId = vendedor
+    //       .value; // Actualizar para almacenar el ID del vendedor seleccionado
+    // }
+  }
+Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
   int? _selectedSalespersonId; // ID del vendedor seleccionado
   List<Vendedor> _vendedores = [];
   Cliente _selectedClient =
@@ -337,7 +359,16 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   @override
   void initState() {
     super.initState();
-    // loadSalesperson();
+    loadSalesperson().then((vendedor) {
+      if (mounted) {
+        setState(() {
+          vendedor = vendedor;
+        });
+      }
+      print('Vendedores cargados: $vendedor.nombre');
+    }).catchError((error) {
+      print('Error cargando vendedores: $error');
+    });;
     _loadSelectedClientName();
     _loadSelectedProducts(); // Agregar esta línea para cargar los productos seleccionados guardados
     fetchVendedores().then((vendedores) {
@@ -358,350 +389,417 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     double _totalPrice = _calculateTotalPrice();
     Vendedor? _selectedSalesperson;
 
-  return WillPopScope(
-  onWillPop: () async {
-    // Mostrar diálogo de confirmación antes de retroceder
-    bool confirm = await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('¿Está seguro?'),
-        content: Text('Puede perder algunos datos si retrocede.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true); // Close the dialog
-            },
-            child: Text('Sí'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('No'),
-          ),
-        ],
-      ),
-    );
+    return WillPopScope(
+        onWillPop: () async {
+          // Mostrar diálogo de confirmación antes de retroceder
+          bool confirm = await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('¿Está seguro?'),
+              content: Text('Puede perder algunos datos si retrocede.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(true); // Close the dialog
+                  },
+                  child: Text('Sí'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text('No'),
+                ),
+              ],
+            ),
+          );
 
+          // Devolver true si el usuario confirma, false si cancela
+          return confirm;
+        },
+        child: Scaffold(
+            appBar: AppBar(
+              title: Text(
+                'Pedidos',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: Colors.blue,
+            ),
+            body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Ahora puedes usar _vendedores en tu DropdownButtonFormField
+                    DropdownButtonFormField<Vendedor>(
+                      value: _selectedSalesperson,
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedSalesperson = newValue!;
+                          print('Vendedor seleccionado: $newValue');
+                          print(_selectedSalesperson!.value);
+                          print(_selectedSalesperson!.nombre);
+                          _selectedSalespersonId = newValue.value;
+                          // Actualizar para almacenar el ID del vendedor seleccionado
+                          // Guardar el vendedor seleccionado
+                        });
+                        // saveSalesperson(_selectedSalesperson!);
+                      },
+                      items: _vendedores.map((vendedor) {
+                        return DropdownMenuItem<Vendedor>(
+                          value: vendedor,
+                          child: Text(
+                            vendedor.nombre,
+                          ),
+                        );
+                      }).toList(),
 
-    // Devolver true si el usuario confirma, false si cancela
-    return confirm;
-  },
-  child: Scaffold(
-    appBar: AppBar(
-      title: Text(
-        'Pedidos',
-        style: TextStyle(color: Colors.white),
-      ),
-      backgroundColor: Colors.blue,
-    ),
-    body: SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Ahora puedes usar _vendedores en tu DropdownButtonFormField
-          DropdownButtonFormField<Vendedor>(
-            value: _selectedSalesperson,
-            onChanged: (newValue) {
-              setState(() {
-                _selectedSalesperson = newValue!;
-                _selectedSalespersonId = newValue.value;
-                // Actualizar para almacenar el ID del vendedor seleccionado
-                // Guardar el vendedor seleccionado
-              });
-              // saveSalesperson(_selectedSalesperson!);
-            },
-            items: _vendedores.map((vendedor) {
-              return DropdownMenuItem<Vendedor>(
-                value: vendedor,
-                child: Text(
-                  vendedor.nombre,
-                ),
-              );
-            }).toList(),
-
-                decoration: InputDecoration(
-                  labelText: 'Vendedor',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                ),
-                iconSize: 12, // Tamaño del ícono desplegable
-                dropdownColor:
-                    Colors.white, // Color de fondo de la lista desplegable
-                elevation: 100,
-                borderRadius: BorderRadius.circular(50),
-                menuMaxHeight: 300,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.black,
-                ),
-
-                // Elevación de la lista desplegable
-              ),
-              SizedBox(height: 20.0),
-              Text(
-                'Cliente: ' + _selectedClient.nombre,
-                style: TextStyle(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _navigateToSeleccionarCliente(context);
-                },
-                child: Text(
-                  'Seleccionar Cliente',
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _buttonColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  minimumSize: Size(double.infinity, 50),
-                ),
-              ),
-              SizedBox(height: 20.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons
-                        .calendar_today, // Aquí puedes cambiar el icono por el que desees
-                    color: Colors.blue, // Color del icono
-                  ),
-                  SizedBox(width: 8.0),
-                  Text(
-                    'Fecha de Entrega: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(width: 8.0),
-                  InkWell(
-                    onTap: () {
-                      _selectDate(context);
-                    },
-                    child: Text(
-                      '${_selectedDate.year}/${_selectedDate.month}/${_selectedDate.day}',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 20.0),
-              ElevatedButton(
-                onPressed: () {
-                  _navigateToSeleccionarProducto(context);
-                },
-                child: Text(
-                  'Seleccionar Producto',
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _buttonColor,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  minimumSize: Size(double.infinity, 50),
-                ),
-              ),
-              SizedBox(height: 20.0),
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10.0),
-                child: Text(
-                  'Productos seleccionados:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: _selectedProducts.map((product) {
-                  int quantity = _selectedProductQuantities[product]!;
-                  double unitPrice = product.precioFinal;
-                  double discount = _discounts[product] ?? 0;
-                  double subtotalBeforeDiscount = unitPrice * quantity;
-                  double discountAmount =
-                      subtotalBeforeDiscount * (discount / 100);
-                  double subtotal = subtotalBeforeDiscount - discountAmount;
-
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      ListTile(
-                        title: Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                '${product.descripcion} - \Q${unitPrice.toStringAsFixed(2)}',
-                                overflow: TextOverflow.values[1],
-                              ),
-                            ),
-                          ],
+                      decoration: InputDecoration(
+                        labelText: 'Vendedor',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(50),
                         ),
                       ),
-                      Row(
-                        children: [
-                          Column(
-                            children: [
-                              Row(
+                      iconSize: 12, // Tamaño del ícono desplegable
+                      dropdownColor: Colors
+                          .white, // Color de fondo de la lista desplegable
+                      elevation: 100,
+                      borderRadius: BorderRadius.circular(50),
+                      menuMaxHeight: 300,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.black,
+                      ),
+
+                      // Elevación de la lista desplegable
+                    ),
+                    SizedBox(height: 20.0),
+                    Text(
+                      'Cliente: ' + _selectedClient.nombre,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                      textAlign: TextAlign.center,
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        _navigateToSeleccionarCliente(context);
+                      },
+                      child: Text(
+                        'Seleccionar Cliente',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _buttonColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        minimumSize: Size(double.infinity, 50),
+                      ),
+                    ),
+                    SizedBox(height: 20.0),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons
+                              .calendar_today, // Aquí puedes cambiar el icono por el que desees
+                          color: Colors.blue, // Color del icono
+                        ),
+                        SizedBox(width: 8.0),
+                        Text(
+                          'Fecha de Entrega: ',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        SizedBox(width: 8.0),
+                        InkWell(
+                          onTap: () {
+                            _selectDate(context);
+                          },
+                          child: Text(
+                            '${_selectedDate.year}/${_selectedDate.month}/${_selectedDate.day}',
+                            style: TextStyle(
+                              color: Colors.blue,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20.0),
+                    ElevatedButton(
+                      onPressed: () {
+                        _navigateToSeleccionarProducto(context);
+                      },
+                      child: Text(
+                        'Seleccionar Producto',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _buttonColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        minimumSize: Size(double.infinity, 50),
+                      ),
+                    ),
+                    SizedBox(height: 20.0),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10.0),
+                      child: Text(
+                        'Productos seleccionados:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _selectedProducts.map((product) {
+                        int quantity = _selectedProductQuantities[product]!;
+                        double unitPrice = product.precioFinal;
+                        double discount = _discounts[product] ?? 0;
+                        double subtotalBeforeDiscount = unitPrice * quantity;
+                        double discountAmount =
+                            subtotalBeforeDiscount * (discount / 100);
+                        double subtotal =
+                            subtotalBeforeDiscount - discountAmount;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            ListTile(
+                              title: Row(
                                 children: [
-                                  IconButton(
-                                    icon: Icon(Icons.remove_circle),
-                                    onPressed: () {
-                                      setState(() {
-                                        if (quantity > 1) {
-                                          _selectedProductQuantities[product] =
-                                              quantity - 1;
-                                          _saveSelectedProducts();
-                                        } else {
-                                          _selectedProducts.remove(product);
-                                          _selectedProductQuantities
-                                              .remove(product);
-                                          _discounts.remove(product);
-                                        }
-                                      });
-                                    },
-                                  ),
-                                  Text(quantity.toString()),
-                                  IconButton(
-                                    icon: Icon(Icons.add_circle),
-                                    onPressed: () {
-                                      setState(() {
-                                        _selectedProductQuantities[product] =
-                                            quantity + 1;
-                                        _saveSelectedProducts();
-                                      });
-                                    },
+                                  Expanded(
+                                    child: Text(
+                                      '${product.descripcion} - \Q${unitPrice.toStringAsFixed(2)}',
+                                      overflow: TextOverflow.values[1],
+                                    ),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                          Expanded(
-                            child: TextField(
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                    RegExp(r'^\d{1,2}$')),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  _discounts[product] =
-                                      double.tryParse(value) ?? 0;
-                                });
-                              },
-                              decoration: InputDecoration(
-                                labelText: '% Desc',
-                                floatingLabelStyle:
-                                    TextStyle(color: Colors.blue),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                contentPadding: EdgeInsets.symmetric(
-                                  vertical: 5.0,
-                                  horizontal: 10.0,
-                                ),
-                                isDense: true,
-                              ),
                             ),
-                          ),
-                          SizedBox(width: 10),
-                          Text(' \Q${subtotal.toStringAsFixed(2)}'),
-                        ],
+                            Row(
+                              children: [
+                                Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.remove_circle),
+                                          onPressed: () {
+                                            setState(() {
+                                              if (quantity > 1) {
+                                                _selectedProductQuantities[
+                                                    product] = quantity - 1;
+                                                _saveSelectedProducts();
+                                              } else {
+                                                _selectedProducts
+                                                    .remove(product);
+                                                _selectedProductQuantities
+                                                    .remove(product);
+                                                _discounts.remove(product);
+                                              }
+                                            });
+                                          },
+                                        ),
+                                        Text(quantity.toString()),
+                                        IconButton(
+                                          icon: Icon(Icons.add_circle),
+                                          onPressed: () {
+                                            setState(() {
+                                              _selectedProductQuantities[
+                                                  product] = quantity + 1;
+                                              _saveSelectedProducts();
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                Expanded(
+                                  child: TextField(
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d{1,2}$')),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _discounts[product] =
+                                            double.tryParse(value) ?? 0;
+                                      });
+                                    },
+                                    decoration: InputDecoration(
+                                      labelText: '% Desc',
+                                      floatingLabelStyle:
+                                          TextStyle(color: Colors.blue),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: 5.0,
+                                        horizontal: 10.0,
+                                      ),
+                                      isDense: true,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Text(' \Q${subtotal.toStringAsFixed(2)}'),
+                              ],
+                            ),
+                            Divider(), // Agregando la línea divisoria
+                          ],
+                        );
+                      }).toList(),
+                    ),
+
+                    SizedBox(height: 20.0),
+                    TextField(
+                      onChanged: (value) {
+                        _observations = value;
+                         
+                    _resetInfo();
+                      
+
+                      },
+                      decoration: InputDecoration(
+                        suffixText: 'Opcional',
+                        labelText: 'Observaciones',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                         
+                        ),
+                       
                       ),
-                      Divider(), // Agregando la línea divisoria
-                    ],
-                  );
-                }).toList(),
-              ),
+                    ),
+                   
+                    SizedBox(height: 20),
+                    Text(
+                      'Subtotal: \Q${(_calculateTotal()).toStringAsFixed(2)}',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15.0),
+                    ),
+                    SizedBox(height: 10.0),
+                    Text(
+                      'Descuento: \Q${(_calculateTotal() - _calculateTotalWithDiscount()).toStringAsFixed(2)}', // Diferencia entre el subtotal y el total con descuento
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 15.0),
+                    ),
+                    SizedBox(height: 10.0),
+                    Text(
+                      'Total: \Q${(_calculateTotalWithDiscount()).toStringAsFixed(2)}', // Precio total con descuento
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 18.0),
+                    ),
 
-              SizedBox(height: 20.0),
-              TextField(
-                onChanged: (value) {
-                  _observations = value;
-                },
-                decoration: InputDecoration(
-                  suffixText: 'Opcional',
-                  labelText: 'Observaciones',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Subtotal: \Q${(_calculateTotal()).toStringAsFixed(2)}',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.0),
-              ),
-              SizedBox(height: 10.0),
-              Text(
-                'Descuento: \Q${(_calculateTotal() - _calculateTotalWithDiscount()).toStringAsFixed(2)}', // Diferencia entre el subtotal y el total con descuento
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15.0),
-              ),
-              SizedBox(height: 10.0),
-              Text(
-                'Total: \Q${(_calculateTotalWithDiscount()).toStringAsFixed(2)}', // Precio total con descuento
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
-              ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: 10.0), // Agrega espacio entre los botones
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          // Mostrar AlertDialog de confirmación antes de agregar el pedido
+                          bool confirm = await showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('¿Está seguro?'),
+                              content: Text('¿Desea agregar el pedido?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(
+                                        true); // Cerrar el cuadro de diálogo y devolver true
+                                  },
+                                  child: Text('Sí'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(
+                                      false), // Cerrar el cuadro de diálogo y devolver false
+                                  child: Text('No'),
+                                ),
+                              ],
+                            ),
+                          );
 
-            Padding(
-  padding: const EdgeInsets.only(bottom: 10.0), // Agrega espacio entre los botones
+                          // Si el usuario confirma, proceder con la acción de agregar pedido
+                          if (confirm == true) {
+                            int? idPedido = await saveOrder(
+                              _selectedClient.codCliente,
+                              _observations,
+                              _selectedSalespersonId ?? 0,
+                              _selectedDate,
+                            );
+                            if (idPedido != null) {
+                              saveOrderDetail(idPedido, _selectedProducts,
+                                  _selectedProductQuantities);
+                              Fluttertoast.showToast(
+                                msg: 'Pedido guardado exitosamente.',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                timeInSecForIosWeb: 1,
+                                backgroundColor: Colors.blue,
+                                textColor: Colors.white,
+                                fontSize: 16.0,
+                              );
+                              _resetState();
+                            } else {
+                              Fluttertoast.showToast(
+                                msg: 'Error al guardar el pedido.',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                timeInSecForIosWeb: 1,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white,
+                                fontSize: 16.0,
+                              );
+                            }
+                          }
+                        },
+                        child: Text(
+                          'Agregar Pedido',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _buttonColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          minimumSize: Size(double.infinity, 50),
+                        ),
+                      ),
+                    ),
+                    Padding(
+  padding: const EdgeInsets.only(
+    top: 10.0, // Agrega espacio entre los botones
+  ),
   child: ElevatedButton(
     onPressed: () async {
-      int? idPedido = await saveOrder(
-        _selectedClient.codCliente,
-        _observations,
-        _selectedSalespersonId ?? 0,
-        _selectedDate,
+      bool confirm = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('¿Está seguro?'),
+          content: Text('¿Desea cancelar el pedido?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); // Cerrar el cuadro de diálogo y devolver true
+              },
+              child: Text('Sí'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false), // Cerrar el cuadro de diálogo y devolver false
+              child: Text('No'),
+            ),
+          ],
+        ),
       );
-      if (idPedido != null) {
-        saveOrderDetail(idPedido, _selectedProducts, _selectedProductQuantities);
-        Fluttertoast.showToast(
-          msg: 'Pedido guardado exitosamente.',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.blue,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
+
+      if (confirm == true) {
         _resetState();
-      } else {
-        Fluttertoast.showToast(
-          msg: 'Error al guardar el pedido.',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.red,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
+        _resetInfo();
       }
     },
     child: Text(
-      'Agregar Pedido',
-      style: TextStyle(color: Colors.white),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: _buttonColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      minimumSize: Size(double.infinity, 50),
-    ),
-  ),
-),
-Padding(
-  padding: const EdgeInsets.only(top: 10.0), // Agrega espacio entre los botones
-  child: ElevatedButton(
-    onPressed: () async {
-      _resetState();
-      _resetInfo();
-    },
-    child: Text(
+
       'Cancelar Pedido',
       style: TextStyle(color: Colors.white),
     ),
@@ -712,13 +810,11 @@ Padding(
       ),
       minimumSize: Size(double.infinity, 50),
       fixedSize: Size(100, 50),
-                ),
-              ),
-),
-            ],
-        ))
-    )
-   );
+                        ),
+                      ),
+                    ),
+                  ],
+                ))));
   }
 
   //aqui termina el widget
@@ -865,15 +961,20 @@ Padding(
     _resetInfo();
   }
 
-  void _resetInfo() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    _saveSelectedClient(Cliente(
-        codCliente: 0,
-        nombre: 'CONSUMIDOR FINAL ',
-        cedula: 'CF',
-        direccion: 'CIUDAD'));
-    await prefs.remove('selectedProducts');
-    List<String>? selectedProductsJson = [];
-    await prefs.setStringList('selectedProducts', selectedProductsJson);
-  }
+void _resetInfo() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  _saveSelectedClient(Cliente(
+      codCliente: 0,
+      nombre: 'CONSUMIDOR FINAL ',
+      cedula: 'CF',
+      direccion: 'CIUDAD'));
+  await prefs.remove('selectedProducts');
+  List<String>? selectedProductsJson = [];
+  await prefs.setStringList('selectedProducts', selectedProductsJson);
+
+  // Agregar esta línea para resetear _observations
+  setState(() {
+    _observations = '';
+  });
+}
 }
