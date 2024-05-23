@@ -35,11 +35,11 @@ class _SecondPageState extends State<SecondPage> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = <Widget>[
-    const  PaginaInventario(),
-            NuevoPedido(),
-    const PaginaVendedores(),
-    const PaginaRegistrar(),
-    const PaginaCliente(),
+    PaginaInventario(),
+    NuevoPedido(),
+    PaginaCliente(),
+    PaginaVendedores(),
+    PaginaRegistrar(),
   ];
 
   void _onItemTapped(int index) {
@@ -55,12 +55,13 @@ class _SecondPageState extends State<SecondPage> {
       bottomNavigationBar: CurvedNavigationBar(
         index: _selectedIndex,
         height: 50,
-        items: const  <Widget>[
+        items: const <Widget>[
           Icon(Icons.inventory),
           Icon(Icons.sell_outlined),
+          Icon(Icons.person),
           Icon(Icons.store_sharp),
           Icon(Icons.person_add_alt),
-          Icon(Icons.person),
+        
         ],
         onTap: _onItemTapped,
         color: Colors.blueAccent,

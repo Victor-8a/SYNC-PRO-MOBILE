@@ -59,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
       body: jsonEncode(<String, String>{
         'id': id.toString(),
         'Nombre': usuario,
-        'password': contrasena,
+        'password': contrasena, 
       }),
     );
     print('prueba de id para ver si devuelve algo');

@@ -287,29 +287,29 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   Future<Vendedor> loadSalesperson() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? idVendedor = prefs.getString('idVendedor');
-  print('http://192.168.1.212:3000/vendedor/id/$idVendedor');
-  if (idVendedor != null) {
-    try {
-      final response = await http.get(Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
-      print(response.body);
-      if (response.statusCode == 200) {
-
-        vendedor = Vendedor.fromJson(jsonDecode(response.body));
-        print(vendedor.value);
-        print(vendedor.nombre);
-        return vendedor;
-      } else {
-        print('Failed to load salesperson: ${response.statusCode}');
-        return Vendedor(value: 1, nombre: 'Vendedor 1');
+    String? idVendedor = prefs.getString('idVendedor');
+    print('http://192.168.1.212:3000/vendedor/id/$idVendedor');
+    if (idVendedor != null) {
+      try {
+        final response = await http.get(
+            Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
+        print(response.body);
+        if (response.statusCode == 200) {
+          vendedor = Vendedor.fromJson(jsonDecode(response.body));
+          print(vendedor.value);
+          print(vendedor.nombre);
+          return vendedor;
+        } else {
+          print('Failed to load salesperson: ${response.statusCode}');
+          return Vendedor(value: 1, nombre: 'Vendedor 1');
+        }
+      } catch (error) {
+        print('Error loading salesperson: $error');
+        throw Exception('Failed to load salesperson: $error');
       }
-    } catch (error) {
-      print('Error loading salesperson: $error');
-      throw Exception('Failed to load salesperson: $error');
+    } else {
+      throw Exception('Failed to load salesperson: idVendedor is null');
     }
-  } else {
-    throw Exception('Failed to load salesperson: idVendedor is null');
-  }
     // if (salespersonJson != null) {
     //   Map<String, dynamic> salespersonMap = jsonDecode(salespersonJson);
     //   Vendedor vendedor = Vendedor.fromJson(salespersonMap);
@@ -320,7 +320,8 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     //       .value; // Actualizar para almacenar el ID del vendedor seleccionado
     // }
   }
-Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
+
+  Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
   int? _selectedSalespersonId; // ID del vendedor seleccionado
   List<Vendedor> _vendedores = [];
   Cliente _selectedClient =
@@ -368,7 +369,8 @@ Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
       print('Vendedores cargados: $vendedor.nombre');
     }).catchError((error) {
       print('Error cargando vendedores: $error');
-    });;
+    });
+    ;
     _loadSelectedClientName();
     _loadSelectedProducts(); // Agregar esta línea para cargar los productos seleccionados guardados
     fetchVendedores().then((vendedores) {
@@ -657,22 +659,18 @@ Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
                     TextField(
                       onChanged: (value) {
                         _observations = value;
-                         
-                    _resetInfo();
-                      
 
+                        _resetInfo();
                       },
                       decoration: InputDecoration(
                         suffixText: 'Opcional',
                         labelText: 'Observaciones',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(20),
-                         
                         ),
-                       
                       ),
                     ),
-                   
+
                     SizedBox(height: 20),
                     Text(
                       'Subtotal: \Q${(_calculateTotal()).toStringAsFixed(2)}',
@@ -720,6 +718,11 @@ Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
                             ),
                           );
 
+                          if (confirm == true) {
+                            _resetState();
+
+                            _resetInfo();
+                          }
                           // Si el usuario confirma, proceder con la acción de agregar pedido
                           if (confirm == true) {
                             int? idPedido = await saveOrder(
@@ -768,48 +771,49 @@ Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
                       ),
                     ),
                     Padding(
-  padding: const EdgeInsets.only(
-    top: 10.0, // Agrega espacio entre los botones
-  ),
-  child: ElevatedButton(
-    onPressed: () async {
-      bool confirm = await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('¿Está seguro?'),
-          content: Text('¿Desea cancelar el pedido?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true); // Cerrar el cuadro de diálogo y devolver true
-              },
-              child: Text('Sí'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // Cerrar el cuadro de diálogo y devolver false
-              child: Text('No'),
-            ),
-          ],
-        ),
-      );
+                      padding: const EdgeInsets.only(
+                        top: 10.0, // Agrega espacio entre los botones
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          bool confirm = await showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('¿Está seguro?'),
+                              content: Text('¿Desea cancelar el pedido?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(
+                                        true); // Cerrar el cuadro de diálogo y devolver true
+                                  },
+                                  child: Text('Sí'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(
+                                      false), // Cerrar el cuadro de diálogo y devolver false
+                                  child: Text('No'),
+                                ),
+                              ],
+                            ),
+                          );
 
-      if (confirm == true) {
-        _resetState();
-        _resetInfo();
-      }
-    },
-    child: Text(
-
-      'Cancelar Pedido',
-      style: TextStyle(color: Colors.white),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.red,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      minimumSize: Size(double.infinity, 50),
-      fixedSize: Size(100, 50),
+                          if (confirm == true) {
+                            _resetState();
+                            _resetInfo();
+                          }
+                        },
+                        child: Text(
+                          'Cancelar Pedido',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          minimumSize: Size(double.infinity, 50),
+                          fixedSize: Size(100, 50),
                         ),
                       ),
                     ),
@@ -961,20 +965,20 @@ Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
     _resetInfo();
   }
 
-void _resetInfo() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  _saveSelectedClient(Cliente(
-      codCliente: 0,
-      nombre: 'CONSUMIDOR FINAL ',
-      cedula: 'CF',
-      direccion: 'CIUDAD'));
-  await prefs.remove('selectedProducts');
-  List<String>? selectedProductsJson = [];
-  await prefs.setStringList('selectedProducts', selectedProductsJson);
+  void _resetInfo() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    _saveSelectedClient(Cliente(
+        codCliente: 0,
+        nombre: 'CONSUMIDOR FINAL ',
+        cedula: 'CF',
+        direccion: 'CIUDAD'));
+    await prefs.remove('selectedProducts');
+    List<String>? selectedProductsJson = [];
+    await prefs.setStringList('selectedProducts', selectedProductsJson);
 
-  // Agregar esta línea para resetear _observations
-  setState(() {
-    _observations = '';
-  });
-}
+    // Agregar esta línea para resetear _observations
+    setState(() {
+      _observations = '';
+    });
+  }
 }
