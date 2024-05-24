@@ -39,10 +39,12 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
       headers: {'Authorization': 'Bearer $token'},
     ).then((response) {
       if (response.statusCode == 200) {
+        print(response.body);
         List<dynamic> jsonResponse = json.decode(response.body);
         List<Cliente> clientes = [];
         for (var clienteData in jsonResponse) {
           clientes.add(Cliente.fromJson(clienteData));
+          
         }
         setState(() {
           _clientes = clientes;

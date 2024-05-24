@@ -1,4 +1,3 @@
-
 class Cliente {
   int codCliente;
   String nombre;
@@ -31,10 +30,10 @@ class Cliente {
   double categoria;
 
   Cliente({
-    required this.codCliente,
-    required this.nombre,
-    required this.cedula,
-    required this.direccion,
+    this.codCliente = 0,
+    this.nombre = '',
+    this.cedula = '',
+    this.direccion = '',
     this.observaciones = '',
     this.telefono1 = '',
     this.telefono2 = '',
@@ -104,7 +103,6 @@ class Cliente {
       dpi: (json['DPI'] == null) ? 0.0 : json['DPI'].toDouble(),
       categoria:
           (json['Categoria'] == null) ? 0.0 : json['Categoria'].toDouble(),
-    
     );
   }
 
