@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'Models/Producto.dart';
 import 'Models/Vendedor.dart';
+import 'crear_cliente.dart';
 import 'services/local_storage.dart';
 
 void saveSalesperson(Vendedor salesperson) async {
@@ -234,7 +235,7 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
 }
 
 class PaginaPedidos extends StatefulWidget {
-  const PaginaPedidos({Key? key}) : super(key: key);
+  const PaginaPedidos({Key? key, required cliente}) : super(key: key);
 
   @override
   _PaginaPedidosState createState() => _PaginaPedidosState();
@@ -474,11 +475,41 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
                       // Elevación de la lista desplegable
                     ),
-                    SizedBox(height: 20.0),
-                    Text(
-                      'Cliente: ' + _selectedClient.nombre,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
+                    Column(
+                      children: [
+                        Row(
+                          children: [
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CrearCliente(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors
+                                    .blue, // Cambia el color de fondo a azul
+                              ),
+                              child: Text('+',
+                                  style: TextStyle(
+                                    fontSize: 20.0,
+                                    color: Colors.white,
+                                  )),
+                            ),
+                            Expanded(
+                              child: Text(
+                                'Cliente: ' + _selectedClient.nombre,
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10.0),
+                        // Otros widgets que necesites
+                      ],
                     ),
                     ElevatedButton(
                       onPressed: () {

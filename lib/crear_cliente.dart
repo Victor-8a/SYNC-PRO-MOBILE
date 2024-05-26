@@ -4,6 +4,13 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'pagina_pedidos.dart';
+
+void main() {
+  runApp(const MaterialApp(
+    home: CrearCliente(),
+  ));
+}
 
 Future<String?> _getToken() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -53,7 +60,7 @@ class _CrearClienteState extends State<CrearCliente> {
     );
   }
 
- void _crearCliente() async {
+  void _crearCliente() async {
   bool shouldCreate = await showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -75,18 +82,15 @@ class _CrearClienteState extends State<CrearCliente> {
   );
 
   if (shouldCreate) {
-    // Recupera el token desde las preferencias compartidas
     String? token = await _getToken();
 
-    // Verifica si se obtuvo el token
     if (token == null) {
       print('Token no encontrado');
       return;
     }
 
-    // Construye el cuerpo de la solicitud
     final body = jsonEncode({
-      "Cedula": _cedulaController.text,
+      "Cedula": _selectedOption == 'CF' ? 'CF' : _cedulaController.text,
       "Nombre": _nombreController.text,
       "Celular": _celularController.text,
       "Telefono1": _telCasaController.text,
@@ -96,10 +100,9 @@ class _CrearClienteState extends State<CrearCliente> {
       "Observaciones": _observacionesController.text,
       "Contacto": _nombreContactoController.text,
       "TelContacto": _telContactoController.text,
-      "InHabilitado": false, // Siempre se crea habilitado
+      "InHabilitado": false,
     });
 
-    // Envía la solicitud POST
     final response = await http.post(
       Uri.parse('http://192.168.1.212:3000/cliente/save'),
       headers: {
@@ -110,15 +113,24 @@ class _CrearClienteState extends State<CrearCliente> {
     );
 
     if (response.statusCode == 200) {
-      // Cliente creado exitosamente
-      print('Cliente creado');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cliente creado exitosamente')),
+      );
       _limpiarCampos();
+
+      // Redirige a PaginaPedidos
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null,)),
+      );
     } else {
-      // Manejo de errores
-      print('Error al crear cliente: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al crear cliente: ${response.body}')),
+      );
     }
   }
 }
+
 
   void _cancelar() async {
     bool shouldCancel = await showDialog(
@@ -142,14 +154,15 @@ class _CrearClienteState extends State<CrearCliente> {
     );
 
     if (shouldCancel) {
-      // Limpiar los campos sin regresar atrás.
       _limpiarCampos();
+      Navigator.of(context).pop();
     }
   }
 
   void _limpiarCampos() {
     setState(() {
       _cedulaController.clear();
+      _nombreController.clear();
       _celularController.clear();
       _telCasaController.clear();
       _telOficinaController.clear();

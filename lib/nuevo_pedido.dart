@@ -18,7 +18,7 @@ widthFactor: double.infinity,
             elevation: 5,
           ),
           onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => PaginaPedidos())
+            Navigator.push(context, MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null,))
             );
           },
           child: Row(
