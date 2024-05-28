@@ -6,8 +6,16 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/second_page.dart';
 
-void main() {
-  runApp(const LoginApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final bool isLoggedIn = await checkIfLoggedIn() ?? false;
+  runApp(LoginApp(isLoggedIn: isLoggedIn));
+}
+
+Future<bool?> checkIfLoggedIn() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = prefs.getString('token');
+  return token != null;
 }
 
 Future<void> saveTokenToStorage(String token) async {
@@ -18,18 +26,21 @@ Future<void> saveTokenToStorage(String token) async {
 
 Future<void> saveIdToStorage(String userId, int opcion) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  opcion == 1 ? await prefs.setString('userId', userId) :await prefs.setString('idVendedor', userId);
+  opcion == 1
+      ? await prefs.setString('userId', userId)
+      : await prefs.setString('idVendedor', userId);
   print('id guardado en el almacenamiento: $userId');
 }
 
 class LoginApp extends StatelessWidget {
-  const LoginApp({super.key});
+  final bool isLoggedIn;
+  const LoginApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Iniciar Sesión',
-      home: LoginPage(),
+      home: isLoggedIn ? const SecondPage() : const LoginPage(),
     );
   }
 }
@@ -59,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
       body: jsonEncode(<String, String>{
         'id': id.toString(),
         'Nombre': usuario,
-        'password': contrasena, 
+        'password': contrasena,
       }),
     );
     print('prueba de id para ver si devuelve algo');
@@ -73,11 +84,14 @@ class _LoginPageState extends State<LoginPage> {
       //guardar el id
       saveIdToStorage(id.toString(), 1);
       saveIdToStorage(jsonDecode(response.body)['user']['idVendedor'].toString(), 2);
-    print('prueba de id para ver si devuelve algo');
+      print('prueba de id para ver si devuelve algo');
       print('id: $id');
-      Navigator.push(
+
+      // Navegar a SecondPage y eliminar las rutas anteriores
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const SecondPage()),
+        (Route<dynamic> route) => false,
       );
     } else {
       setState(() {

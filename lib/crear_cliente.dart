@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'pagina_pedidos.dart';
+// import 'pagina_pedidos.dart';
 
 void main() {
   runApp(const MaterialApp(
@@ -119,11 +119,11 @@ class _CrearClienteState extends State<CrearCliente> {
       _limpiarCampos();
 
       // Redirige a PaginaPedidos
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null,)),
-      );
-    } else {
+    //   Navigator.pushReplacement(
+    //     context,
+    //     MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null,)),
+    //   );
+    // } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al crear cliente: ${response.body}')),
       );

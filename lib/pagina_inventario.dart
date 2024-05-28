@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'Models/Producto.dart';
 
 class PaginaInventario extends StatefulWidget {
@@ -21,8 +22,21 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   }
 
   Future<List<Product>> fetchProducts() async {
-    final response =
-        await http.get(Uri.parse('http://192.168.1.169:3500/dashboard'));
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('No token found');
+    }
+
+    final response = await http.get(
+      Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    print(response.body);
 
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
@@ -46,13 +60,6 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Inventario',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.blue,
-      ),
       body: Column(
         children: [
           Padding(
@@ -85,15 +92,23 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                     itemBuilder: (context, index) {
                       final product = products[index];
                       return ListTile(
-                        title: Text(product.descripcion),
+                        title: Text(
+                          product.barras + ' ' + product.descripcion,
+                        ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Código: ${product.codigo}'),
-                            Text('Barras: ${product.barras}'),
+                            Text('Existencia: ${product.existencia}'),
                             Text('Costo: ${product.costo.toStringAsFixed(2)}'),
-                            Text(
-                                'Precio Final: ${product.precioFinal.toStringAsFixed(2)}'),
+
+                            Text('Precios: A) ${product.precioFinal.toStringAsFixed(2)}' +
+                                ' B) ${product.precioB.toStringAsFixed(2)}' +
+                                ' C) ${product.precioC.toStringAsFixed(2)}' +
+                                ' D) ${product.precioD.toStringAsFixed(2)}'),
+
+                            Text('Marca: ${product.marcas}'),
+                            Text('Categoría: ${product.categoriaSubCategoria}'),
+
                             Divider(
                               color: Colors.blue,
                             ),

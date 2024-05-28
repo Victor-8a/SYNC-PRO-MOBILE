@@ -168,59 +168,80 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Productos',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.blue,
+  return Scaffold(
+    appBar: AppBar(
+      title: Text(
+        'Productos',
+        style: TextStyle(color: Colors.white),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(20.0),
-                ),
-                labelText: 'Buscar producto',
-                prefixIcon: Icon(Icons.search),
-                prefixIconColor: Colors.blue,
+      backgroundColor: Colors.blue,
+    ),
+    body: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20.0),
               ),
-              cursorColor: Colors.blue,
+              labelText: 'Buscar producto',
+              prefixIcon: Icon(Icons.search),
+              prefixIconColor: Colors.blue,
             ),
+            cursorColor: Colors.blue,
           ),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-                color: Colors.blue.withOpacity(0),
+        ),
+        Expanded(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
               ),
-              child: ListView.builder(
-                itemCount: _filteredProducts.length,
-                itemBuilder: (context, index) {
-                  final product = _filteredProducts[index];
-                  return ListTile(
-                    title: Text(
-                      product.descripcion,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      'Precio: \Q${product.precioFinal.toStringAsFixed(2)}',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    onTap: _productSelected[index]
-                        ? null
-                        : () {
-                            Navigator.pop(context, product);
-                            setState(() {
-                              _productSelected[index] = true;
+              color: Colors.blue.withOpacity(0),
+            ),
+            child: ListView.builder(
+              itemCount: _filteredProducts.length,
+              itemBuilder: (context, index) {
+                final product = _filteredProducts[index];
+                return ListTile(
+                  title: Text(
+                    product.descripcion,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Precio: Q${product.precioFinal.toStringAsFixed(2)}',
+                    
+                      ),
+                      Text(
+                        'Existencia: ${product.existencia}',
+                      
+                      ),
+                      Text(
+                        'Precio B: Q${product.precioB.toStringAsFixed(2)}',
+                    
+                      ),
+                      Text(
+                        'Precio C: Q${product.precioC.toStringAsFixed(2)}',
+                  
+                      ),
+                      Text(
+                        'Precio D: Q${product.precioD.toStringAsFixed(2)}',
+                       
+                      ),
+                    ],
+                  ),
+                  onTap: _productSelected[index]
+                      ? null
+                      : () {
+                          Navigator.pop(context, product);
+                          setState(() {
+                            _productSelected[index] = true;
                             });
                           },
                   );
@@ -911,8 +932,21 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         selectedClientJson); // Guardar el nombre del cliente en SharedPreferences
   }
 
-  void _navigateToSeleccionarProducto(BuildContext context) {
-    http.get(Uri.parse('http://192.168.1.169:3500/dashboard')).then((response) {
+   void _navigateToSeleccionarProducto(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      print('No token found');
+      return;
+    }
+
+    http.get(
+      Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    ).then((response) {
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
         List<Product> products = [];
