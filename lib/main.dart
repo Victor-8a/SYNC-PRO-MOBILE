@@ -1,5 +1,3 @@
-// ignore_for_file: unused_field
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -32,9 +30,21 @@ Future<void> saveIdToStorage(String userId, int opcion) async {
   print('id guardado en el almacenamiento: $userId');
 }
 
+Future<void> saveUsernameToStorage(String username) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('userName', username); // Cambiado a 'userName'
+  print('Nombre de usuario guardado en el almacenamiento: $username');
+}
+
+
+Future<String?> getUsernameFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('username');
+}
+
 class LoginApp extends StatelessWidget {
   final bool isLoggedIn;
-  const LoginApp({super.key, required this.isLoggedIn});
+  const LoginApp({Key? key, required this.isLoggedIn}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +56,7 @@ class LoginApp extends StatelessWidget {
 }
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -55,6 +65,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usuarioController = TextEditingController();
   final TextEditingController _contrasenaController = TextEditingController();
+  // ignore: unused_field
   bool _mostrarError = false;
 
   Future<void> _login() async {
@@ -78,16 +89,21 @@ class _LoginPageState extends State<LoginPage> {
 
     if (response.statusCode == 200) {
       String token = jsonDecode(response.body)['token'];
-      id = jsonDecode(response.body)['user']['id'];
-      saveTokenToStorage(token);
-      print('Token: $token');
-      //guardar el id
-      saveIdToStorage(id.toString(), 1);
-      saveIdToStorage(jsonDecode(response.body)['user']['idVendedor'].toString(), 2);
-      print('prueba de id para ver si devuelve algo');
-      print('id: $id');
+      String? nombreUsuario = jsonDecode(response.body)['user']?['nombre'];
+      id = jsonDecode(response.body)['user']?['id'] ?? 0;
 
-      // Navegar a SecondPage y eliminar las rutas anteriores
+      saveTokenToStorage(token);
+      saveIdToStorage(id.toString(), 1);
+      saveIdToStorage(
+          jsonDecode(response.body)['user']?['idVendedor']?.toString() ?? '',
+          2);
+
+      if (nombreUsuario != null) {
+        saveUsernameToStorage(nombreUsuario);
+      } else {
+        print('No se pudo encontrar el nombre de usuario en la respuesta.');
+      }
+
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const SecondPage()),

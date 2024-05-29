@@ -629,7 +629,7 @@ Column(
       product.precioB,
       product.precioC,
       product.precioD,
-    ];
+    ].where((price) => price > 0).toList(); // Filtrar precios mayores a 0
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -639,8 +639,9 @@ Column(
             children: [
               Expanded(
                 child: Text(
-                  '${product.descripcion} - Q${unitPrice.toStringAsFixed(2)}',
-                  overflow: TextOverflow.ellipsis,
+                  '${product.descripcion}',
+                  
+                  overflow: TextOverflow.clip,
                 ),
               ),
               DropdownButton<double>(

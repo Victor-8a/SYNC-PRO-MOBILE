@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:sync_pro_mobile/main.dart';
-import 'package:sync_pro_mobile/nuevo_pedido.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'main.dart';
 import 'pagina_inventario.dart';
+import 'nuevo_pedido.dart';
+import 'pagina_cliente.dart';
 import 'pagina_vendedores.dart';
 import 'pagina_registrar.dart';
-import 'pagina_cliente.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:shared_preferences/shared_preferences.dart';  // Importar shared_preferences
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  // ignore: use_key_in_widget_constructors
-  const MyApp({Key? key});
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,16 +24,15 @@ class MyApp extends StatelessWidget {
 }
 
 class SecondPage extends StatefulWidget {
-  // ignore: use_key_in_widget_constructors
-  const SecondPage({Key? key});
+  const SecondPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _SecondPageState createState() => _SecondPageState();
 }
 
 class _SecondPageState extends State<SecondPage> {
   int _selectedIndex = 0;
+  String _userName = '';
 
   final List<Widget> _pages = <Widget>[
     PaginaInventario(),
@@ -43,6 +41,21 @@ class _SecondPageState extends State<SecondPage> {
     PaginaVendedores(),
     PaginaRegistrar(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+Future<void> _loadUserName() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? storedUsername = prefs.getString('userName'); // Cambiado a 'userName'
+  setState(() {
+    _userName = storedUsername ?? '';
+  });
+}
+
 
   void _onItemTapped(int index) {
     setState(() {
@@ -55,7 +68,7 @@ class _SecondPageState extends State<SecondPage> {
     await prefs.remove('token');
     await prefs.remove('userId');
     await prefs.remove('idVendedor');
-    // Navegar a la página de inicio de sesión y eliminar todas las rutas anteriores
+    await prefs.remove('userName');
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -64,25 +77,25 @@ class _SecondPageState extends State<SecondPage> {
   }
 
   @override
- Widget build(BuildContext context) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text(
-    'Sync Pro Mobile',
-    style: TextStyle(color: Colors.white), // Establecer el color del texto en blanco
-  ),
-  backgroundColor: Colors.blue,
-),
+        title: Text(
+          'Sync Pro Mobile',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.blue,
+      ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            const DrawerHeader(
+            DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.blue,
               ),
               child: Text(
-                'Menu',
+                'Hola, $_userName',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -119,26 +132,23 @@ class _SecondPageState extends State<SecondPage> {
 }
 
 // La clase LoginPage debe estar definida aquí o importada desde otro archivo
-
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login Page'),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Login Page'),
+    ),
+    body: Center(
+      child: ElevatedButton(
+        onPressed: () {
+          // Navegar a la SecondPage (esto es solo para ejemplo, reemplazar con tu lógica de inicio de sesión)
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const SecondPage()),
+          );
+        },
+        child: const Text('Login'),
       ),
-      body: Center(
-        child: ElevatedButton(
-          onPressed: () {
-            // Navegar a la SecondPage (esto es solo para ejemplo, reemplazar con tu lógica de inicio de sesión)
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const SecondPage()),
-            );
-          },
-          child: const Text('Login'),
-        ),
-      ),
-    );
-  }
-
+    ),
+  );
+}
