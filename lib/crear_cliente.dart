@@ -123,7 +123,7 @@ class _CrearClienteState extends State<CrearCliente> {
     //     context,
     //     MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null,)),
     //   );
-    // } else {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al crear cliente: ${response.body}')),
       );
