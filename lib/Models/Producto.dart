@@ -61,4 +61,38 @@ class Product {
       'Cantidad': cantidad,
     };
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'codigo': codigo,
+      'barras': barras,
+      'descripcion': descripcion,
+      'existencia': existencia,
+      'costo': costo,
+      'precioFinal': precioFinal,
+      'precioB': precioB,
+      'precioC': precioC,
+      'precioD': precioD,
+      'marcas': marcas,
+      'categoriaSubCategoria': categoriaSubCategoria,
+      'observaciones': observaciones,
+    };
+  }
+
+  static Product fromMap(Map<String, dynamic> map) {
+    return Product(
+      codigo: map['codigo'] ?? 0,
+      barras: map['barras'] ?? '',
+      descripcion: map['descripcion'] ?? '',
+      existencia: map['existencia'] ?? 0,
+      costo: map['costo']?.toDouble() ?? 0,
+      precioFinal: map['precioFinal']?.toDouble() ?? 0,
+      precioB: map['precioB']?.toDouble() ?? 0,
+      precioC: map['precioC']?.toDouble() ?? 0,
+      precioD: map['precioD']?.toDouble() ?? 0,
+      marcas: map['marcas'] ?? '',
+      categoriaSubCategoria: map['categoriaSubCategoria'] ?? '',
+      observaciones: map['observaciones'] ?? '',
+    );
+  }
 }

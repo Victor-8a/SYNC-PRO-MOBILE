@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sync_pro_mobile/db.dart';
 import 'Models/Producto.dart';
 
 class PaginaInventario extends StatefulWidget {
@@ -18,10 +19,24 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   @override
   void initState() {
     super.initState();
-    futureProducts = fetchProducts();
+    futureProducts = fetchProducts().catchError((error) async {
+      return await getProductsFromLocalDatabase();
+    });
   }
-
+  
   Future<List<Product>> fetchProducts() async {
+    try {
+      // Intenta obtener los productos de la base de datos local
+      final productsFromLocal = await getProductsFromLocalDatabase();
+      if (productsFromLocal.isNotEmpty) {
+        return productsFromLocal;
+      }
+    } catch (error) {
+      // En caso de error al obtener productos de la base de datos local, continua con la API
+      print('Error fetching products from local database: $error');
+    }
+
+    // Si no hay productos en la base de datos local o hay un error, intenta obtenerlos de la API
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
@@ -36,14 +51,28 @@ class _PaginaInventarioState extends State<PaginaInventario> {
       },
     );
 
-    print(response.body);
-
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
-      return data.map((json) => Product.fromJson(json)).toList();
+      print(data);
+      final products = data.map((json) => Product.fromJson(json)).toList();
+      await saveProductsToLocalDatabase(products); // Guarda los productos en la base de datos local
+      return products;
     } else {
       throw Exception('Failed to load products');
     }
+  }
+
+  Future<void> saveProductsToLocalDatabase(List<Product> products) async {
+    final dbHelper = DatabaseHelper();
+    await dbHelper.deleteAllProducts(); // Limpiar la base de datos antes de insertar nuevos datos
+    for (var product in products) {
+      await dbHelper.insertProduct(product);
+    }
+  }
+
+  Future<List<Product>> getProductsFromLocalDatabase() async {
+    final dbHelper = DatabaseHelper();
+    return await dbHelper.getProducts();
   }
 
   void _filterProducts(String query) {
@@ -100,23 +129,15 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                           children: [
                             Text('Existencia: ${product.existencia}'),
                             Text('Costo: ${product.costo.toStringAsFixed(2)}'),
-
                             Text('Precios: A) ${product.precioFinal.toStringAsFixed(2)}' +
                                 ' B) ${product.precioB.toStringAsFixed(2)}' +
                                 ' C) ${product.precioC.toStringAsFixed(2)}' +
                                 ' D) ${product.precioD.toStringAsFixed(2)}'),
-
                             Text('Marca: ${product.marcas}'),
                             Text('Categoría: ${product.categoriaSubCategoria}'),
-
-                            Divider(
-                              color: Colors.blue,
-                            ),
-
-                            // Text('Marca: ${product.marcas}'),
+                            Divider(color: Colors.blue),
                           ],
                         ),
-                        // Otros detalles del producto según necesites
                       );
                     },
                   );

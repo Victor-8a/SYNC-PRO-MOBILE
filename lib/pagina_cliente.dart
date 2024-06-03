@@ -36,6 +36,6 @@ widthFactor: double.infinity,
         ),
       ),
     );
-    
+
   }
 }
