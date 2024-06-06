@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,20 +24,17 @@ class _PaginaInventarioState extends State<PaginaInventario> {
       return await getProductsFromLocalDatabase();
     });
   }
-  
-  Future<List<Product>> fetchProducts() async {
-    try {
-      // Intenta obtener los productos de la base de datos local
-      final productsFromLocal = await getProductsFromLocalDatabase();
-      if (productsFromLocal.isNotEmpty) {
-        return productsFromLocal;
-      }
-    } catch (error) {
-      // En caso de error al obtener productos de la base de datos local, continua con la API
-      print('Error fetching products from local database: $error');
+   
+Future<List<Product>> fetchProducts() async {
+  try {
+    // Verificar la conectividad de red
+ var connectivityResult = await Connectivity().checkConnectivity().timeout(Duration(seconds: 5));
+    if (connectivityResult == ConnectivityResult.none) {
+      // Si no hay conexión a Internet, obtén los productos de la base de datos local
+      return await getProductsFromLocalDatabase();
     }
 
-    // Si no hay productos en la base de datos local o hay un error, intenta obtenerlos de la API
+    // Si hay conexión a Internet, intenta obtener los productos de la API
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
 
@@ -60,7 +58,12 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     } else {
       throw Exception('Failed to load products');
     }
+  } catch (error) {
+    // En caso de error al obtener productos de la API, intenta obtenerlos de la base de datos local
+    print('Error fetching products: $error');
+    return await getProductsFromLocalDatabase();
   }
+}
 
   Future<void> saveProductsToLocalDatabase(List<Product> products) async {
     final dbHelper = DatabaseHelper();

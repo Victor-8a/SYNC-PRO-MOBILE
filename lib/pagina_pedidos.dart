@@ -92,8 +92,13 @@ Future<int?> saveOrder(int selectedClient, String observations,
   }
 }
 
-Future<void> saveOrderDetail(int idPedido, List<Product> selectedProducts,
-    Map<Product, int> selectedProductQuantities,Map<Product, double> _selectedProductPrices) async {
+Future<void> saveOrderDetail(
+    int idPedido,
+    List<Product> selectedProducts,
+    Map<Product, int> selectedProductQuantities,
+    Map<Product, double> _selectedProductPrices,
+    Map<Product, double> _discounts,
+    ) async {
   try {
     String? token = await getTokenFromStorage();
     if (token == false) {
@@ -112,9 +117,12 @@ Future<void> saveOrderDetail(int idPedido, List<Product> selectedProducts,
         "CodArticulo": product.codigo,
         "Descripcion": product.descripcion,
         "Cantidad": selectedProductQuantities[product],
-         "PrecioVenta": _selectedProductPrices[product] ?? product.precioFinal
+        "PrecioVenta": _selectedProductPrices[product] ?? product.precioFinal,
+        "PorcDescuento": _discounts[product],
+        
       };
       var body = jsonEncode(orderDetailData);
+      print(jsonEncode(orderDetailData));
 
       var response = await http.post(url, headers: headers, body: body);
 
@@ -138,7 +146,8 @@ class SeleccionarProducto extends StatefulWidget {
 }
 
 class _SeleccionarProductoState extends State<SeleccionarProducto> {
-  List<Product> _selectedProducts = []; // Inicializa la lista de productos seleccionados
+  List<Product> _selectedProducts =
+      []; // Inicializa la lista de productos seleccionados
   Map<Product, double> _selectedProductPrices = {};
   Map<Product, int> _selectedProductQuantities = {};
   Map<Product, double> _discounts = {};
@@ -156,11 +165,11 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
     // Inicializar _selectedProductPrices, _selectedProductQuantities y _discounts por defecto
     for (var product in _selectedProducts) {
       _selectedProductPrices[product] = product.precioFinal;
-      _selectedProductQuantities[product] = 1; // Inicializa las cantidades a 1 si es necesario
+      _selectedProductQuantities[product] =
+          1; // Inicializa las cantidades a 1 si es necesario
       _discounts[product] = 0; // Inicializa los descuentos a 0 si es necesario
     }
   }
-
 
   @override
   void dispose() {
@@ -357,34 +366,35 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   DateTime _selectedDate = DateTime.now();
   List<Product> _selectedProducts = [];
   Map<Product, int> _selectedProductQuantities = {};
+
   Map<Product, double> _discounts =
       {}; // Mapa que guarda el descuento asociado con cada producto
-         Map<Product, double> _selectedProductPrices = {};
+  Map<Product, double> _selectedProductPrices = {};
   String _observations = '';
   Color _buttonColor = Colors.blue; // Color para los botones
- double _calculateTotal() {
-  double total = 0;
-  for (var product in _selectedProducts) {
-    int quantity = _selectedProductQuantities[product]!;
-    double unitPrice = _selectedProductPrices[product] ?? product.precioFinal;
-    total += unitPrice * quantity;
+  double _calculateTotal() {
+    double total = 0;
+    for (var product in _selectedProducts) {
+      int quantity = _selectedProductQuantities[product]!;
+      double unitPrice = _selectedProductPrices[product] ?? product.precioFinal;
+      total += unitPrice * quantity;
+    }
+    return total;
   }
-  return total;
-}
 
-double _calculateTotalWithDiscount() {
-  double total = 0.0;
-  // Itera sobre los productos seleccionados y calcula el precio total con descuento
-  _selectedProducts.forEach((product) {
-    int quantity = _selectedProductQuantities[product] ?? 0;
-    double unitPrice = _selectedProductPrices[product] ?? product.precioFinal;
-    double discount = _discounts[product] ?? 0;
-    double subtotal = unitPrice * quantity * (1 - (discount / 100));
+  double _calculateTotalWithDiscount() {
+    double total = 0.0;
+    // Itera sobre los productos seleccionados y calcula el precio total con descuento
+    _selectedProducts.forEach((product) {
+      int quantity = _selectedProductQuantities[product] ?? 0;
+      double unitPrice = _selectedProductPrices[product] ?? product.precioFinal;
+      double discount = _discounts[product] ?? 0;
+      double subtotal = unitPrice * quantity * (1 - (discount / 100));
 
-    total += subtotal;
-  });
-  return total;
-}
+      total += subtotal;
+    });
+    return total;
+  }
 
   @override
   @override
@@ -614,130 +624,154 @@ double _calculateTotalWithDiscount() {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: _selectedProducts.map((product) {
-    double unitPrice = _selectedProductPrices[product] ?? product.precioFinal;
-    int quantity = _selectedProductQuantities[product] ?? 1;
-    double discount = _discounts[product] ?? 0;
-    double subtotalBeforeDiscount = unitPrice * quantity;
-    double discountAmount = subtotalBeforeDiscount * (discount / 100);
-    double subtotal = subtotalBeforeDiscount - discountAmount;
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _selectedProducts.map((product) {
+                        double unitPrice = _selectedProductPrices[product] ??
+                            product.precioFinal;
+                        int quantity = _selectedProductQuantities[product] ?? 1;
+                        double discount = _discounts[product] ?? 0;
+                        double subtotalBeforeDiscount = unitPrice * quantity;
+                        double discountAmount =
+                            subtotalBeforeDiscount * (discount / 100);
+                        double subtotal =
+                            subtotalBeforeDiscount - discountAmount;
 
-    List<double> availablePrices = [
-      product.precioFinal,
-      product.precioB,
-      product.precioC,
-      product.precioD,
-    ].where((price) => price > 0).toList(); // Filtrar precios mayores a 0
+                        List<double> availablePrices = [
+                          product.precioFinal,
+                          product.precioB,
+                          product.precioC,
+                          product.precioD,
+                        ]
+                            .where((price) => price > 0)
+                            .toList(); // Filtrar precios mayores a 0
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        ListTile(
-          title: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${product.descripcion}',
-                  
-                  overflow: TextOverflow.clip,
-                ),
-              ),
-              DropdownButton<double>(
-                value: availablePrices.contains(unitPrice) ? unitPrice : product.precioFinal,
-                items: availablePrices.toSet().map((price) {
-                  return DropdownMenuItem(
-                    value: price,
-                    child: Text('Q${price.toStringAsFixed(2)}'),
-                  );
-                }).toList(),
-                onChanged: (newPrice) {
-                  setState(() {
-                    _selectedProductPrices[product] = newPrice!;
-                    unitPrice = newPrice;
-                    subtotalBeforeDiscount = unitPrice * quantity;
-                    discountAmount = subtotalBeforeDiscount * (discount / 100);
-                    subtotal = subtotalBeforeDiscount - discountAmount;
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-        Row(
-          children: [
-            Column(
-              children: [
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.remove_circle),
-                      onPressed: () {
-                        setState(() {
-                          if (quantity > 1) {
-                            _selectedProductQuantities[product] = quantity - 1;
-                            _saveSelectedProducts();
-                          } else {
-                            _selectedProducts.remove(product);
-                            _selectedProductQuantities.remove(product);
-                            _discounts.remove(product);
-                            _selectedProductPrices.remove(product);
-                          }
-                        });
-                      },
-                    ),
-                    Text(quantity.toString()),
-                    IconButton(
-                      icon: Icon(Icons.add_circle),
-                      onPressed: () {
-                        setState(() {
-                          _selectedProductQuantities[product] = quantity + 1;
-                          _saveSelectedProducts();
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            Expanded(
-              child: TextField(
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d{1,2}$')),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    _discounts[product] = double.tryParse(value) ?? 0;
-                    discount = _discounts[product]!;
-                    subtotalBeforeDiscount = unitPrice * quantity;
-                    discountAmount = subtotalBeforeDiscount * (discount / 100);
-                    subtotal = subtotalBeforeDiscount - discountAmount;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: '% Desc',
-                  floatingLabelStyle: TextStyle(color: Colors.blue),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                    vertical: 5.0,
-                    horizontal: 10.0,
-                  ),
-                  isDense: true,
-                ),
-              ),
-            ),
-            SizedBox(width: 10),
-            Text('Q${subtotal.toStringAsFixed(2)}'),
-          ],
-        ),
-        Divider(),
-      ],
-    );
-  }).toList(),
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            ListTile(
+                              title: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      '${product.descripcion}',
+                                      overflow: TextOverflow.clip,
+                                    ),
+                                  ),
+                                  DropdownButton<double>(
+                                    value: availablePrices.contains(unitPrice)
+                                        ? unitPrice
+                                        : product.precioFinal,
+                                    items: availablePrices.toSet().map((price) {
+                                      return DropdownMenuItem(
+                                        value: price,
+                                        child: Text(
+                                            'Q${price.toStringAsFixed(2)}'),
+                                      );
+                                    }).toList(),
+                                    onChanged: (newPrice) {
+                                      setState(() {
+                                        _selectedProductPrices[product] =
+                                            newPrice!;
+                                        unitPrice = newPrice;
+                                        subtotalBeforeDiscount =
+                                            unitPrice * quantity;
+                                        discountAmount =
+                                            subtotalBeforeDiscount *
+                                                (discount / 100);
+                                        subtotal = subtotalBeforeDiscount -
+                                            discountAmount;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Row(
+                              children: [
+                                Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.remove_circle),
+                                          onPressed: () {
+                                            setState(() {
+                                              if (quantity > 1) {
+                                                _selectedProductQuantities[
+                                                    product] = quantity - 1;
+                                                _saveSelectedProducts();
+                                              } else {
+                                                _selectedProducts
+                                                    .remove(product);
+                                                _selectedProductQuantities
+                                                    .remove(product);
+                                                _discounts.remove(product);
+                                                _selectedProductPrices
+                                                    .remove(product);
+                                              }
+                                            });
+                                          },
+                                        ),
+                                        Text(quantity.toString()),
+                                        IconButton(
+                                          icon: Icon(Icons.add_circle),
+                                          onPressed: () {
+                                            setState(() {
+                                              _selectedProductQuantities[
+                                                  product] = quantity + 1;
+                                              _saveSelectedProducts();
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                Expanded(
+                                  child: TextField(
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d{1,2}$')),
+                                    ],
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _discounts[product] =
+                                            double.tryParse(value) ?? 0;
+                                        discount = _discounts[product]!;
+                                        subtotalBeforeDiscount =
+                                            unitPrice * quantity;
+                                        discountAmount =
+                                            subtotalBeforeDiscount *
+                                                (discount / 100);
+                                        subtotal = subtotalBeforeDiscount -
+                                            discountAmount;
+                                      });
+                                    },
+                                    decoration: InputDecoration(
+                                      labelText: '% Desc',
+                                      floatingLabelStyle:
+                                          TextStyle(color: Colors.blue),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: 5.0,
+                                        horizontal: 10.0,
+                                      ),
+                                      isDense: true,
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Text('Q${subtotal.toStringAsFixed(2)}'),
+                              ],
+                            ),
+                            Divider(),
+                          ],
+                        );
+                      }).toList(),
                     ),
 
                     SizedBox(height: 20.0),
@@ -801,9 +835,7 @@ Column(
                             ),
                           );
 
-                          if (confirm == true) {
-                      
-                          }
+                          if (confirm == true) {}
                           // Si el usuario confirma, proceder con la acción de agregar pedido
                           if (confirm == true) {
                             int? idPedido = await saveOrder(
@@ -813,8 +845,12 @@ Column(
                               _selectedDate,
                             );
                             if (idPedido != null) {
-                              saveOrderDetail(idPedido, _selectedProducts,
-                                  _selectedProductQuantities, _selectedProductPrices);
+                              saveOrderDetail(
+                                  idPedido,
+                                  _selectedProducts,
+                                  _selectedProductQuantities,
+                                  _selectedProductPrices,
+                                  _discounts);
                               Fluttertoast.showToast(
                                 msg: 'Pedido guardado exitosamente.',
                                 toastLength: Toast.LENGTH_SHORT,
@@ -992,8 +1028,8 @@ Column(
           if (selectedProduct != null) {
             print(selectedProduct.precioFinal);
             print(selectedProduct.precioB);
-             print(selectedProduct.precioC);
-              print(selectedProduct.precioD);
+            print(selectedProduct.precioC);
+            print(selectedProduct.precioD);
             print('PRODUCTOS');
             setState(() {
               _selectedProducts.add(selectedProduct);
@@ -1074,8 +1110,5 @@ Column(
     await prefs.remove('selectedProducts');
     List<String>? selectedProductsJson = [];
     await prefs.setStringList('selectedProducts', selectedProductsJson);
-
-
-    }
   }
-
+}
