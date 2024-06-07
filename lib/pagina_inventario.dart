@@ -3,7 +3,7 @@ import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sync_pro_mobile/db.dart';
+import 'package:sync_pro_mobile/db/db.dart';
 import 'Models/Producto.dart';
 
 class PaginaInventario extends StatefulWidget {

@@ -93,12 +93,12 @@ Future<int?> saveOrder(int selectedClient, String observations,
 }
 
 Future<void> saveOrderDetail(
-    int idPedido,
-    List<Product> selectedProducts,
-    Map<Product, int> selectedProductQuantities,
-    Map<Product, double> _selectedProductPrices,
-    Map<Product, double> _discounts,
-    ) async {
+  int idPedido,
+  List<Product> selectedProducts,
+  Map<Product, int> selectedProductQuantities,
+  Map<Product, double> _selectedProductPrices,
+  Map<Product, double> _discounts,
+) async {
   try {
     String? token = await getTokenFromStorage();
     if (token == false) {
@@ -119,7 +119,11 @@ Future<void> saveOrderDetail(
         "Cantidad": selectedProductQuantities[product],
         "PrecioVenta": _selectedProductPrices[product] ?? product.precioFinal,
         "PorcDescuento": _discounts[product],
-        
+        "Total": ((_selectedProductPrices[product] ?? product.precioFinal) *
+                selectedProductQuantities[product]!) -
+            (selectedProductQuantities[product]! *
+                    (_selectedProductPrices[product] ?? product.precioFinal)) *
+                (_discounts[product]! / 100)
       };
       var body = jsonEncode(orderDetailData);
       print(jsonEncode(orderDetailData));
