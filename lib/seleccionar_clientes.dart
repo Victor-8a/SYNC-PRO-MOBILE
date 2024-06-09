@@ -7,7 +7,8 @@ import 'db/dbCliente.dart';
 import 'package:connectivity/connectivity.dart';
 
 class SeleccionarCliente extends StatefulWidget {
-  const SeleccionarCliente({Key? key, required List clientes}) : super(key: key);
+  const SeleccionarCliente({Key? key, required List clientes})
+      : super(key: key);
 
   @override
   _SeleccionarClienteState createState() => _SeleccionarClienteState();
@@ -34,77 +35,80 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
     super.dispose();
   }
 
- Future<void> fetchClientes() async {
-  try {
-    var connectivityResult = await Connectivity().checkConnectivity().timeout(Duration(seconds: 5));
-    if (connectivityResult == ConnectivityResult.none) {
-      print('No internet connection, retrieving clients from local database');
-      return await retrieveClientesFromLocalDatabase();
-    }
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-
-    if (token == null) {
-      throw Exception('No token found');
-    }
-
-    final response = await http.get(
-      Uri.parse('http://192.168.1.212:3000/cliente'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
-
-    if (response.statusCode == 200) {
-      final List<dynamic> jsonResponse = json.decode(response.body);
-      final clientes = jsonResponse.map((json) => Cliente.fromJson(json)).toList();
-      if (_isMounted) {
-        setState(() {
-          _clientes = clientes;
-          _filteredClientes = clientes;
-          saveClientesToLocalDatabase(clientes);
-          _isLoading = false;
-        });
+  Future<void> fetchClientes() async {
+    try {
+      var connectivityResult = await Connectivity()
+          .checkConnectivity()
+          .timeout(Duration(seconds: 5));
+      if (connectivityResult == ConnectivityResult.none) {
+        print('No internet connection, retrieving clients from local database');
+        return await retrieveClientesFromLocalDatabase();
       }
-    } else {
-      throw Exception('Failed to load clientes');
-    }
-  } catch (error) {
-    print('Error fetching clientes: $error');
-    if (_isMounted) {
-      await retrieveClientesFromLocalDatabase();
-    }
-  }
-}
 
-Future<void> saveClientesToLocalDatabase(List<Cliente> clientes) async {
-  try {
-    DatabaseHelper databaseHelper = DatabaseHelper();
-    await databaseHelper.deleteAllClientes();
-    for (var cliente in clientes) {
-      await databaseHelper.insertCliente(cliente);
-      print('Cliente ${cliente.nombre} inserted into local database');
-    }
-  } catch (error) {
-    print('Error saving clientes to local database: $error');
-  }
-}
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('token');
 
-Future<void> retrieveClientesFromLocalDatabase() async {
-  try {
-    DatabaseHelper databaseHelper = DatabaseHelper();
-    List<Cliente> clientes = await databaseHelper.getClientes();
-    setState(() {
-      _clientes = clientes;
-      _filteredClientes = clientes;
-      _isLoading = false;
-    });
-  } catch (error) {
-    print('Error retrieving clientes from local database: $error');
-    setState(() {
-      _isLoading = false;
-    });
+      if (token == null) {
+        throw Exception('No token found');
+      }
+
+      final response = await http.get(
+        Uri.parse('http://192.168.1.212:3000/cliente'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> jsonResponse = json.decode(response.body);
+        final clientes =
+            jsonResponse.map((json) => Cliente.fromJson(json)).toList();
+        if (_isMounted) {
+          setState(() {
+            _clientes = clientes;
+            _filteredClientes = clientes;
+            saveClientesToLocalDatabase(clientes);
+            _isLoading = false;
+          });
+        }
+      } else {
+        throw Exception('Failed to load clientes');
+      }
+    } catch (error) {
+      print('Error fetching clientes: $error');
+      if (_isMounted) {
+        await retrieveClientesFromLocalDatabase();
+      }
+    }
   }
-}
+
+  Future<void> saveClientesToLocalDatabase(List<Cliente> clientes) async {
+    try {
+      DatabaseHelper databaseHelper = DatabaseHelper();
+      await databaseHelper.deleteAllClientes();
+      for (var cliente in clientes) {
+        await databaseHelper.insertCliente(cliente);
+        print('Cliente ${cliente.nombre} inserted into local database');
+      }
+    } catch (error) {
+      print('Error saving clientes to local database: $error');
+    }
+  }
+
+  Future<void> retrieveClientesFromLocalDatabase() async {
+    try {
+      DatabaseHelper databaseHelper = DatabaseHelper();
+      List<Cliente> clientes = await databaseHelper.getClientes();
+      setState(() {
+        _clientes = clientes;
+        _filteredClientes = clientes;
+        _isLoading = false;
+      });
+    } catch (error) {
+      print('Error retrieving clientes from local database: $error');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   void _onSearchChanged() {
     String searchTerm = _searchController.text.toLowerCase();

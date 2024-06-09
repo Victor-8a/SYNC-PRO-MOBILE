@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sync_pro_mobile/Models/Vendedor.dart';
 import '../Models/Cliente.dart';
 
 class DatabaseHelper {
@@ -87,4 +88,6 @@ class DatabaseHelper {
     await db.delete('clientes');
     print('All clientes deleted');
   }
+
+  insertVendedor(Vendedor vendedor) {}
 }
