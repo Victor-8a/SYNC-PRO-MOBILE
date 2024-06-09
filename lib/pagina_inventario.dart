@@ -1,5 +1,6 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:connectivity/connectivity.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,30 +26,35 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     });
   }
    
+// Suponiendo que ya tienes la clase Product y los métodos
+// Product.fromJson, getProductsFromLocalDatabase y saveProductsToLocalDatabase definidos.
+
 Future<List<Product>> fetchProducts() async {
   try {
     // Verificar la conectividad de red
- var connectivityResult = await Connectivity().checkConnectivity().timeout(Duration(seconds: 5));
+    var connectivityResult = await Connectivity().checkConnectivity();
     if (connectivityResult == ConnectivityResult.none) {
       // Si no hay conexión a Internet, obtén los productos de la base de datos local
+      print("NO HAY CONEXIÓN");
       return await getProductsFromLocalDatabase();
     }
-
+    
     // Si hay conexión a Internet, intenta obtener los productos de la API
+    print("SI HAY CONEXIÓN");
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-
+    
     if (token == null) {
       throw Exception('No token found');
     }
-
+    
     final response = await http.get(
       Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
       headers: {
         'Authorization': 'Bearer $token',
       },
-    );
-
+    ).timeout(Duration(seconds: 10)); // Añadimos un timeout para la petición HTTP
+    
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       print(data);

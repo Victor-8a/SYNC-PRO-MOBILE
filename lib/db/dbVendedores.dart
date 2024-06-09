@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert'; // For json.decode
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http; // For HTTP requests
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -63,8 +65,15 @@ class VendedorDatabaseHelper {
     print('All vendedores deleted');
   }
 
-  Future<void> fetchAndStoreVendedores() async {
+  Future<bool> fetchAndStoreVendedores() async {
     try {
+      var connectivityResult = await Connectivity()
+          .checkConnectivity()
+          .timeout(Duration(seconds: 5));
+      if (connectivityResult == ConnectivityResult.none) {
+        print('No internet connection, retrieving clients from local database');
+        return false;
+      }
       final response = await http.get(Uri.parse('http://192.168.1.212:3000/vendedor'));
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
@@ -78,12 +87,14 @@ class VendedorDatabaseHelper {
           await insertVendedor(vendedor);
         }
         print('Vendedores fetched and stored');
+        return true;
       } else {
         throw Exception('Failed to load vendedores');
       }
     } catch (e) {
       print('Error fetching and storing vendedores: $e');
     }
+    return false;
   }
     static initializeDatabase() {}
 }

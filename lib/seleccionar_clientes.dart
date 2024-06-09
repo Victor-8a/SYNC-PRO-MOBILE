@@ -1,10 +1,11 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'Models/Cliente.dart';
 import 'db/dbCliente.dart';
-import 'package:connectivity/connectivity.dart';
+
 
 class SeleccionarCliente extends StatefulWidget {
   const SeleccionarCliente({Key? key, required List clientes})

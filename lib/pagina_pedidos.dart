@@ -326,62 +326,63 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           direccion: clientData['direccion']!);
     }
   }
-Future<void> saveVendedorToLocalDatabase(Vendedor vendedor) async {
-  try {
-    VendedorDatabaseHelper dbHelper = VendedorDatabaseHelper();
-    await dbHelper.insertVendedor(vendedor);
-  } catch (error) {
-    print('Error saving vendedor to local database: $error');
-    throw Exception('Failed to save vendedor to local database: $error');
+
+  Future<void> saveVendedorToLocalDatabase(Vendedor vendedor) async {
+    try {
+      VendedorDatabaseHelper dbHelper = VendedorDatabaseHelper();
+      await dbHelper.insertVendedor(vendedor);
+    } catch (error) {
+      print('Error saving vendedor to local database: $error');
+      throw Exception('Failed to save vendedor to local database: $error');
+    }
   }
-}
 
   Future<Vendedor> loadSalesperson() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? idVendedor = prefs.getString('idVendedor');
-  print('http://192.168.1.212:3000/vendedor/id/$idVendedor');
-  
-  if (idVendedor != null) {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? idVendedor = prefs.getString('idVendedor');
+
+    if (idVendedor != null) {
+      try {
+        final response = await http.get(
+            Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
+        print(response.body);
+
+        if (response.statusCode == 200) {
+          Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
+          print(vendedor.value);
+          print(vendedor.nombre);
+
+          // Guardar el vendedor en la base de datos local
+          // await saveVendedorToLocalDatabase(vendedor);
+
+          return vendedor;
+        } else {
+          print('Failed to load salesperson: ${response.statusCode}');
+          throw Exception('Failed to load salesperson: ${response.statusCode}');
+        }
+      } catch (error) {
+        print('Error loading salesperson: $error');
+        throw Exception('Failed to load salesperson: $error');
+      }
+    } else {
+      throw Exception('Failed to load salesperson: idVendedor is null');
+    }
+  }
+
+  Future<Vendedor> getSalesperson() async {
     try {
-      final response = await http.get(
-        Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
-      print(response.body);
-      
-      if (response.statusCode == 200) {
-        Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
-        print(vendedor.value);
-        print(vendedor.nombre);
-        
-        // Guardar el vendedor en la base de datos local
-        await saveVendedorToLocalDatabase(vendedor);
-        
-        return vendedor;
+      VendedorDatabaseHelper dbHelper = VendedorDatabaseHelper();
+      List<Vendedor> vendedores = await dbHelper.getVendedores();
+      if (vendedores.isNotEmpty) {
+        return vendedores.first;
       } else {
-        print('Failed to load salesperson: ${response.statusCode}');
-        throw Exception('Failed to load salesperson: ${response.statusCode}');
+        throw Exception('No salesperson found in local database');
       }
     } catch (error) {
-      print('Error loading salesperson: $error');
-      throw Exception('Failed to load salesperson: $error');
+      print('Error getting salesperson from local database: $error');
+      throw Exception('Failed to get salesperson from local database: $error');
     }
-  } else {
-    throw Exception('Failed to load salesperson: idVendedor is null');
   }
-}
-Future<Vendedor> getSalesperson() async {
-  try {
-    VendedorDatabaseHelper dbHelper = VendedorDatabaseHelper();
-    List<Vendedor> vendedores = await dbHelper.getVendedores();
-    if (vendedores.isNotEmpty) {
-      return vendedores.first;
-    } else {
-      throw Exception('No salesperson found in local database');
-    }
-  } catch (error) {
-    print('Error getting salesperson from local database: $error');
-    throw Exception('Failed to get salesperson from local database: $error');
-  }
-}
 
   Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
   int? _selectedSalespersonId; // ID del vendedor seleccionado
@@ -425,52 +426,50 @@ Future<Vendedor> getSalesperson() async {
   @override
   void initState() {
     super.initState();
-    loadSalesperson().then((vendedor) {
-      if (mounted) {
-        setState(() {
-          vendedor = vendedor;
-        });
-      }
-      print('Vendedores cargados: $vendedor.nombre');
-    }).catchError((error) {
-      print('Error cargando vendedores: $error');
-    });
-    ;
+    // loadSalesperson().then((vendedor) {
+    //   if (mounted) {
+    //     setState(() {
+    //       vendedor = vendedor;
+    //     });
+    //   }
+    //   print('Vendedores cargados: $vendedor.nombre');
+    // }).catchError((error) {
+    //   print('Error cargando vendedores: $error');
+    // });
+
     _loadSelectedClientName();
     _loadSelectedProducts();
     // Inicializa _selectedProductPrices con precioFinal por defecto
     _selectedProducts.forEach((product) {
       _selectedProductPrices[product] = product.precioFinal;
     }); // Agregar esta línea para cargar los productos seleccionados guardados
-     _fetchAndLoadVendedores();
+    _fetchAndLoadVendedores();
   }
 
-   Future<void> _fetchAndLoadVendedores() async {
+  Future<void> _fetchAndLoadVendedores() async {
     bool fetchSuccess = await _tryFetchAndStoreVendedores();
 
     // If fetching from server fails, load from local database
     if (!fetchSuccess) {
       print('Failed to fetch from server, loading from local database');
-    }
-    
-    final vendedores = await VendedorDatabaseHelper().getVendedores();
-    if (mounted) {
-      setState(() {
-        _vendedores = vendedores;
-      });
+      final vendedores = await VendedorDatabaseHelper().getVendedores();
+
+      if (mounted) {
+        setState(() {
+          _vendedores = vendedores;
+        });
+      }
     }
   }
 
   Future<bool> _tryFetchAndStoreVendedores() async {
     try {
-      await VendedorDatabaseHelper().fetchAndStoreVendedores();
-      return true;
+      return await VendedorDatabaseHelper().fetchAndStoreVendedores();
     } catch (e) {
       print('Error fetching and storing vendedores: $e');
       return false;
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -519,27 +518,28 @@ Future<Vendedor> getSalesperson() async {
                   children: [
                     // Ahora puedes usar _vendedores en tu DropdownButtonFormField
                     DropdownButtonFormField<Vendedor>(
-                    value: _selectedSalesperson,
-      onChanged: (newValue) async {
-        setState(() {
-          _selectedSalesperson = newValue!;
-          _selectedSalespersonId = newValue.value;
-        });
-        
-        // Guardar el vendedor seleccionado en la base de datos
-        await VendedorDatabaseHelper().insertVendedor(_selectedSalesperson!);
-        print('Vendedor seleccionado: $newValue');
-        print(_selectedSalesperson!.value);
-        print(_selectedSalesperson!.nombre);
-      },
-      items: _vendedores.map((vendedor) {
-        return DropdownMenuItem<Vendedor>(
-          value: vendedor,
-          child: Text(
-            vendedor.nombre,
-          ),
-        );
-      }).toList(),
+                      value: _selectedSalesperson,
+                      onChanged: (newValue) async {
+                        setState(() {
+                          _selectedSalesperson = newValue!;
+                          _selectedSalespersonId = newValue.value;
+                        });
+
+                        // Guardar el vendedor seleccionado en la base de datos
+                        await VendedorDatabaseHelper()
+                            .insertVendedor(_selectedSalesperson!);
+                        print('Vendedor seleccionado: $newValue');
+                        print(_selectedSalesperson!.value);
+                        print(_selectedSalesperson!.nombre);
+                      },
+                      items: _vendedores.map((vendedor) {
+                        return DropdownMenuItem<Vendedor>(
+                          value: vendedor,
+                          child: Text(
+                            vendedor.nombre,
+                          ),
+                        );
+                      }).toList(),
                       decoration: InputDecoration(
                         labelText: 'Vendedor',
                         border: OutlineInputBorder(
