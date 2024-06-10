@@ -48,6 +48,7 @@ Future<List<Product>> fetchProducts() async {
       throw Exception('No token found');
     }
     
+    
     final response = await http.get(
       Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
       headers: {
@@ -59,7 +60,6 @@ Future<List<Product>> fetchProducts() async {
       final List<dynamic> data = jsonDecode(response.body);
       print(data);
       final products = data.map((json) => Product.fromJson(json)).toList();
-      await saveProductsToLocalDatabase(products); // Guarda los productos en la base de datos local
       return products;
     } else {
       throw Exception('Failed to load products');
@@ -71,13 +71,7 @@ Future<List<Product>> fetchProducts() async {
   }
 }
 
-  Future<void> saveProductsToLocalDatabase(List<Product> products) async {
-    final dbHelper = DatabaseHelper();
-    await dbHelper.deleteAllProducts(); // Limpiar la base de datos antes de insertar nuevos datos
-    for (var product in products) {
-      await dbHelper.insertProduct(product);
-    }
-  }
+
 
   Future<List<Product>> getProductsFromLocalDatabase() async {
     final dbHelper = DatabaseHelper();

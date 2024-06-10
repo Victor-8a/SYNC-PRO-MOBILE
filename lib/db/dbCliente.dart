@@ -90,4 +90,5 @@ class DatabaseHelper {
   }
 
   insertVendedor(Vendedor vendedor) {}
+
 }
