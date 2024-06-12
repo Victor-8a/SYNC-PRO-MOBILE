@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
+import 'package:sync_pro_mobile/db/dbGuardarPedido.dart' as dbGuardarPedido;
 import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbVendedores.dart';
 import 'db/dbProducto.dart' as product;
@@ -14,6 +15,7 @@ import 'Models/Producto.dart';
 import 'Models/Vendedor.dart';
 import 'crear_cliente.dart';
 import 'services/local_storage.dart';
+
 
 void saveSalesperson(Vendedor salesperson) async {
   String salespersonJson = jsonEncode(salesperson.toJson());
@@ -48,15 +50,18 @@ Future<Vendedor?> getSalesperson() async {
 // Función para guardar el pedido en la base de datos
 Future<int?> saveOrder(int selectedClient, String observations,
     int _selectedSalespersonId, DateTime selectedDate) async {
-  try {
-    String? token = await getTokenFromStorage();
-    String userId = await getIdFromStorage();
-    // ignore: unnecessary_null_comparison
-    if (token == null) {
-      print('return null pedido...');
-      return null;
-    }
+  String? token = await getTokenFromStorage();
+  String userId = await getIdFromStorage();
+  
+  // ignore: unnecessary_null_comparison
+  if (token == null) {
+    print('return null pedido...');
+    return null;
+  }
 
+  Map<String, dynamic> dataPedido = {}; // Declarar dataPedido fuera del bloque try-catch
+
+  try {
     print('INGRESO A SAVEORDER...');
     var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
     var headers = {
@@ -65,15 +70,15 @@ Future<int?> saveOrder(int selectedClient, String observations,
     };
     print('Guardando pedido...');
 
-    var dataPedido = {
+    dataPedido = {
       "CodCliente": selectedClient,
       "Fecha": DateTime.now().toIso8601String(),
       "Observaciones": observations,
       "IdUsuario": userId,
-      "FechaEntrega": selectedDate.toIso8601String(),
+      "FechaEntrega": selectedDate.toIso8601String(),  
       "CodMoneda": 1,
       "TipoCambio": 1,
-      "Anulado": false,
+      "Anulado": false, // Usar 0 en lugar de false
       "idVendedor": _selectedSalespersonId,
     };
     var body = jsonEncode(dataPedido);
@@ -81,9 +86,23 @@ Future<int?> saveOrder(int selectedClient, String observations,
     var response = await http.post(url, headers: headers, body: body);
     print(
         'Server responded with status code ${response.statusCode} and body: ${response.body}');
+    
     if (response.statusCode == 200) {
       var jsonResponse = json.decode(response.body);
       int idPedido = jsonResponse['savedOrder']['id'];
+
+      // Guardar en SQLite
+      dbGuardarPedido.DatabaseHelper db = dbGuardarPedido.DatabaseHelper();
+      await db.insertOrder(dataPedido);
+      print('Pedido guardado en SQLite: $dataPedido');
+
+      // Verificar si se guardó en SQLite
+      var savedOrder = await db.getAllOrders();
+      // ignore: unnecessary_null_comparison
+      if (savedOrder != null) {
+        print('Pedido verificado en SQLite: $savedOrder');
+      }
+
       return idPedido;
     } else {
       print(
@@ -91,10 +110,17 @@ Future<int?> saveOrder(int selectedClient, String observations,
       throw Exception('Failed to save order: ${response.statusCode}');
     }
   } catch (error) {
+    print('Error saving order: $error');
+    
+    // Guardar en SQLite en caso de error
+    dbGuardarPedido.DatabaseHelper db = dbGuardarPedido.DatabaseHelper();
+    await db.insertOrder(dataPedido);
+    print('Pedido guardado en SQLite después del error: $dataPedido');
     
     return null;
   }
 }
+
 
 Future<void> saveOrderDetail(
   int idPedido,
