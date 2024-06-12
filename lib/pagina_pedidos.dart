@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
-import 'package:sync_pro_mobile/db/dbGuardarPedido.dart' as dbGuardarPedido;
+import 'package:sync_pro_mobile/db/dbPedidos.dart' as dbGuardarPedido;
 import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbVendedores.dart';
 import 'db/dbProducto.dart' as product;
@@ -15,6 +15,7 @@ import 'Models/Producto.dart';
 import 'Models/Vendedor.dart';
 import 'crear_cliente.dart';
 import 'services/local_storage.dart';
+import 'db/dbDetallePedidos.dart' as dbDetallePedidos;
 
 
 void saveSalesperson(Vendedor salesperson) async {
@@ -155,6 +156,10 @@ Future<void> saveOrderDetail(
                     (_selectedProductPrices[product] ?? product.precioFinal)) *
                 (_discounts[product]! / 100)
       };
+
+      // Guardar en SQLite
+      await dbDetallePedidos.DatabaseHelper().insertOrderDetail(orderDetailData);
+
       var body = jsonEncode(orderDetailData);
       print(jsonEncode(orderDetailData));
 
