@@ -74,7 +74,7 @@ class VendedorDatabaseHelper {
         print('No internet connection, retrieving clients from local database');
         return false;
       }
-      final response = await http.get(Uri.parse('http://192.168.1.212:3000/vendedor'));
+      final response = await http.get(Uri.parse('http://192.168.1.212:3000/vendedor')).timeout(Duration(seconds: 5)); 
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
         List<Vendedor> vendedores = jsonResponse.map((data) => Vendedor.fromJson(data)).toList();

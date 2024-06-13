@@ -56,7 +56,7 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
       final response = await http.get(
         Uri.parse('http://192.168.1.212:3000/cliente'),
         headers: {'Authorization': 'Bearer $token'},
-      );
+      ).timeout(Duration(seconds: 5)); 
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonResponse = json.decode(response.body);

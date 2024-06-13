@@ -45,8 +45,13 @@ class DatabaseHelper {
     );
   }
 
-    Future<void> deleteOrderDetailsTable() async {
+  Future<void> deleteOrderDetailsTable() async {
     final db = await database;
     await db.execute('DROP TABLE IF EXISTS order_details');
-}
+  }
+
+  Future<List<Map<String, dynamic>>> getOrderDetails() async {
+    final db = await database;
+    return await db.query('order_details');
+  }
 }

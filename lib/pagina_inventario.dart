@@ -54,7 +54,7 @@ Future<List<Product>> fetchProducts() async {
       headers: {
         'Authorization': 'Bearer $token',
       },
-    ).timeout(Duration(seconds: 10)); // Añadimos un timeout para la petición HTTP
+    ).timeout(Duration(seconds: 5)); // Añadimos un timeout para la petición HTTP
     
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);

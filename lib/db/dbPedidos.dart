@@ -43,19 +43,21 @@ class DatabaseHelper {
     print("Tabla Orders creada correctamente.");
   }
 
-  Future<void> insertOrder(Map<String, dynamic> order) async {
+  Future<int> insertOrder(Map<String, dynamic> order) async {
     final db = await database;
 
     // Convertir valores booleanos a enteros
     order['Anulado'] = order['Anulado'] ? 1 : 0;
 
 
-    await db.insert(
+    int id = await db.insert(
       'Orders', // Nombre de la tabla en tu base de datos
       order,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+    print('Id pedido: $id');
     print('Pedido insertado en la base de datos: $order');
+    return id;
   }
   
   Future<List<Map<String, dynamic>>> getAllOrders() async {
@@ -81,4 +83,6 @@ class DatabaseHelper {
     );
     print('Pedido actualizado en la base de datos: $order');
   }
+
+  insertOrderDetail(Map<String, Object> orderDetailData) {}
 }

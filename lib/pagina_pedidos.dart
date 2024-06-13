@@ -115,13 +115,12 @@ Future<int?> saveOrder(int selectedClient, String observations,
     
     // Guardar en SQLite en caso de error
     dbGuardarPedido.DatabaseHelper db = dbGuardarPedido.DatabaseHelper();
-    await db.insertOrder(dataPedido);
+    
     print('Pedido guardado en SQLite después del error: $dataPedido');
     
-    return null;
+    return await db.insertOrder(dataPedido);
   }
 }
-
 
 Future<void> saveOrderDetail(
   int idPedido,
@@ -132,7 +131,8 @@ Future<void> saveOrderDetail(
 ) async {
   try {
     String? token = await getTokenFromStorage();
-    if (token == false) {
+    // ignore: unnecessary_null_comparison
+    if (token == null) {
       throw Exception('Token de autorización no válido');
     }
 
@@ -151,28 +151,38 @@ Future<void> saveOrderDetail(
         "PrecioVenta": _selectedProductPrices[product] ?? product.precioFinal,
         "PorcDescuento": _discounts[product],
         "Total": ((_selectedProductPrices[product] ?? product.precioFinal) *
-                selectedProductQuantities[product]!) -
-            (selectedProductQuantities[product]! *
-                    (_selectedProductPrices[product] ?? product.precioFinal)) *
-                (_discounts[product]! / 100)
+                  selectedProductQuantities[product]! -
+              (selectedProductQuantities[product]! *
+                      ((_selectedProductPrices[product] ?? product.precioFinal) *
+                          (_discounts[product] ?? 0) /
+                          100)))
       };
 
       // Guardar en SQLite
       await dbDetallePedidos.DatabaseHelper().insertOrderDetail(orderDetailData);
 
       var body = jsonEncode(orderDetailData);
-      print(jsonEncode(orderDetailData));
+      print('Datos del detalle del pedido a enviar: $body');
 
       var response = await http.post(url, headers: headers, body: body);
 
-      if (response.statusCode != 200) {
-        throw Exception('Failed to save order detail: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        print('Detalle del pedido guardado en la API correctamente');
+      } else {
+        print('Error al guardar el detalle del pedido en la API: ${response.statusCode}');
+        // Puedes manejar aquí el guardado en un almacenamiento local adicional
+        // en caso de fallo en la conexión.
       }
     }
-  } catch (error) {
+  } catch (error, stackTrace) {
     print('Hubo un error al guardar los detalles del pedido: $error');
+    // Puedes imprimir también el stack trace para tener más detalles del error.
+    print(stackTrace);
+    // Aquí podrías agregar lógica para guardar localmente en caso de error de conexión.
   }
 }
+
+
 
 //aqui inicia el widget
 class SeleccionarProducto extends StatefulWidget {
@@ -966,6 +976,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                               );
                             }
                           }
+                          print(confirm);
                         },
                         child: Text(
                           'Agregar Pedido',
