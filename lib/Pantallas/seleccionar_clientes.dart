@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'Models/Cliente.dart';
-import 'db/dbCliente.dart';
+import '../Models/Cliente.dart';
+import '../db/dbCliente.dart';
 
 
 class SeleccionarCliente extends StatefulWidget {

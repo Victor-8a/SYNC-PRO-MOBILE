@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:sync_pro_mobile/pagina_pedidos.dart';
-// Asegúrate de usar la ruta correcta
+import 'package:sync_pro_mobile/Pantallas/crear_cliente.dart';
 
-class NuevoPedido extends StatelessWidget {
-  @override
+class PaginaCliente extends StatelessWidget {
+  const PaginaCliente({super.key});
+
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
@@ -18,18 +19,16 @@ widthFactor: double.infinity,
             elevation: 5,
           ),
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null,)),
+            Navigator.push(context, MaterialPageRoute(builder: (context) => CrearCliente())
             );
           },
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.shopping_cart, color: Colors.white),
+              Icon(Icons.person_add_alt_rounded, color: Colors.white),
               SizedBox(width: 8), // Espacio entre el icono y el texto
               Text(
-                'Realizar Nuevo Pedido',
+                'Nuevo Cliente',
                 style: TextStyle(fontSize: 16),
               ),
             ],
@@ -37,5 +36,6 @@ widthFactor: double.infinity,
         ),
       ),
     );
+
   }
 }

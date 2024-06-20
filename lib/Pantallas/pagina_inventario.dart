@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/db/dbProducto.dart';
-import 'Models/Producto.dart';
+import 'package:sync_pro_mobile/Models/Producto.dart';
 
 class PaginaInventario extends StatefulWidget {
   const PaginaInventario({Key? key}) : super(key: key);

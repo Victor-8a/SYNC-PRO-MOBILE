@@ -27,7 +27,7 @@ class DatabaseHelper {
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE Orders (
+      CREATE TABLE Orders (      
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         CodCliente INTEGER,
         Fecha TEXT,
@@ -37,7 +37,7 @@ class DatabaseHelper {
         CodMoneda INTEGER,
         TipoCambio REAL,
         Anulado INTEGER,
-        idVendedor INTEGER
+        idVendedor INTEGER   
       )
     ''');
     print("Tabla Orders creada correctamente.");

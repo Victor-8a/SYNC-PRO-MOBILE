@@ -7,15 +7,15 @@ import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart' as dbGuardarPedido;
 import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbVendedores.dart';
-import 'db/dbProducto.dart' as product;
-import 'package:sync_pro_mobile/seleccionar_clientes.dart';
+import '../db/dbProducto.dart' as product;
+import 'package:sync_pro_mobile/Pantallas/seleccionar_clientes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'Models/Producto.dart';
-import 'Models/Vendedor.dart';
+import '../Models/Producto.dart';
+import '../Models/Vendedor.dart';
 import 'crear_cliente.dart';
-import 'services/local_storage.dart';
-import 'db/dbDetallePedidos.dart' as dbDetallePedidos;
+import '../services/local_storage.dart';
+import '../db/dbDetallePedidos.dart' as dbDetallePedidos;
 
 
 void saveSalesperson(Vendedor salesperson) async {
@@ -48,6 +48,8 @@ Future<Vendedor?> getSalesperson() async {
   }
 }
 
+//Aqui empieza a realikzar las acciopnes de guardar pedido 
+//y guardar el detalle del pedido desde la base de datos y a la appi 
 // Función para guardar el pedido en la base de datos
 Future<int?> saveOrder(int selectedClient, String observations,
     int _selectedSalespersonId, DateTime selectedDate) async {
@@ -157,7 +159,6 @@ Future<void> saveOrderDetail(
                           (_discounts[product] ?? 0) /
                           100)))
       };
-
       // Guardar en SQLite
       await dbDetallePedidos.DatabaseHelper().insertOrderDetail(orderDetailData);
 
@@ -182,7 +183,7 @@ Future<void> saveOrderDetail(
   }
 }
 
-
+//aqui finalizan las acciones de este bloque de codigo 
 
 //aqui inicia el widget
 class SeleccionarProducto extends StatefulWidget {
@@ -227,7 +228,7 @@ Future<List<Product>> getProductsFromLocalDatabase() async {
 
   // print("Obteniendo productos de la base de datos local...");
   List<Product> products = await dbHelper.getProducts();
-  // print("Productos obtenidos: $products");
+  print("Productos obtenidos: $products");
 
   return products;
 }
@@ -433,11 +434,11 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
       if (vendedores.isNotEmpty) {
         return vendedores.first;
       } else {
-        throw Exception('No salesperson found in local database');
+        throw Exception('Vendedor no encontrado en la base de datos local');
       }
     } catch (error) {
-      print('Error getting salesperson from local database: $error');
-      throw Exception('Failed to get salesperson from local database: $error');
+      print('Error en obtener el vendedor desde la base de datos: $error');
+      throw Exception('Fallo en obtener el vendedorde manera Local $error');
     }
   }
 
@@ -544,7 +545,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
             context: context,
             builder: (context) => AlertDialog(
               title: Text('¿Está seguro?'),
-              content: Text('Puede perder algunos datos si retrocede.'),
+              content: Text('Puede perder los datos de su pedido si retrocede.'),
               actions: [
                 TextButton(
                   onPressed: () {

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'main.dart';
-import 'pagina_inventario.dart';
-import 'nuevo_pedido.dart';
-import 'pagina_cliente.dart';
-import 'pagina_vendedores.dart';
-import 'pagina_registrar.dart';
+import 'package:sync_pro_mobile/services/warning_widget_cubit.dart';
+import '../main.dart';
+import '../Pantallas/pagina_inventario.dart';
+import '../Pantallas/nuevo_pedido.dart';
+import '../Pantallas/pagina_cliente.dart';
+import '../Pantallas/pagina_vendedores.dart';
+import '../Pantallas/pagina_registrar.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 
 void main() {
@@ -83,13 +84,18 @@ Future<void> _loadUserName() async {
         title: Text(
           'Sync Pro Mobile',
           style: TextStyle(color: Colors.white),
+          
         ),
         backgroundColor: Colors.blue,
+        
       ),
+
+   
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
+            
             DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.blue,
@@ -110,7 +116,12 @@ Future<void> _loadUserName() async {
           ],
         ),
       ),
-      body: _pages.elementAt(_selectedIndex),
+      body: Column(
+        children: [
+           WarningWidgetCubit(),
+          Expanded(child: _pages.elementAt(_selectedIndex)),
+        ],
+      ),
       bottomNavigationBar: CurvedNavigationBar(
         index: _selectedIndex,
         height: 50,
@@ -127,7 +138,9 @@ Future<void> _loadUserName() async {
         animationCurve: Curves.easeInOut,
         animationDuration: const Duration(milliseconds: 300),
       ),
+      
     );
+    
   }
 }
 
