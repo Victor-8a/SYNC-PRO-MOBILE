@@ -27,39 +27,56 @@ class DatabaseHelper {
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE Orders (      
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        CodCliente INTEGER,
-        Fecha TEXT,
-        Observaciones TEXT,
-        IdUsuario TEXT,
-        FechaEntrega TEXT,
-        CodMoneda INTEGER,
-        TipoCambio REAL,
-        Anulado INTEGER,
-        idVendedor INTEGER   
-      )
-    ''');
+  CREATE TABLE Orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    CodCliente INTEGER,
+    Fecha TEXT,
+    Observaciones TEXT,
+    IdUsuario TEXT,
+    FechaEntrega TEXT,
+    CodMoneda INTEGER,
+    TipoCambio REAL,
+    Anulado INTEGER,
+    idVendedor INTEGER,
+    synced INTEGER DEFAULT 0
+  )
+''');
     print("Tabla Orders creada correctamente.");
   }
-
-  Future<int> insertOrder(Map<String, dynamic> order) async {
-    final db = await database;
-
-    // Convertir valores booleanos a enteros
-    order['Anulado'] = order['Anulado'] ? 1 : 0;
-
-
-    int id = await db.insert(
-      'Orders', // Nombre de la tabla en tu base de datos
-      order,
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
-    print('Id pedido: $id');
-    print('Pedido insertado en la base de datos: $order');
-    return id;
-  }
   
+Future<int> insertOrder(Map<String, dynamic> order) async {
+  final db = await database;
+
+  // Convertir valores booleanos a enteros
+  order['Anulado'] = order['Anulado'] ? 1 : 0;
+
+  order['synced'] = 0; // Marcar pedido como no sincronizado
+
+  int id = await db.insert(
+    'Orders',
+    order,
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+  print('Pedido insertado en la base de datos: $order');
+  return id;
+}
+
+Future<List<Map<String, dynamic>>> getUnsyncedOrders() async {
+  final db = await database;
+  return await db.query('Orders', where: 'synced =?', whereArgs: [0]);
+}
+
+Future<void> markOrderAsSynced(int id) async {
+  final db = await database;
+  await db.update(
+    'Orders',
+    {'synced': 1},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+}
+
+
   Future<List<Map<String, dynamic>>> getAllOrders() async {
   final db = await database;
   var result = await db.query('Orders');
@@ -70,8 +87,6 @@ class DatabaseHelper {
   }
   return result;
 }
-
-
 
   Future<void> updateOrder(Map<String, dynamic> order) async {
     final db = await database;

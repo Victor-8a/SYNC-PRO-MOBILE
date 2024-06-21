@@ -51,6 +51,76 @@ Future<Vendedor?> getSalesperson() async {
 //Aqui empieza a realikzar las acciopnes de guardar pedido 
 //y guardar el detalle del pedido desde la base de datos y a la appi 
 // Función para guardar el pedido en la base de datos
+
+Future<void> syncOrders() async {
+  List<Map<String, dynamic>> unsyncedOrders = await dbGuardarPedido.DatabaseHelper().getUnsyncedOrders();
+  String? token = await getTokenFromStorage();
+  // ignore: unnecessary_null_comparison
+  if (token == null) {
+    print('Token no disponible, no se pueden sincronizar los pedidos.');
+    return;
+  }
+
+  for (var order in unsyncedOrders) {
+    try {
+      var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
+      var headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      // Crear una copia del pedido excluyendo el campo 'synced'
+      var orderCopy = Map<String, dynamic>.from(order);
+      orderCopy.remove('synced');
+      orderCopy.remove('id');
+
+      var body = jsonEncode(orderCopy);
+      print('Enviando pedido: $body'); // Imprimir el cuerpo de la solicitud para depuración
+      var response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 200) {
+        var jsonResponse = json.decode(response.body);
+        // ignore: unused_local_variable
+        int idPedido = jsonResponse['savedOrder']['id'];
+
+        await dbGuardarPedido.DatabaseHelper().markOrderAsSynced(order['id']);
+        print('Pedido sincronizado correctamente: $order');
+        
+        // Sincronizar detalles del pedido
+        List<Map<String, dynamic>> unsyncedOrderDetails = await dbDetallePedidos.DatabaseHelper().getUnsyncedOrderDetails(order['id']);
+        print(unsyncedOrderDetails);
+        for (var detail in unsyncedOrderDetails) {
+          try {
+
+              var detailCopy = Map<String, dynamic>.from(detail);
+             detailCopy.remove('Id');
+             detailCopy['IdPedido']=idPedido;
+             print(detailCopy);
+
+            var detailUrl = Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
+            var detailBody = jsonEncode(detailCopy);
+            
+            print('Enviando detalle del pedido: $detailBody'); // Imprimir el cuerpo de la solicitud para depuración
+            var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
+
+            if (detailResponse.statusCode == 200) {
+              
+              print('Detalle del pedido sincronizado correctamente: $detail');
+            } else {
+              print('Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
+            }
+          } catch (error) {
+            print('Error al sincronizar detalle del pedido: $error');
+          }
+        }
+      } else {
+        print('Error al sincronizar pedido: ${response.statusCode} - ${response.body}');
+      }
+    } catch (error) {
+      print('Error al sincronizar pedido: $error');
+    }
+  }
+}
 Future<int?> saveOrder(int selectedClient, String observations,
     int _selectedSalespersonId, DateTime selectedDate) async {
   String? token = await getTokenFromStorage();
@@ -128,8 +198,8 @@ Future<void> saveOrderDetail(
   int idPedido,
   List<Product> selectedProducts,
   Map<Product, int> selectedProductQuantities,
-  Map<Product, double> _selectedProductPrices,
-  Map<Product, double> _discounts,
+  Map<Product, double> selectedProductPrices,
+  Map<Product, double> discounts,
 ) async {
   try {
     String? token = await getTokenFromStorage();
@@ -150,15 +220,16 @@ Future<void> saveOrderDetail(
         "CodArticulo": product.codigo,
         "Descripcion": product.descripcion,
         "Cantidad": selectedProductQuantities[product],
-        "PrecioVenta": _selectedProductPrices[product] ?? product.precioFinal,
-        "PorcDescuento": _discounts[product],
-        "Total": ((_selectedProductPrices[product] ?? product.precioFinal) *
+        "PrecioVenta": selectedProductPrices[product] ?? product.precioFinal,
+        "PorcDescuento": discounts[product],
+        "Total": ((selectedProductPrices[product] ?? product.precioFinal) *
                   selectedProductQuantities[product]! -
               (selectedProductQuantities[product]! *
-                      ((_selectedProductPrices[product] ?? product.precioFinal) *
-                          (_discounts[product] ?? 0) /
+                      ((selectedProductPrices[product] ?? product.precioFinal) *
+                          (discounts[product] ?? 0) /
                           100)))
       };
+
       // Guardar en SQLite
       await dbDetallePedidos.DatabaseHelper().insertOrderDetail(orderDetailData);
 
@@ -169,6 +240,9 @@ Future<void> saveOrderDetail(
 
       if (response.statusCode == 200) {
         print('Detalle del pedido guardado en la API correctamente');
+        // Marcar el detalle del pedido como sincronizado en la base de datos local
+        await dbDetallePedidos.DatabaseHelper().markOrderDetailAsSynced(idPedido);
+        print('Detalle del pedido marcado como sincronizado en SQLite: $orderDetailData');
       } else {
         print('Error al guardar el detalle del pedido en la API: ${response.statusCode}');
         // Puedes manejar aquí el guardado en un almacenamiento local adicional
@@ -182,7 +256,6 @@ Future<void> saveOrderDetail(
     // Aquí podrías agregar lógica para guardar localmente en caso de error de conexión.
   }
 }
-
 //aqui finalizan las acciones de este bloque de codigo 
 
 //aqui inicia el widget
@@ -194,6 +267,7 @@ class SeleccionarProducto extends StatefulWidget {
   @override
   _SeleccionarProductoState createState() => _SeleccionarProductoState();
 }
+
 
 class _SeleccionarProductoState extends State<SeleccionarProducto> {
   List<Product> _selectedProducts =
@@ -248,6 +322,8 @@ Future<List<Product>> getProductsFromLocalDatabase() async {
       }).toList();
     });
   }
+
+
 
   @override
 Widget build(BuildContext context) {
@@ -531,6 +607,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
       return false;
     }
   }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -564,6 +641,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           // Devolver true si el usuario confirma, false si cancela
           return confirm;
         },
+        
         child: Scaffold(
             appBar: AppBar(
               title: Text(
@@ -576,6 +654,9 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+
+
+                  
                   children: [
                     // Ahora puedes usar _vendedores en tu DropdownButtonFormField
                     DropdownButtonFormField<Vendedor>(
@@ -618,9 +699,21 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                         fontSize: 14,
                         color: Colors.black,
                       ),
+                       ),
+//          SizedBox(height: 20), // Espacio entre el Dropdown y el botón
+// ElevatedButton(
+//   onPressed: () async {
+//     await syncOrders();
+//   },
+//   style: ElevatedButton.styleFrom(
+//     backgroundColor: Colors.blue, // Color de fondo del botón
+//   ),
+//   child: Text('Sincronizar Pedidos',
+//    style: TextStyle(color: Colors.white), 
+// ),
 
-                      // Elevación de la lista desplegable
-                    ),
+// ),
+
                     Column(
                       children: [
                         Row(

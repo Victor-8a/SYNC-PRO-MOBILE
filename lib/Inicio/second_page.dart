@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sync_pro_mobile/Pantallas/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/services/warning_widget_cubit.dart';
 import '../main.dart';
 import '../Pantallas/pagina_inventario.dart';
@@ -108,6 +109,33 @@ Future<void> _loadUserName() async {
                 ),
               ),
             ),
+                     ElevatedButton(
+  onPressed: () async {
+    await syncOrders();
+  },
+  style: ElevatedButton.styleFrom(
+    backgroundColor: Colors.white, // Color de fondo del botón (blanco)
+    iconColor: Colors.blue, // Color del texto (azul)
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8), // Bordes redondeados
+      side: BorderSide(color: Colors.blue), // Borde con color azul
+    ),
+  ),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      Icon(Icons.sync, color: Colors.blue), // Icono de sincronización azul
+      SizedBox(width: 8), // Espacio entre el icono y el texto
+      Text(
+        'Sincronizar Pedidos',
+        style: TextStyle(
+          color: Colors.blue, // Color del texto (azul)
+          fontWeight: FontWeight.bold, // Negrita
+        ),
+      ),
+    ],
+  ),
+),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar sesión'),
@@ -116,6 +144,7 @@ Future<void> _loadUserName() async {
           ],
         ),
       ),
+      
       body: Column(
         children: [
            WarningWidgetCubit(),
