@@ -17,7 +17,6 @@ import 'crear_cliente.dart';
 import '../services/local_storage.dart';
 import '../db/dbDetallePedidos.dart' as dbDetallePedidos;
 
-
 void saveSalesperson(Vendedor salesperson) async {
   String salespersonJson = jsonEncode(salesperson.toJson());
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -48,16 +47,21 @@ Future<Vendedor?> getSalesperson() async {
   }
 }
 
-//Aqui empieza a realikzar las acciopnes de guardar pedido 
-//y guardar el detalle del pedido desde la base de datos y a la appi 
+//Aqui empieza a realikzar las acciopnes de guardar pedido
+//y guardar el detalle del pedido desde la base de datos y a la appi
 // Función para guardar el pedido en la base de datos
 
 Future<void> syncOrders() async {
-  List<Map<String, dynamic>> unsyncedOrders = await dbGuardarPedido.DatabaseHelper().getUnsyncedOrders();
+  List<Map<String, dynamic>> unsyncedOrders =
+      await dbGuardarPedido.DatabaseHelper().getUnsyncedOrders();
   String? token = await getTokenFromStorage();
   // ignore: unnecessary_null_comparison
   if (token == null) {
-    print('Token no disponible, no se pueden sincronizar los pedidos.');
+    Fluttertoast.showToast(
+      msg: 'Token no disponible, no se pueden sincronizar los pedidos.',
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+    );
     return;
   }
 
@@ -75,68 +79,115 @@ Future<void> syncOrders() async {
       orderCopy.remove('id');
 
       var body = jsonEncode(orderCopy);
-      print('Enviando pedido: $body'); // Imprimir el cuerpo de la solicitud para depuración
+      print('Enviando pedido: $body');
       var response = await http.post(url, headers: headers, body: body);
 
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
-        // ignore: unused_local_variable
         int idPedido = jsonResponse['savedOrder']['id'];
 
-        await dbGuardarPedido.DatabaseHelper().markOrderAsSynced(order['id']);
-        print('Pedido sincronizado correctamente: $order');
         
+        print('Pedido sincronizado correctamente: $order');
+
+        // Mostrar notificación de éxito
+        Fluttertoast.showToast(
+          msg: 'Pedido sincronizado correctamente.',
+          textColor: Colors.blue,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+
         // Sincronizar detalles del pedido
-        List<Map<String, dynamic>> unsyncedOrderDetails = await dbDetallePedidos.DatabaseHelper().getUnsyncedOrderDetails(order['id']);
-        print(unsyncedOrderDetails);
-        for (var detail in unsyncedOrderDetails) {
-          try {
+ // Sincronizar detalles del pedido
+List<Map<String, dynamic>> unsyncedOrderDetails =
+    await dbDetallePedidos.DatabaseHelper().getUnsyncedOrderDetails(order['id']);
+print(unsyncedOrderDetails);
 
-              var detailCopy = Map<String, dynamic>.from(detail);
-             detailCopy.remove('Id');
-             detailCopy['IdPedido']=idPedido;
-             print(detailCopy);
+int syncedDetailsCount = 0; // Contador para detalles sincronizados correctamente
 
-            var detailUrl = Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
-            var detailBody = jsonEncode(detailCopy);
-            
-            print('Enviando detalle del pedido: $detailBody'); // Imprimir el cuerpo de la solicitud para depuración
-            var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
+for (int i = 0; i < unsyncedOrderDetails.length; i++) {
+  var detail = unsyncedOrderDetails[i];
+  try {
+    var detailCopy = Map<String, dynamic>.from(detail);
+    detailCopy.remove('Id');
+    detailCopy['IdPedido'] = idPedido;
+    print(detailCopy);
 
-            if (detailResponse.statusCode == 200) {
-              
-              print('Detalle del pedido sincronizado correctamente: $detail');
-            } else {
-              print('Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
-            }
-          } catch (error) {
-            print('Error al sincronizar detalle del pedido: $error');
-          }
-        }
+    var detailUrl = Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
+    var detailBody = jsonEncode(detailCopy);
+
+    print('Enviando detalle del pedido: $detailBody');
+    var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
+
+    if (detailResponse.statusCode == 200) {
+      syncedDetailsCount++; // Incrementa el contador de detalles sincronizados
+
+      if (syncedDetailsCount == unsyncedOrderDetails.length) {
+        // Si todos los detalles se han sincronizado correctamente
+        print('Todos los detalles del pedido sincronizados correctamente.');
+
+        // Marcar el pedido como sincronizado solo después de sincronizar todos los detalles
+        await dbGuardarPedido.DatabaseHelper().markOrderAsSynced(order['id']);
+
+        // Mostrar notificación de éxito solo una vez al final
+        Fluttertoast.showToast(
+          msg: 'Pedido y detalles sincronizados correctamente.',
+          textColor: Colors.blue,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
+    } else {
+      print('Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
+      // Manejo de errores y notificación de error si es necesario
+    }
+  } catch (error) {
+    print('Error al sincronizar detalle del pedido: $error');
+    // Manejo de errores y notificación de error si es necesario
+  }
+}
+
       } else {
-        print('Error al sincronizar pedido: ${response.statusCode} - ${response.body}');
+        print(
+            'Error al sincronizar pedido: ${response.statusCode} - ${response.body}');
+
+        // Mostrar notificación de error
+        Fluttertoast.showToast(
+          msg: 'Error al sincronizar pedido: ${response.statusCode}',
+          textColor: Colors.red,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
       }
     } catch (error) {
       print('Error al sincronizar pedido: $error');
+
+      // Mostrar notificación de error
+      Fluttertoast.showToast(
+        msg: 'Error al sincronizar pedido.',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
     }
   }
 }
+
 Future<int?> saveOrder(int selectedClient, String observations,
     int _selectedSalespersonId, DateTime selectedDate) async {
   String? token = await getTokenFromStorage();
   String userId = await getIdFromStorage();
-  
+
   // ignore: unnecessary_null_comparison
   if (token == null) {
-    print('return null pedido...');
     return null;
   }
 
-  Map<String, dynamic> dataPedido = {}; // Declarar dataPedido fuera del bloque try-catch
+  Map<String, dynamic> dataPedido =
+      {}; // Declarar dataPedido fuera del bloque try-catch
 
   try {
     print('INGRESO A SAVEORDER...');
-    var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
+    var url = Uri.parse('/');
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -148,7 +199,7 @@ Future<int?> saveOrder(int selectedClient, String observations,
       "Fecha": DateTime.now().toIso8601String(),
       "Observaciones": observations,
       "IdUsuario": userId,
-      "FechaEntrega": selectedDate.toIso8601String(),  
+      "FechaEntrega": selectedDate.toIso8601String(),
       "CodMoneda": 1,
       "TipoCambio": 1,
       "Anulado": false, // Usar 0 en lugar de false
@@ -159,7 +210,7 @@ Future<int?> saveOrder(int selectedClient, String observations,
     var response = await http.post(url, headers: headers, body: body);
     print(
         'Server responded with status code ${response.statusCode} and body: ${response.body}');
-    
+
     if (response.statusCode == 200) {
       var jsonResponse = json.decode(response.body);
       int idPedido = jsonResponse['savedOrder']['id'];
@@ -184,12 +235,12 @@ Future<int?> saveOrder(int selectedClient, String observations,
     }
   } catch (error) {
     print('Error saving order: $error');
-    
+
     // Guardar en SQLite en caso de error
     dbGuardarPedido.DatabaseHelper db = dbGuardarPedido.DatabaseHelper();
-    
+
     print('Pedido guardado en SQLite después del error: $dataPedido');
-    
+
     return await db.insertOrder(dataPedido);
   }
 }
@@ -208,7 +259,7 @@ Future<void> saveOrderDetail(
       throw Exception('Token de autorización no válido');
     }
 
-    var url = Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
+    var url = Uri.parse('/');
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -221,17 +272,18 @@ Future<void> saveOrderDetail(
         "Descripcion": product.descripcion,
         "Cantidad": selectedProductQuantities[product],
         "PrecioVenta": selectedProductPrices[product] ?? product.precioFinal,
-        "PorcDescuento": discounts[product],
+        "PorcDescuento": discounts[product] ?? 0,
         "Total": ((selectedProductPrices[product] ?? product.precioFinal) *
-                  selectedProductQuantities[product]! -
-              (selectedProductQuantities[product]! *
-                      ((selectedProductPrices[product] ?? product.precioFinal) *
-                          (discounts[product] ?? 0) /
-                          100)))
+                selectedProductQuantities[product]! -
+            (selectedProductQuantities[product]! *
+                ((selectedProductPrices[product] ?? product.precioFinal) *
+                    (discounts[product] ?? 0) /
+                    100)))
       };
 
       // Guardar en SQLite
-      await dbDetallePedidos.DatabaseHelper().insertOrderDetail(orderDetailData);
+      await dbDetallePedidos.DatabaseHelper()
+          .insertOrderDetail(orderDetailData);
 
       var body = jsonEncode(orderDetailData);
       print('Datos del detalle del pedido a enviar: $body');
@@ -241,10 +293,13 @@ Future<void> saveOrderDetail(
       if (response.statusCode == 200) {
         print('Detalle del pedido guardado en la API correctamente');
         // Marcar el detalle del pedido como sincronizado en la base de datos local
-        await dbDetallePedidos.DatabaseHelper().markOrderDetailAsSynced(idPedido);
-        print('Detalle del pedido marcado como sincronizado en SQLite: $orderDetailData');
+        await dbDetallePedidos.DatabaseHelper()
+            .markOrderDetailAsSynced(idPedido);
+        print(
+            'Detalle del pedido marcado como sincronizado en SQLite: $orderDetailData');
       } else {
-        print('Error al guardar el detalle del pedido en la API: ${response.statusCode}');
+        print(
+            'Error al guardar el detalle del pedido en la API: ${response.statusCode}');
         // Puedes manejar aquí el guardado en un almacenamiento local adicional
         // en caso de fallo en la conexión.
       }
@@ -256,7 +311,7 @@ Future<void> saveOrderDetail(
     // Aquí podrías agregar lógica para guardar localmente en caso de error de conexión.
   }
 }
-//aqui finalizan las acciones de este bloque de codigo 
+//aqui finalizan las acciones de este bloque de codigo
 
 //aqui inicia el widget
 class SeleccionarProducto extends StatefulWidget {
@@ -268,7 +323,6 @@ class SeleccionarProducto extends StatefulWidget {
   _SeleccionarProductoState createState() => _SeleccionarProductoState();
 }
 
-
 class _SeleccionarProductoState extends State<SeleccionarProducto> {
   List<Product> _selectedProducts =
       []; // Inicializa la lista de productos seleccionados
@@ -279,34 +333,32 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
   List<bool> _productSelected = [];
   TextEditingController _searchController = TextEditingController();
 
-  
- 
+  @override
+  void initState() {
+    super.initState();
+    getProductsFromLocalDatabase();
+    _productSelected = List<bool>.filled(widget.productos.length, false);
+    _filteredProducts = List.from(widget.productos);
+    _searchController.addListener(_onSearchChanged);
 
-@override
-void initState() {
-  super.initState();
-   getProductsFromLocalDatabase();
-  _productSelected = List<bool>.filled(widget.productos.length, false);
-  _filteredProducts = List.from(widget.productos);
-  _searchController.addListener(_onSearchChanged);
-
-  // Inicializar _selectedProductPrices, _selectedProductQuantities y _discounts por defecto
-  for (var product in _selectedProducts) {
-    _selectedProductPrices[product] = product.precioFinal;
-    _selectedProductQuantities[product] = 1; // Inicializa las cantidades a 1 si es necesario
-    _discounts[product] = 0; // Inicializa los descuentos a 0 si es necesario
+    // Inicializar _selectedProductPrices, _selectedProductQuantities y _discounts por defecto
+    for (var product in _selectedProducts) {
+      _selectedProductPrices[product] = product.precioFinal;
+      _selectedProductQuantities[product] =
+          1; // Inicializa las cantidades a 1 si es necesario
+      _discounts[product] = 0; // Inicializa los descuentos a 0 si es necesario
+    }
   }
-}
-Future<List<Product>> getProductsFromLocalDatabase() async {
-  final dbHelper = product.DatabaseHelper(); // Usar la versión de dbProducto
 
-  // print("Obteniendo productos de la base de datos local...");
-  List<Product> products = await dbHelper.getProducts();
-  print("Productos obtenidos: $products");
+  Future<List<Product>> getProductsFromLocalDatabase() async {
+    final dbHelper = product.DatabaseHelper(); // Usar la versión de dbProducto
 
-  return products;
-}
+    // print("Obteniendo productos de la base de datos local...");
+    List<Product> products = await dbHelper.getProducts();
+    print("Productos obtenidos: $products");
 
+    return products;
+  }
 
   @override
   void dispose() {
@@ -323,79 +375,77 @@ Future<List<Product>> getProductsFromLocalDatabase() async {
     });
   }
 
-
-
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: Text(
-        'Productos',
-        style: TextStyle(color: Colors.white),
-      ),
-      backgroundColor: Colors.blue,
-    ),
-    body: Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20.0),
-              ),
-              labelText: 'Buscar producto',
-              prefixIcon: Icon(Icons.search),
-              prefixIconColor: Colors.blue,
-            ),
-            cursorColor: Colors.blue,
-          ),
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Productos',
+          style: TextStyle(color: Colors.white),
         ),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+        backgroundColor: Colors.blue,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(20.0),
+                ),
+                labelText: 'Buscar producto',
+                prefixIcon: Icon(Icons.search),
+                prefixIconColor: Colors.blue,
               ),
-              color: Colors.blue.withOpacity(0),
+              cursorColor: Colors.blue,
             ),
-            child: ListView.builder(
-              itemCount: _filteredProducts.length,
-              itemBuilder: (context, index) {
-                final product = _filteredProducts[index];
-                return ListTile(
-                  title: Text(
-                    product.descripcion,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Precio: Q${product.precioFinal.toStringAsFixed(2)}',
-                      ),
-                      Text(
-                        'Existencia: ${product.existencia}',
-                      ),
-                      Text(
-                        'Precio B: Q${product.precioB.toStringAsFixed(2)}',
-                      ),
-                      Text(
-                        'Precio C: Q${product.precioC.toStringAsFixed(2)}',
-                      ),
-                      Text(
-                        'Precio D: Q${product.precioD.toStringAsFixed(2)}',
-                      ),
-                    ],
-                  ),
-                  onTap: _productSelected[index]
-                      ? null
-                      : () {
-                          Navigator.pop(context, product);
-                          setState(() {
-                            _productSelected[index] = true;
+          ),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+                color: Colors.blue.withOpacity(0),
+              ),
+              child: ListView.builder(
+                itemCount: _filteredProducts.length,
+                itemBuilder: (context, index) {
+                  final product = _filteredProducts[index];
+                  return ListTile(
+                    title: Text(
+                      product.descripcion,
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Precio: Q${product.precioFinal.toStringAsFixed(2)}',
+                        ),
+                        Text(
+                          'Existencia: ${product.existencia}',
+                        ),
+                        Text(
+                          'Precio B: Q${product.precioB.toStringAsFixed(2)}',
+                        ),
+                        Text(
+                          'Precio C: Q${product.precioC.toStringAsFixed(2)}',
+                        ),
+                        Text(
+                          'Precio D: Q${product.precioD.toStringAsFixed(2)}',
+                        ),
+                      ],
+                    ),
+                    onTap: _productSelected[index]
+                        ? null
+                        : () {
+                            Navigator.pop(context, product);
+                            setState(() {
+                              _productSelected[index] = true;
                             });
                           },
                   );
@@ -479,13 +529,14 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
       try {
         final response = await http.get(
             Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
-        print(response.body);
+        print(response.body)
+        ;
 
         if (response.statusCode == 200) {
           Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
           print(vendedor.value);
           print(vendedor.nombre);
-
+print("Exito vendedores $response");
           // Guardar el vendedor en la base de datos local
           // await saveVendedorToLocalDatabase(vendedor);
 
@@ -499,6 +550,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         throw Exception('Failed to load salesperson: $error');
       }
     } else {
+      print("Fallo Vendedores");
       throw Exception('Failed to load salesperson: idVendedor is null');
     }
   }
@@ -593,11 +645,10 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           _vendedores = vendedores;
         });
       }
-    }else {
-          fetchVendedores();
-          
+    } else {
+      fetchVendedores();
     }
-  }     
+  }
 
   Future<bool> _tryFetchAndStoreVendedores() async {
     try {
@@ -607,7 +658,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
       return false;
     }
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -622,7 +672,8 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
             context: context,
             builder: (context) => AlertDialog(
               title: Text('¿Está seguro?'),
-              content: Text('Puede perder los datos de su pedido si retrocede.'),
+              content:
+                  Text('Puede perder los datos de su pedido si retrocede.'),
               actions: [
                 TextButton(
                   onPressed: () {
@@ -641,7 +692,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           // Devolver true si el usuario confirma, false si cancela
           return confirm;
         },
-        
         child: Scaffold(
             appBar: AppBar(
               title: Text(
@@ -654,9 +704,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
-
-                  
                   children: [
                     // Ahora puedes usar _vendedores en tu DropdownButtonFormField
                     DropdownButtonFormField<Vendedor>(
@@ -699,21 +746,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                         fontSize: 14,
                         color: Colors.black,
                       ),
-                       ),
-//          SizedBox(height: 20), // Espacio entre el Dropdown y el botón
-// ElevatedButton(
-//   onPressed: () async {
-//     await syncOrders();
-//   },
-//   style: ElevatedButton.styleFrom(
-//     backgroundColor: Colors.blue, // Color de fondo del botón
-//   ),
-//   child: Text('Sincronizar Pedidos',
-//    style: TextStyle(color: Colors.white), 
-// ),
-
-// ),
-
+                    ),
                     Column(
                       children: [
                         Row(
@@ -804,7 +837,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                         'Seleccionar Producto',
                         style: TextStyle(color: Colors.white),
                       ),
-
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _buttonColor,
                         shape: RoundedRectangleBorder(
@@ -1157,14 +1189,17 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     final response =
         await http.get(Uri.parse('http://192.168.1.212:3000/vendedor'));
     if (response.statusCode == 200) {
+      print("Exito vendedores $response");
       List<dynamic> jsonResponse = json.decode(response.body);
-       final vendedores = jsonResponse.map((data) => Vendedor.fromJson(data)).toList();
-       if (mounted) {
+      final vendedores =
+          jsonResponse.map((data) => Vendedor.fromJson(data)).toList();
+      if (mounted) {
         setState(() {
           _vendedores = vendedores;
         });
       }
     } else {
+      print("Fallo vendedores $response");
       throw Exception('Failed to load vendedores');
     }
   }
@@ -1200,80 +1235,78 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         selectedClientJson); // Guardar el nombre del cliente en SharedPreferences
   }
 
+  void _navigateToSeleccionarProducto(BuildContext context) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
 
-
-void _navigateToSeleccionarProducto(BuildContext context) async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? token = prefs.getString('token');
-
-  if (token == null) {
-    print('No token found');
-    return;
-  }
-
-  try {
-    List<Product> products = [];
-
-    // Si hay token, intenta obtener los productos de la base de datos local
-    DatabaseHelper dbHelper = DatabaseHelper();
-    List<Product> productsFromDB = await dbHelper.getProducts();
-
-    // Si hay productos en la base de datos local, usarlos
-    if (productsFromDB.isNotEmpty) {
-      products = productsFromDB;
-    } else {
-      // Si no hay productos en la base de datos, hacer la llamada HTTP para obtenerlos
-      final response = await http.get(
-        Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
-
-      if (response.statusCode == 200) {
-        List<dynamic> jsonResponse = json.decode(response.body);
-
-        for (var productData in jsonResponse) {
-          products.add(Product.fromJson(productData));
-        }
-      } else {
-        print('Failed to load products: ${response.statusCode}');
-        return;
-      }
+    if (token == null) {
+      print('No token found');
+      return;
     }
 
-    // Mostrar los productos, ya sean de la base de datos o de la solicitud HTTP
-    print("PRODUCTOD BD");
-    print(productsFromDB);
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SeleccionarProducto(productos:products),
-  
-      )
-      
-      
-    ).then((selectedProduct) {
-          if (selectedProduct != null) {
-            print(selectedProduct.precioFinal);
-            print(selectedProduct.precioB);
-            print(selectedProduct.precioC);
-            print(selectedProduct.precioD);
-            print('PRODUCTOS');
-            setState(() {
-              _selectedProducts.add(selectedProduct);
-              if (_selectedProductQuantities.containsKey(selectedProduct)) {
-                // Si el producto ya está en la lista, aumentar la cantidad
-                _selectedProductQuantities[selectedProduct] =
-                    _selectedProductQuantities[selectedProduct]! + 1;
-              } else {
-                // Si es un nuevo producto, establecer la cantidad en 1
-                _selectedProductQuantities[selectedProduct] = 1;
-              }
-            });
-  } });}catch (error) {
-    print('Error loading products: $error');
-  }
-}
+    try {
+      List<Product> products = [];
 
+      // Si hay token, intenta obtener los productos de la base de datos local
+      DatabaseHelper dbHelper = DatabaseHelper();
+      List<Product> productsFromDB = await dbHelper.getProducts();
+
+      // Si hay productos en la base de datos local, usarlos
+      if (productsFromDB.isNotEmpty) {
+        products = productsFromDB;
+      } else {
+        // Si no hay productos en la base de datos, hacer la llamada HTTP para obtenerlos
+        final response = await http.get(
+          Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
+          headers: {'Authorization': 'Bearer $token'},
+          
+        );
+
+        if (response.statusCode == 200) {
+          print("Exito vendedores $response");
+          List<dynamic> jsonResponse = json.decode(response.body);
+
+          for (var productData in jsonResponse) {
+            products.add(Product.fromJson(productData));
+          }
+        } else {
+          print("Fallo vendedores $response");
+          print('Failed to load products: ${response.statusCode}');
+          return;
+        }
+      }
+
+      // Mostrar los productos, ya sean de la base de datos o de la solicitud HTTP
+      print("PRODUCTOD BD");
+      print(productsFromDB);
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SeleccionarProducto(productos: products),
+          )).then((selectedProduct) {
+        if (selectedProduct != null) {
+          print(selectedProduct.precioFinal);
+          print(selectedProduct.precioB);
+          print(selectedProduct.precioC);
+          print(selectedProduct.precioD);
+          print('PRODUCTOS');
+          setState(() {
+            _selectedProducts.add(selectedProduct);
+            if (_selectedProductQuantities.containsKey(selectedProduct)) {
+              // Si el producto ya está en la lista, aumentar la cantidad
+              _selectedProductQuantities[selectedProduct] =
+                  _selectedProductQuantities[selectedProduct]! + 1;
+            } else {
+              // Si es un nuevo producto, establecer la cantidad en 1
+              _selectedProductQuantities[selectedProduct] = 1;
+            }
+          });
+        }
+      });
+    } catch (error) {
+      print('Error loading products: $error');
+    }
+  }
 
   Future<void> _saveSelectedProducts() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sync_pro_mobile/Models/Producto.dart';
 import 'package:sync_pro_mobile/Pantallas/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/services/warning_widget_cubit.dart';
 import '../main.dart';
@@ -9,7 +10,7 @@ import '../Pantallas/pagina_cliente.dart';
 import '../Pantallas/pagina_vendedores.dart';
 import '../Pantallas/pagina_registrar.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-
+import 'package:sync_pro_mobile/services/ProductoService.dart';
 void main() {
   runApp(const MyApp());
 }
@@ -35,6 +36,8 @@ class SecondPage extends StatefulWidget {
 class _SecondPageState extends State<SecondPage> {
   int _selectedIndex = 0;
   String _userName = '';
+    late Future<List<Product>> futureProducts;
+     final ProductService productService = ProductService();
 
   final List<Widget> _pages = <Widget>[
     PaginaInventario(),
@@ -43,6 +46,7 @@ class _SecondPageState extends State<SecondPage> {
     PaginaVendedores(),
     PaginaRegistrar(),
   ];
+
 
   @override
   void initState() {
@@ -65,6 +69,13 @@ Future<void> _loadUserName() async {
     });
   }
 
+  //   void _syncProducts() async {
+  //   setState(() {
+  //     futureProducts = productService.fetchProducts();
+  //   });
+  // }
+
+
   Future<void> _logout() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
@@ -85,18 +96,18 @@ Future<void> _loadUserName() async {
         title: Text(
           'Sync Pro Mobile',
           style: TextStyle(color: Colors.white),
-          
+
         ),
         backgroundColor: Colors.blue,
-        
+
       ),
 
-   
+
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            
+
             DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.blue,
@@ -109,33 +120,19 @@ Future<void> _loadUserName() async {
                 ),
               ),
             ),
-                     ElevatedButton(
-  onPressed: () async {
-    await syncOrders();
-  },
-  style: ElevatedButton.styleFrom(
-    backgroundColor: Colors.white, // Color de fondo del botón (blanco)
-    iconColor: Colors.blue, // Color del texto (azul)
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8), // Bordes redondeados
-      side: BorderSide(color: Colors.blue), // Borde con color azul
-    ),
-  ),
-  child: Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [
-      Icon(Icons.sync, color: Colors.blue), // Icono de sincronización azul
-      SizedBox(width: 8), // Espacio entre el icono y el texto
-      Text(
-        'Sincronizar Pedidos',
-        style: TextStyle(
-          color: Colors.blue, // Color del texto (azul)
-          fontWeight: FontWeight.bold, // Negrita
-        ),
-      ),
-    ],
-  ),
-),
+
+          // ListTile(
+          //     leading: const Icon(Icons.sync),
+          //     title: const Text('Sincronizar Productos'),
+          //     onTap:  _syncProducts,
+
+          //   ),
+
+ListTile(
+              leading: const Icon(Icons.sync),
+              title: const Text('Sincronizar Pedido'),
+              onTap: syncOrders,
+            ),
             ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar sesión'),
@@ -144,7 +141,7 @@ Future<void> _loadUserName() async {
           ],
         ),
       ),
-      
+
       body: Column(
         children: [
            WarningWidgetCubit(),
@@ -167,9 +164,9 @@ Future<void> _loadUserName() async {
         animationCurve: Curves.easeInOut,
         animationDuration: const Duration(milliseconds: 300),
       ),
-      
+
     );
-    
+
   }
 }
 

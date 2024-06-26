@@ -1,11 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/Models/Producto.dart';
+import 'package:sync_pro_mobile/services/ProductoService.dart';
 
 class PaginaInventario extends StatefulWidget {
   const PaginaInventario({Key? key}) : super(key: key);
@@ -17,65 +13,12 @@ class PaginaInventario extends StatefulWidget {
 class _PaginaInventarioState extends State<PaginaInventario> {
   late Future<List<Product>> futureProducts;
   List<Product> displayedProducts = [];
+  final ProductService productService = ProductService();
 
   @override
   void initState() {
     super.initState();
-    futureProducts = fetchProducts().catchError((error) async {
-      return await getProductsFromLocalDatabase();
-    });
-  }
-   
-// Suponiendo que ya tienes la clase Product y los métodos
-// Product.fromJson, getProductsFromLocalDatabase y saveProductsToLocalDatabase definidos.
-
-Future<List<Product>> fetchProducts() async {
-  try {
-    // Verificar la conectividad de red
-    var connectivityResult = await Connectivity().checkConnectivity();
-    if (connectivityResult == ConnectivityResult.none) {
-      // Si no hay conexión a Internet, obtén los productos de la base de datos local
-      print("NO HAY CONEXIÓN");
-      return await getProductsFromLocalDatabase();
-    }
-    
-    // Si hay conexión a Internet, intenta obtener los productos de la API
-    print("SI HAY CONEXIÓN");
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-    
-    if (token == null) {
-      throw Exception('No token found');
-    }
-    
-    
-    final response = await http.get(
-      Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    ).timeout(Duration(seconds: 5)); // Añadimos un timeout para la petición HTTP
-    
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body);
-      print(data);
-      final products = data.map((json) => Product.fromJson(json)).toList();
-      return products;
-    } else {
-      throw Exception('Failed to load products');
-    }
-  } catch (error) {
-    // En caso de error al obtener productos de la API, intenta obtenerlos de la base de datos local
-    print('Error fetching products: $error');
-    return await getProductsFromLocalDatabase();
-  }
-}
-
-
-
-  Future<List<Product>> getProductsFromLocalDatabase() async {
-    final dbHelper = DatabaseHelper();
-    return await dbHelper.getProducts();
+    futureProducts = productService.getProductsFromLocalDatabase();
   }
 
   void _filterProducts(String query) {
@@ -89,24 +32,50 @@ Future<List<Product>> fetchProducts() async {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
+  void _syncProducts() async {
+    setState(() {
+      futureProducts = productService.fetchProducts();
+    });
+  }
+ @override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              onChanged: _filterProducts,
-              decoration: InputDecoration(
-                border: OutlineInputBorder(),
-                labelText: 'Buscar producto',
-                prefixIcon: Icon(Icons.search),
-                prefixIconColor: Colors.blue,
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  onChanged: _filterProducts,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Buscar producto',
+                    prefixIcon: Icon(Icons.search),
+                    prefixIconColor: Colors.blue,
+                  ),
+                  cursorColor: Colors.blue,
+                ),
               ),
-              cursorColor: Colors.blue,
-            ),
+              SizedBox(width: 8.0), // Espacio adicional entre el TextField y el botón
+              ElevatedButton.icon(
+                onPressed: _syncProducts,
+                icon: Icon(Icons.sync, size: 32), // Icono que deseas agregar y ajustar tamaño
+                label: Container(), // Usamos un Container vacío como label
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.zero, // Eliminamos el padding interno
+                  minimumSize: Size(48, 48), // Ajustamos el tamaño mínimo del botón
+                ),
+                // Alineamos el icono al centro vertical y horizontalmente
+                // Cambia el alignment según tus necesidades
+                                iconAlignment:IconAlignment.start,
+
+              ),
+            ],
           ),
+          SizedBox(height: 8.0), // Espacio adicional después de la fila
           Expanded(
             child: FutureBuilder<List<Product>>(
               future: futureProducts,
@@ -125,17 +94,17 @@ Future<List<Product>> fetchProducts() async {
                       final product = products[index];
                       return ListTile(
                         title: Text(
-                          product.barras + ' ' + product.descripcion,
+                          '${product.barras} ${product.descripcion}',
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Existencia: ${product.existencia}'),
                             Text('Costo: ${product.costo.toStringAsFixed(2)}'),
-                            Text('Precios: A) ${product.precioFinal.toStringAsFixed(2)}' +
-                                ' B) ${product.precioB.toStringAsFixed(2)}' +
-                                ' C) ${product.precioC.toStringAsFixed(2)}' +
-                                ' D) ${product.precioD.toStringAsFixed(2)}'),
+                            Text('Precios: A) ${product.precioFinal.toStringAsFixed(2)}, ' +
+                                'B) ${product.precioB.toStringAsFixed(2)}, ' +
+                                'C) ${product.precioC.toStringAsFixed(2)}, ' +
+                                'D) ${product.precioD.toStringAsFixed(2)}'),
                             Text('Marca: ${product.marcas}'),
                             Text('Categoría: ${product.categoriaSubCategoria}'),
                             Divider(color: Colors.blue),
@@ -150,6 +119,7 @@ Future<List<Product>> fetchProducts() async {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

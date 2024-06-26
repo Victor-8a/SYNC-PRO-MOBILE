@@ -30,7 +30,7 @@ class VendedorDatabaseHelper {
       onCreate: (db, version) async {
         await db.execute(
           'CREATE TABLE vendedores('
-          'id INTEGER PRIMARY KEY,' // 'id' as primary key
+          'value INTEGER PRIMARY KEY,' // 'id' as primary key
           'nombre TEXT'
           ')',
         );
@@ -75,6 +75,8 @@ class VendedorDatabaseHelper {
         return false;
       }
       final response = await http.get(Uri.parse('http://192.168.1.212:3000/vendedor')).timeout(Duration(seconds: 5)); 
+      print("RESPUESTO DE API VENDEDORES *********************");
+      print(response.body);
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
         List<Vendedor> vendedores = jsonResponse.map((data) => Vendedor.fromJson(data)).toList();
@@ -84,6 +86,7 @@ class VendedorDatabaseHelper {
 
         // Insert the new vendedores
         for (var vendedor in vendedores) {
+          print(vendedor.nombre);
           await insertVendedor(vendedor);
         }
         print('Vendedores fetched and stored');

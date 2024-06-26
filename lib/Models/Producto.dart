@@ -12,6 +12,7 @@ class Product {
   final String categoriaSubCategoria;
   final String observaciones;
 
+
   Product({
     required this.codigo,
     required this.barras,
