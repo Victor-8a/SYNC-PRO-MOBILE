@@ -7,6 +7,7 @@ import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart' as dbGuardarPedido;
 import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbVendedores.dart';
+import 'package:sync_pro_mobile/main.dart';
 import '../db/dbProducto.dart' as product;
 import 'package:sync_pro_mobile/Pantallas/seleccionar_clientes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,6 +31,22 @@ Future<String> getTokenFromStorage() async {
       ""; // Si el token no existe, devuelve una cadena vacía
   return token;
 }
+Future<String?> getUsernameFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? username = prefs.getString('username');
+  print('aqui se recupera el username');
+print(username);
+  return username;
+}
+Future<String?> getPasswordFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? password =  prefs.getString('password');
+  print('aqui se recupera el password');
+print(password);
+  return password;
+}
+
+
 
 Future<String> getIdFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -47,33 +64,71 @@ Future<Vendedor?> getSalesperson() async {
   }
 }
 
-//Aqui empieza a realikzar las acciopnes de guardar pedido
-//y guardar el detalle del pedido desde la base de datos y a la appi
-// Función para guardar el pedido en la base de datos
+Future<String?> login() async {
+  String? username = await getUsernameFromStorage();
+  String? password = await getPasswordFromStorage();
 
-Future<void> syncOrders() async {
-  List<Map<String, dynamic>> unsyncedOrders =
-      await dbGuardarPedido.DatabaseHelper().getUnsyncedOrders();
-  String? token = await getTokenFromStorage();
-  // ignore: unnecessary_null_comparison
-  if (token == null) {
+  if (username == null || password == null) {
     Fluttertoast.showToast(
-      msg: 'Token no disponible, no se pueden sincronizar los pedidos.',
+      msg: 'Credenciales no disponibles, no se puede iniciar sesión.',
       toastLength: Toast.LENGTH_LONG,
       gravity: ToastGravity.BOTTOM,
     );
-    return;
+    return null;
+  }
+
+  final response = await http.post(
+    Uri.parse('http://192.168.1.212:3000/auth/signIn'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(<String, String>{
+      'Nombre': username,
+      'password': password,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    String token = jsonDecode(response.body)['token'];
+    await saveTokenToStorage(token);
+    return token;
+  } else {
+    Fluttertoast.showToast(
+      msg: 'Error al iniciar sesión: ${response.statusCode}',
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+    );
+    return null;
+  }
+}
+
+Future<void> syncOrders() async {
+  List<Map<String, dynamic>> unsyncedOrders = await dbGuardarPedido.DatabaseHelper().getUnsyncedOrders();
+  String? token = await getTokenFromStorage();
+
+  // ignore: unnecessary_null_comparison
+  if (token == null) {
+    token = await login();
+    if (token == null) {
+      Fluttertoast.showToast(
+        msg: 'No se puede obtener un token, no se pueden sincronizar los pedidos.',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+      return;
+    }
   }
 
   for (var order in unsyncedOrders) {
     try {
       var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
       var headers = {
+        
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       };
+    
 
-      // Crear una copia del pedido excluyendo el campo 'synced'
       var orderCopy = Map<String, dynamic>.from(order);
       orderCopy.remove('synced');
       orderCopy.remove('id');
@@ -82,14 +137,32 @@ Future<void> syncOrders() async {
       print('Enviando pedido: $body');
       var response = await http.post(url, headers: headers, body: body);
 
+      if (response.statusCode == 401) {
+        // Token expirado o inválido, intentar iniciar sesión nuevamente
+        // token = await login();
+        if (token != null) {
+          headers['Authorization'] = 'Bearer $token';
+          response = await http.post(url, headers: headers, body: body);
+        } else {
+          Fluttertoast.showToast(
+            msg: 'Error de Servidor 401',
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+          );
+          return ;
+        }
+      }
+      print('++++Respuesta del S ervidor+++++');
+      print(response.statusCode);
+      print('++++respuesta del login+++++');
+      print(login());
+
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
         int idPedido = jsonResponse['savedOrder']['id'];
 
-        
         print('Pedido sincronizado correctamente: $order');
 
-        // Mostrar notificación de éxito
         Fluttertoast.showToast(
           msg: 'Pedido sincronizado correctamente.',
           textColor: Colors.blue,
@@ -97,61 +170,62 @@ Future<void> syncOrders() async {
           gravity: ToastGravity.BOTTOM,
         );
 
-        // Sincronizar detalles del pedido
- // Sincronizar detalles del pedido
-List<Map<String, dynamic>> unsyncedOrderDetails =
-    await dbDetallePedidos.DatabaseHelper().getUnsyncedOrderDetails(order['id']);
-print(unsyncedOrderDetails);
+        List<Map<String, dynamic>> unsyncedOrderDetails = await dbDetallePedidos.DatabaseHelper().getUnsyncedOrderDetails(order['id']);
+        print(unsyncedOrderDetails);
 
-int syncedDetailsCount = 0; // Contador para detalles sincronizados correctamente
+        int syncedDetailsCount = 0;
 
-for (int i = 0; i < unsyncedOrderDetails.length; i++) {
-  var detail = unsyncedOrderDetails[i];
-  try {
-    var detailCopy = Map<String, dynamic>.from(detail);
-    detailCopy.remove('Id');
-    detailCopy['IdPedido'] = idPedido;
-    print(detailCopy);
+        for (int i = 0; i < unsyncedOrderDetails.length; i++) {
+          var detail = unsyncedOrderDetails[i];
+          try {
+            var detailCopy = Map<String, dynamic>.from(detail);
+            detailCopy.remove('Id');
+            detailCopy['IdPedido'] = idPedido;
+            print(detailCopy);
 
-    var detailUrl = Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
-    var detailBody = jsonEncode(detailCopy);
+            var detailUrl = Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
+            var detailBody = jsonEncode(detailCopy);
 
-    print('Enviando detalle del pedido: $detailBody');
-    var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
+            print('Enviando detalle del pedido: $detailBody');
+            var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
 
-    if (detailResponse.statusCode == 200) {
-      syncedDetailsCount++; // Incrementa el contador de detalles sincronizados
+            if (detailResponse.statusCode == 401) {
+              // Token expirado o inválido, intentar iniciar sesión nuevamente
+              token = await login();
+              if (token != null) {
+                headers['Authorization'] = 'Bearer $token';
+                detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
+              } else {
+                Fluttertoast.showToast(
+                  msg: 'Error al iniciar sesión nuevamente. No se pueden sincronizar los detalles del pedido.',
+                  toastLength: Toast.LENGTH_LONG,
+                  gravity: ToastGravity.BOTTOM,
+                );
+                return;
+              }
+            }
 
-      if (syncedDetailsCount == unsyncedOrderDetails.length) {
-        // Si todos los detalles se han sincronizado correctamente
-        print('Todos los detalles del pedido sincronizados correctamente.');
-
-        // Marcar el pedido como sincronizado solo después de sincronizar todos los detalles
-        await dbGuardarPedido.DatabaseHelper().markOrderAsSynced(order['id']);
-
-        // Mostrar notificación de éxito solo una vez al final
-        Fluttertoast.showToast(
-          msg: 'Pedido y detalles sincronizados correctamente.',
-          textColor: Colors.blue,
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-        );
-      }
-    } else {
-      print('Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
-      // Manejo de errores y notificación de error si es necesario
-    }
-  } catch (error) {
-    print('Error al sincronizar detalle del pedido: $error');
-    // Manejo de errores y notificación de error si es necesario
-  }
-}
-
+            if (detailResponse.statusCode == 200) {
+              syncedDetailsCount++;
+              if (syncedDetailsCount == unsyncedOrderDetails.length) {
+                print('Todos los detalles del pedido sincronizados correctamente.');
+                await dbGuardarPedido.DatabaseHelper().markOrderAsSynced(order['id']);
+                Fluttertoast.showToast(
+                  msg: 'Pedido y detalles sincronizados correctamente.',
+                  textColor: Colors.blue,
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                );
+              }
+            } else {
+              print('Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
+            }
+          } catch (error) {
+            print('Error al sincronizar detalle del pedido: $error');
+          }
+        }
       } else {
-        print(
-            'Error al sincronizar pedido: ${response.statusCode} - ${response.body}');
-
-        // Mostrar notificación de error
+        print('Error al sincronizar pedido: ${response.statusCode} - ${response.body}');
         Fluttertoast.showToast(
           msg: 'Error al sincronizar pedido: ${response.statusCode}',
           textColor: Colors.red,
@@ -161,8 +235,6 @@ for (int i = 0; i < unsyncedOrderDetails.length; i++) {
       }
     } catch (error) {
       print('Error al sincronizar pedido: $error');
-
-      // Mostrar notificación de error
       Fluttertoast.showToast(
         msg: 'Error al sincronizar pedido.',
         toastLength: Toast.LENGTH_LONG,
@@ -244,7 +316,6 @@ Future<int?> saveOrder(int selectedClient, String observations,
     return await db.insertOrder(dataPedido);
   }
 }
-
 Future<void> saveOrderDetail(
   int idPedido,
   List<Product> selectedProducts,
@@ -259,59 +330,59 @@ Future<void> saveOrderDetail(
       throw Exception('Token de autorización no válido');
     }
 
-    var url = Uri.parse('/');
+    var url = Uri.parse('https://tu_api_url/detalle_pedido');
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     };
 
+    print('Número de productos seleccionados: ${selectedProducts.length}');
+    print('Productos seleccionados: $selectedProducts');
+
     for (var product in selectedProducts) {
-      var orderDetailData = {
-        "IdPedido": idPedido,
-        "CodArticulo": product.codigo,
-        "Descripcion": product.descripcion,
-        "Cantidad": selectedProductQuantities[product],
-        "PrecioVenta": selectedProductPrices[product] ?? product.precioFinal,
-        "PorcDescuento": discounts[product] ?? 0,
-        "Total": ((selectedProductPrices[product] ?? product.precioFinal) *
-                selectedProductQuantities[product]! -
-            (selectedProductQuantities[product]! *
-                ((selectedProductPrices[product] ?? product.precioFinal) *
-                    (discounts[product] ?? 0) /
-                    100)))
-      };
+      try {
+        print('Procesando producto: ${product.codigo}');
+        print('Cantidad: ${selectedProductQuantities[product]}');
+        print('Precio: ${selectedProductPrices[product]}');
+        print('Descuento: ${discounts[product]}');
 
-      // Guardar en SQLite
-      await dbDetallePedidos.DatabaseHelper()
-          .insertOrderDetail(orderDetailData);
+        var orderDetailData = {
+          "IdPedido": idPedido,
+          "CodArticulo": product.codigo,
+          "Descripcion": product.descripcion,
+          "Cantidad": selectedProductQuantities[product],
+          "PrecioVenta": selectedProductPrices[product] ?? product.precioFinal,
+          "PorcDescuento": discounts[product] ?? 0,
+          "Total": ((selectedProductPrices[product] ?? product.precioFinal) *
+                  selectedProductQuantities[product]! -
+              (selectedProductQuantities[product]! *
+                  ((selectedProductPrices[product] ?? product.precioFinal) *
+                      (discounts[product] ?? 0) /
+                      100)))
+        };
 
-      var body = jsonEncode(orderDetailData);
-      print('Datos del detalle del pedido a enviar: $body');
+        await dbDetallePedidos.DatabaseHelper().insertOrderDetail(orderDetailData);
+        
+        var body = jsonEncode(orderDetailData);
+        print('Datos del detalle del pedido a enviar: $body');
 
-      var response = await http.post(url, headers: headers, body: body);
+        var response = await http.post(url, headers: headers, body: body);
 
-      if (response.statusCode == 200) {
-        print('Detalle del pedido guardado en la API correctamente');
-        // Marcar el detalle del pedido como sincronizado en la base de datos local
-        await dbDetallePedidos.DatabaseHelper()
-            .markOrderDetailAsSynced(idPedido);
-        print(
-            'Detalle del pedido marcado como sincronizado en SQLite: $orderDetailData');
-      } else {
-        print(
-            'Error al guardar el detalle del pedido en la API: ${response.statusCode}');
-        // Puedes manejar aquí el guardado en un almacenamiento local adicional
-        // en caso de fallo en la conexión.
+        if (response.statusCode == 200) {
+          print('Detalle del pedido guardado en la API correctamente');
+          print('Detalle del pedido marcado como sincronizado en SQLite: $orderDetailData');
+        } else {
+          print('Error al guardar el detalle del pedido en la API: ${response.statusCode}');
+        }
+      } catch (e) {
+        print('Error al procesar el producto ${product.codigo}: $e');
       }
     }
   } catch (error, stackTrace) {
     print('Hubo un error al guardar los detalles del pedido: $error');
-    // Puedes imprimir también el stack trace para tener más detalles del error.
     print(stackTrace);
-    // Aquí podrías agregar lógica para guardar localmente en caso de error de conexión.
   }
 }
-//aqui finalizan las acciones de este bloque de codigo
 
 //aqui inicia el widget
 class SeleccionarProducto extends StatefulWidget {

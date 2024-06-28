@@ -35,15 +35,25 @@ Future<void> saveIdToStorage(String userId, int opcion) async {
 
 Future<void> saveUsernameToStorage(String username) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  await prefs.setString('userName', username); // Cambiado a 'userName'
+  await prefs.setString('username', username); // Cambiado a 'userName'
   print('Nombre de usuario guardado en el almacenamiento: $username');
 }
-
 
 Future<String?> getUsernameFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getString('username');
 }
+Future<String?> getPasswordFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('password');
+}
+
+Future<void> savePasswordToStorage(String password) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('password', password);
+  print('Contraseña guardada en el almacenamiento: $password');
+}
+
 
 class LoginApp extends StatelessWidget {
   final bool isLoggedIn;
@@ -100,6 +110,7 @@ class _LoginPageState extends State<LoginPage> {
       saveIdToStorage(
           jsonDecode(response.body)['user']?['idVendedor']?.toString() ?? '',
           2);
+      savePasswordToStorage(contrasena);  // Guarda la contraseña aquí
 
       if (nombreUsuario != null) {
         saveUsernameToStorage(nombreUsuario);
