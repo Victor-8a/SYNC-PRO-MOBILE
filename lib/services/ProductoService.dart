@@ -44,12 +44,12 @@ class ProductService {
   }
 
   Future<List<Product>> getProductsFromLocalDatabase() async {
-    final dbHelper = DatabaseHelper();
+    final dbHelper = DatabaseHelperProducto();
     return await dbHelper.getProducts();
   }
 
   Future<void> saveProductsToLocalDatabase(List<Product> products) async {
-    final dbHelper = DatabaseHelper();
+    final dbHelper = DatabaseHelperProducto();
     for (var product in products) {
       await dbHelper.insertProduct(product);
     }

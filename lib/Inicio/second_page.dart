@@ -7,7 +7,7 @@ import '../main.dart';
 import '../Pantallas/pagina_inventario.dart';
 import '../Pantallas/nuevo_pedido.dart';
 import '../Pantallas/pagina_cliente.dart';
-import '../Pantallas/pagina_vendedores.dart';
+import '../Pantallas/pagina_listar_pedido.dart';
 import '../Pantallas/pagina_registrar.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:sync_pro_mobile/services/ProductoService.dart';
@@ -43,7 +43,7 @@ class _SecondPageState extends State<SecondPage> {
     PaginaInventario(),
     NuevoPedido(),
     PaginaCliente(),
-    PaginaVendedores(),
+    PaginaListarPedidos(),
     PaginaRegistrar(),
   ];
 

@@ -83,7 +83,7 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
 
   Future<void> saveClientesToLocalDatabase(List<Cliente> clientes) async {
     try {
-      DatabaseHelper databaseHelper = DatabaseHelper();
+      DatabaseHelperCliente databaseHelper = DatabaseHelperCliente();
       await databaseHelper.deleteAllClientes();
       for (var cliente in clientes) {
         await databaseHelper.insertCliente(cliente);
@@ -96,7 +96,7 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
 
   Future<void> retrieveClientesFromLocalDatabase() async {
     try {
-      DatabaseHelper databaseHelper = DatabaseHelper();
+      DatabaseHelperCliente databaseHelper = DatabaseHelperCliente();
       List<Cliente> clientes = await databaseHelper.getClientes();
       setState(() {
         _clientes = clientes;

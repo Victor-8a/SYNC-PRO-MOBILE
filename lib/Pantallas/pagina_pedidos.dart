@@ -103,7 +103,7 @@ Future<String?> login() async {
 }
 
 Future<void> syncOrders() async {
-  List<Map<String, dynamic>> unsyncedOrders = await dbGuardarPedido.DatabaseHelper().getUnsyncedOrders();
+  List<Map<String, dynamic>> unsyncedOrders = await dbGuardarPedido.DatabaseHelperPedidos().getUnsyncedOrders();
   String? token = await getTokenFromStorage();
 
   // ignore: unnecessary_null_comparison
@@ -170,7 +170,7 @@ Future<void> syncOrders() async {
           gravity: ToastGravity.BOTTOM,
         );
 
-        List<Map<String, dynamic>> unsyncedOrderDetails = await dbDetallePedidos.DatabaseHelper().getUnsyncedOrderDetails(order['id']);
+        List<Map<String, dynamic>> unsyncedOrderDetails = await dbDetallePedidos.DatabaseHelperDetallePedidos().getUnsyncedOrderDetails(order['id']);
         print(unsyncedOrderDetails);
 
         int syncedDetailsCount = 0;
@@ -209,7 +209,7 @@ Future<void> syncOrders() async {
               syncedDetailsCount++;
               if (syncedDetailsCount == unsyncedOrderDetails.length) {
                 print('Todos los detalles del pedido sincronizados correctamente.');
-                await dbGuardarPedido.DatabaseHelper().markOrderAsSynced(order['id']);
+                await dbGuardarPedido.DatabaseHelperPedidos().markOrderAsSynced(order['id']);
                 Fluttertoast.showToast(
                   msg: 'Pedido y detalles sincronizados correctamente.',
                   textColor: Colors.blue,
@@ -288,7 +288,7 @@ Future<int?> saveOrder(int selectedClient, String observations,
       int idPedido = jsonResponse['savedOrder']['id'];
 
       // Guardar en SQLite
-      dbGuardarPedido.DatabaseHelper db = dbGuardarPedido.DatabaseHelper();
+      dbGuardarPedido.DatabaseHelperPedidos db = dbGuardarPedido.DatabaseHelperPedidos();
       await db.insertOrder(dataPedido);
       print('Pedido guardado en SQLite: $dataPedido');
 
@@ -309,7 +309,7 @@ Future<int?> saveOrder(int selectedClient, String observations,
     print('Error saving order: $error');
 
     // Guardar en SQLite en caso de error
-    dbGuardarPedido.DatabaseHelper db = dbGuardarPedido.DatabaseHelper();
+    dbGuardarPedido.DatabaseHelperPedidos db = dbGuardarPedido.DatabaseHelperPedidos();
 
     print('Pedido guardado en SQLite después del error: $dataPedido');
 
@@ -361,7 +361,7 @@ Future<void> saveOrderDetail(
                       100)))
         };
 
-        await dbDetallePedidos.DatabaseHelper().insertOrderDetail(orderDetailData);
+        await dbDetallePedidos.DatabaseHelperDetallePedidos().insertOrderDetail(orderDetailData);
         
         var body = jsonEncode(orderDetailData);
         print('Datos del detalle del pedido a enviar: $body');
@@ -422,7 +422,7 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
   }
 
   Future<List<Product>> getProductsFromLocalDatabase() async {
-    final dbHelper = product.DatabaseHelper(); // Usar la versión de dbProducto
+    final dbHelper = product.DatabaseHelperProducto(); // Usar la versión de dbProducto
 
     // print("Obteniendo productos de la base de datos local...");
     List<Product> products = await dbHelper.getProducts();
@@ -584,7 +584,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   Future<void> saveVendedorToLocalDatabase(Vendedor vendedor) async {
     try {
-      VendedorDatabaseHelper dbHelper = VendedorDatabaseHelper();
+     DatabaseHelperVendedor dbHelper = DatabaseHelperVendedor();
       await dbHelper.insertVendedor(vendedor);
     } catch (error) {
       print('Error saving vendedor to local database: $error');
@@ -628,7 +628,7 @@ print("Exito vendedores $response");
 
   Future<Vendedor> getSalesperson() async {
     try {
-      VendedorDatabaseHelper dbHelper = VendedorDatabaseHelper();
+       DatabaseHelperVendedor dbHelper =  DatabaseHelperVendedor();
       List<Vendedor> vendedores = await dbHelper.getVendedores();
       if (vendedores.isNotEmpty) {
         return vendedores.first;
@@ -709,7 +709,7 @@ print("Exito vendedores $response");
     // If fetching from server fails, load from local database
     if (!fetchSuccess) {
       print('Failed to fetch from server, loading from local database');
-      final vendedores = await VendedorDatabaseHelper().getVendedores();
+      final vendedores = await DatabaseHelperVendedor().getVendedores();
 
       if (mounted) {
         setState(() {
@@ -723,7 +723,7 @@ print("Exito vendedores $response");
 
   Future<bool> _tryFetchAndStoreVendedores() async {
     try {
-      return await VendedorDatabaseHelper().fetchAndStoreVendedores();
+      return await  DatabaseHelperVendedor().fetchAndStoreVendedores();
     } catch (e) {
       print('Error fetching and storing vendedores: $e');
       return false;
@@ -786,7 +786,7 @@ print("Exito vendedores $response");
                         });
 
                         // Guardar el vendedor seleccionado en la base de datos
-                        await VendedorDatabaseHelper()
+                        await  DatabaseHelperVendedor()
                             .insertVendedor(_selectedSalesperson!);
                         print('Vendedor seleccionado: $newValue');
                         print(_selectedSalesperson!.value);
@@ -1319,7 +1319,7 @@ print("Exito vendedores $response");
       List<Product> products = [];
 
       // Si hay token, intenta obtener los productos de la base de datos local
-      DatabaseHelper dbHelper = DatabaseHelper();
+      DatabaseHelperProducto dbHelper = DatabaseHelperProducto();
       List<Product> productsFromDB = await dbHelper.getProducts();
 
       // Si hay productos en la base de datos local, usarlos
@@ -1434,4 +1434,4 @@ print("Exito vendedores $response");
     List<String>? selectedProductsJson = [];
     await prefs.setStringList('selectedProducts', selectedProductsJson);
   }
-}
+}            

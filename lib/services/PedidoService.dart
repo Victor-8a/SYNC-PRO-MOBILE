@@ -14,7 +14,7 @@ import '../db/dbDetallePedidos.dart' as dbDetallePedidos;
 class PedidoService{
   
 Future<void> syncOrders() async {
-  List<Map<String, dynamic>> unsyncedOrders = await dbGuardarPedido.DatabaseHelper().getUnsyncedOrders();
+  List<Map<String, dynamic>> unsyncedOrders = await dbGuardarPedido.DatabaseHelperPedidos().getUnsyncedOrders();
   String? token = await getTokenFromStorage();
 
   // ignore: unnecessary_null_comparison
@@ -79,7 +79,7 @@ Future<void> syncOrders() async {
           gravity: ToastGravity.BOTTOM,
         );
 
-        List<Map<String, dynamic>> unsyncedOrderDetails = await dbDetallePedidos.DatabaseHelper().getUnsyncedOrderDetails(order['id']);
+        List<Map<String, dynamic>> unsyncedOrderDetails = await dbDetallePedidos.DatabaseHelperDetallePedidos().getUnsyncedOrderDetails(order['id']);
         print(unsyncedOrderDetails);
 
         int syncedDetailsCount = 0;
@@ -118,7 +118,7 @@ Future<void> syncOrders() async {
               syncedDetailsCount++;
               if (syncedDetailsCount == unsyncedOrderDetails.length) {
                 print('Todos los detalles del pedido sincronizados correctamente.');
-                await dbGuardarPedido.DatabaseHelper().markOrderAsSynced(order['id']);
+                await dbGuardarPedido.DatabaseHelperPedidos().markOrderAsSynced(order['id']);
                 Fluttertoast.showToast(
                   msg: 'Pedido y detalles sincronizados correctamente.',
                   textColor: Colors.blue,

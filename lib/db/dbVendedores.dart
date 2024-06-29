@@ -3,44 +3,14 @@ import 'dart:convert'; // For json.decode
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http; // For HTTP requests
-import 'package:path/path.dart';
+import 'bd.dart';
 import 'package:sqflite/sqflite.dart';
 import '../Models/Vendedor.dart';
 
-class VendedorDatabaseHelper {
-  static final VendedorDatabaseHelper _instance = VendedorDatabaseHelper._internal();
-  factory VendedorDatabaseHelper() => _instance;
-  static Database? _database;
-
-  VendedorDatabaseHelper._internal();
-
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
-  }
-
-  Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'vendedores.db');
-
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute(
-          'CREATE TABLE vendedores('
-          'value INTEGER PRIMARY KEY,' // 'id' as primary key
-          'nombre TEXT'
-          ')',
-        );
-        print('Database created and table vendedores initialized');
-      },
-    );
-  }
-
+class DatabaseHelperVendedor {
+final dbProvider = DatabaseHelper();
   Future<void> insertVendedor(Vendedor vendedor) async {
-    final db = await database;
+ final db = await dbProvider.database;
     await db.insert(
       'vendedores',
       vendedor.toJson(),
@@ -50,7 +20,7 @@ class VendedorDatabaseHelper {
   }
 
   Future<List<Vendedor>> getVendedores() async {
-    final db = await database;
+ final db = await dbProvider.database;
     final List<Map<String, dynamic>> maps = await db.query('vendedores');
     print('Vendedores retrieved: ${maps.length}');
     return List.generate(maps.length, (i) {
@@ -60,7 +30,7 @@ class VendedorDatabaseHelper {
   }
 
   Future<void> deleteAllVendedores() async {
-    final db = await database;
+ final db = await dbProvider.database;
     await db.delete('vendedores');
     print('All vendedores deleted');
   }
