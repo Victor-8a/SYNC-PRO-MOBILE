@@ -42,7 +42,6 @@ class _SecondPageState extends State<SecondPage> {
     PaginaInventario(),
       PaginaListarPedidos(),
     PaginaCliente(),
-  
     PaginaRegistrar(),
   ];
 
@@ -142,10 +141,10 @@ ListTile(
         items: const <Widget>[
           Icon(Icons.inventory),
            Icon(Icons.store_sharp),
-          Icon(Icons.sell_outlined),
-          Icon(Icons.person),
-         
-          Icon(Icons.person_add_alt),
+          Icon(Icons.person_3_rounded),
+          Icon(Icons.sell),
+          // Icon(Icons.person_add_alt),
+
         ],
         onTap: _onItemTapped,
         color: Colors.blueAccent,

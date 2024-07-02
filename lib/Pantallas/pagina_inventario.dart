@@ -60,20 +60,11 @@ Widget build(BuildContext context) {
                 ),
               ),
               SizedBox(width: 8.0), // Espacio adicional entre el TextField y el botón
-              ElevatedButton.icon(
-                onPressed: _syncProducts,
-                icon: Icon(Icons.sync, size: 32), // Icono que deseas agregar y ajustar tamaño
-                label: Container(), // Usamos un Container vacío como label
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.zero, // Eliminamos el padding interno
-                  minimumSize: Size(48, 48), // Ajustamos el tamaño mínimo del botón
-                ),
-                // Alineamos el icono al centro vertical y horizontalmente
-                // Cambia el alignment según tus necesidades
-                                iconAlignment:IconAlignment.start,
-
-              ),
-            ],
+               IconButton(
+                icon: Icon(Icons.refresh),
+                onPressed: () {
+                  _syncProducts();
+})],
           ),
           SizedBox(height: 8.0), // Espacio adicional después de la fila
           Expanded(

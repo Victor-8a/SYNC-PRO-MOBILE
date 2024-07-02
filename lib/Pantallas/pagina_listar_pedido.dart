@@ -130,95 +130,107 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                labelText: 'Buscar por cliente',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    body: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    labelText: 'Buscar por cliente',
+                      prefixIcon: Icon(Icons.search),
+                    prefixIconColor: Colors.blue,
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: _filterOrders,
+                ),
               ),
-              onChanged: _filterOrders,
-            ),
+              IconButton(
+                icon: Icon(Icons.refresh),
+                onPressed: () {
+                  _loadOrders(); // Llama a la función para recargar los pedidos
+                },
+              ),
+            ],
           ),
-          Expanded(
-            child: _filteredOrders.isEmpty
-                ? Center(child: Text('No se encontraron resultados'))
-                : ListView.builder(
-                    itemCount: _filteredOrders.length,
-                    itemBuilder: (context, index) {
-                      final order = _filteredOrders[index];
-                      final String syncedStatus = order['synced'] == 1 ? 'Sincronizado' : 'No sincronizado';
-                      return Card(
-                        margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
-                        child: InkWell(
-                          onTap: () {
-                            final int orderId = order['id'];
-                            _showOrderDetailsDialog(context, orderId, order['NumPedido']);
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Pedido: ${order['id']}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16.0,
-                                  ),
+        ),
+        Expanded(
+          child: _filteredOrders.isEmpty
+              ? Center(child: Text('No se encontraron resultados'))
+              : ListView.builder(
+                  itemCount: _filteredOrders.length,
+                  itemBuilder: (context, index) {
+                    final order = _filteredOrders[index];
+                    final String syncedStatus = order['synced'] == 1 ? 'Sincronizado' : 'No sincronizado';
+                    return Card(
+                      margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+                      child: InkWell(
+                        onTap: () {
+                          final int orderId = order['id'];
+                          _showOrderDetailsDialog(context, orderId, order['NumPedido']);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Pedido: ${order['id']}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16.0,
                                 ),
-                                Text(
-                                  'Cliente: ${order['nombreCliente']}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16.0,
-                                  ),
+                              ),
+                              Text(
+                                'Cliente: ${order['nombreCliente']}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16.0,
                                 ),
-                                const SizedBox(height: 4.0),
-                                Text('Numero de Pedido: ${order['NumPedido']}'),
-                                const SizedBox(height: 4.0),
-                                Text('Vendedor: ${order['nombreVendedor']}'),
-                                const SizedBox(height: 4.0),
-                                Text('Fecha Entrega: ${order['FechaEntrega'].substring(0, 10)}'),
-                                const SizedBox(height: 4.0),
-                                Text('Estado: $syncedStatus'),
-                                const SizedBox(height: 4.0),
-                                Text('Observaciones: ${order['Observaciones']}'),
-                              ],
-                            ),
+                              ),
+                              const SizedBox(height: 4.0),
+                              Text('Numero de Pedido: ${order['NumPedido']}'),
+                              const SizedBox(height: 4.0),
+                              Text('Vendedor: ${order['nombreVendedor']}'),
+                              const SizedBox(height: 4.0),
+                              Text('Fecha Entrega: ${order['FechaEntrega'].substring(0, 10)}'),
+                              const SizedBox(height: 4.0),
+                              Text('Estado: $syncedStatus'),
+                              const SizedBox(height: 4.0),
+                              Text('Observaciones: ${order['Observaciones']}'),
+                            ],
                           ),
                         ),
-                      );
-                    },
+                      ),
+                    );
+                  },
+                ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue,
+                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.blue,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 5,
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null)),
+                  elevation: 5,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null)),
                     );
                   },
                   child: Row(
