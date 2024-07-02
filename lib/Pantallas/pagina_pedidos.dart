@@ -31,22 +31,22 @@ Future<String> getTokenFromStorage() async {
       ""; // Si el token no existe, devuelve una cadena vacía
   return token;
 }
+
 Future<String?> getUsernameFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? username = prefs.getString('username');
   print('aqui se recupera el username');
-print(username);
+  print(username);
   return username;
 }
+
 Future<String?> getPasswordFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? password =  prefs.getString('password');
+  String? password = prefs.getString('password');
   print('aqui se recupera el password');
-print(password);
+  print(password);
   return password;
 }
-
-
 
 Future<String> getIdFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -103,7 +103,8 @@ Future<String?> login() async {
 }
 
 Future<void> syncOrders() async {
-  List<Map<String, dynamic>> unsyncedOrders = await dbGuardarPedido.DatabaseHelperPedidos().getUnsyncedOrders();
+  List<Map<String, dynamic>> unsyncedOrders =
+      await dbGuardarPedido.DatabaseHelperPedidos().getUnsyncedOrders();
   String? token = await getTokenFromStorage();
 
   // ignore: unnecessary_null_comparison
@@ -111,7 +112,8 @@ Future<void> syncOrders() async {
     token = await login();
     if (token == null) {
       Fluttertoast.showToast(
-        msg: 'No se puede obtener un token, no se pueden sincronizar los pedidos.',
+        msg:
+            'No se puede obtener un token, no se pueden sincronizar los pedidos.',
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
       );
@@ -123,15 +125,14 @@ Future<void> syncOrders() async {
     try {
       var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
       var headers = {
-        
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       };
-    
 
       var orderCopy = Map<String, dynamic>.from(order);
       orderCopy.remove('synced');
       orderCopy.remove('id');
+      orderCopy.remove('NumPedido');
 
       var body = jsonEncode(orderCopy);
       print('Enviando pedido: $body');
@@ -149,7 +150,7 @@ Future<void> syncOrders() async {
             toastLength: Toast.LENGTH_LONG,
             gravity: ToastGravity.BOTTOM,
           );
-          return ;
+          return;
         }
       }
       print('++++Respuesta del S ervidor+++++');
@@ -170,7 +171,9 @@ Future<void> syncOrders() async {
           gravity: ToastGravity.BOTTOM,
         );
 
-        List<Map<String, dynamic>> unsyncedOrderDetails = await dbDetallePedidos.DatabaseHelperDetallePedidos().getUnsyncedOrderDetails(order['id']);
+        List<Map<String, dynamic>> unsyncedOrderDetails =
+            await dbDetallePedidos.DatabaseHelperDetallePedidos()
+                .getUnsyncedOrderDetails(order['id']);
         print(unsyncedOrderDetails);
 
         int syncedDetailsCount = 0;
@@ -183,21 +186,25 @@ Future<void> syncOrders() async {
             detailCopy['IdPedido'] = idPedido;
             print(detailCopy);
 
-            var detailUrl = Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
+            var detailUrl =
+                Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
             var detailBody = jsonEncode(detailCopy);
 
             print('Enviando detalle del pedido: $detailBody');
-            var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
+            var detailResponse =
+                await http.post(detailUrl, headers: headers, body: detailBody);
 
             if (detailResponse.statusCode == 401) {
               // Token expirado o inválido, intentar iniciar sesión nuevamente
               token = await login();
               if (token != null) {
                 headers['Authorization'] = 'Bearer $token';
-                detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
+                detailResponse = await http.post(detailUrl,
+                    headers: headers, body: detailBody);
               } else {
                 Fluttertoast.showToast(
-                  msg: 'Error al iniciar sesión nuevamente. No se pueden sincronizar los detalles del pedido.',
+                  msg:
+                      'Error al iniciar sesión nuevamente. No se pueden sincronizar los detalles del pedido.',
                   toastLength: Toast.LENGTH_LONG,
                   gravity: ToastGravity.BOTTOM,
                 );
@@ -208,8 +215,10 @@ Future<void> syncOrders() async {
             if (detailResponse.statusCode == 200) {
               syncedDetailsCount++;
               if (syncedDetailsCount == unsyncedOrderDetails.length) {
-                print('Todos los detalles del pedido sincronizados correctamente.');
-                await dbGuardarPedido.DatabaseHelperPedidos().markOrderAsSynced(order['id']);
+                print(
+                    'Todos los detalles del pedido sincronizados correctamente.');
+                await dbGuardarPedido.DatabaseHelperPedidos()
+                    .markOrderAsSynced(order['id'],idPedido);
                 Fluttertoast.showToast(
                   msg: 'Pedido y detalles sincronizados correctamente.',
                   textColor: Colors.blue,
@@ -218,14 +227,16 @@ Future<void> syncOrders() async {
                 );
               }
             } else {
-              print('Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
+              print(
+                  'Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
             }
           } catch (error) {
             print('Error al sincronizar detalle del pedido: $error');
           }
         }
       } else {
-        print('Error al sincronizar pedido: ${response.statusCode} - ${response.body}');
+        print(
+            'Error al sincronizar pedido: ${response.statusCode} - ${response.body}');
         Fluttertoast.showToast(
           msg: 'Error al sincronizar pedido: ${response.statusCode}',
           textColor: Colors.red,
@@ -288,7 +299,8 @@ Future<int?> saveOrder(int selectedClient, String observations,
       int idPedido = jsonResponse['savedOrder']['id'];
 
       // Guardar en SQLite
-      dbGuardarPedido.DatabaseHelperPedidos db = dbGuardarPedido.DatabaseHelperPedidos();
+      dbGuardarPedido.DatabaseHelperPedidos db =
+          dbGuardarPedido.DatabaseHelperPedidos();
       await db.insertOrder(dataPedido);
       print('Pedido guardado en SQLite: $dataPedido');
 
@@ -309,13 +321,15 @@ Future<int?> saveOrder(int selectedClient, String observations,
     print('Error saving order: $error');
 
     // Guardar en SQLite en caso de error
-    dbGuardarPedido.DatabaseHelperPedidos db = dbGuardarPedido.DatabaseHelperPedidos();
+    dbGuardarPedido.DatabaseHelperPedidos db =
+        dbGuardarPedido.DatabaseHelperPedidos();
 
     print('Pedido guardado en SQLite después del error: $dataPedido');
 
     return await db.insertOrder(dataPedido);
   }
 }
+
 Future<void> saveOrderDetail(
   int idPedido,
   List<Product> selectedProducts,
@@ -361,8 +375,9 @@ Future<void> saveOrderDetail(
                       100)))
         };
 
-        await dbDetallePedidos.DatabaseHelperDetallePedidos().insertOrderDetail(orderDetailData);
-        
+        await dbDetallePedidos.DatabaseHelperDetallePedidos()
+            .insertOrderDetail(orderDetailData);
+
         var body = jsonEncode(orderDetailData);
         print('Datos del detalle del pedido a enviar: $body');
 
@@ -370,9 +385,11 @@ Future<void> saveOrderDetail(
 
         if (response.statusCode == 200) {
           print('Detalle del pedido guardado en la API correctamente');
-          print('Detalle del pedido marcado como sincronizado en SQLite: $orderDetailData');
+          print(
+              'Detalle del pedido marcado como sincronizado en SQLite: $orderDetailData');
         } else {
-          print('Error al guardar el detalle del pedido en la API: ${response.statusCode}');
+          print(
+              'Error al guardar el detalle del pedido en la API: ${response.statusCode}');
         }
       } catch (e) {
         print('Error al procesar el producto ${product.codigo}: $e');
@@ -422,7 +439,8 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
   }
 
   Future<List<Product>> getProductsFromLocalDatabase() async {
-    final dbHelper = product.DatabaseHelperProducto(); // Usar la versión de dbProducto
+    final dbHelper =
+        product.DatabaseHelperProducto(); // Usar la versión de dbProducto
 
     // print("Obteniendo productos de la base de datos local...");
     List<Product> products = await dbHelper.getProducts();
@@ -584,7 +602,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   Future<void> saveVendedorToLocalDatabase(Vendedor vendedor) async {
     try {
-     DatabaseHelperVendedor dbHelper = DatabaseHelperVendedor();
+      DatabaseHelperVendedor dbHelper = DatabaseHelperVendedor();
       await dbHelper.insertVendedor(vendedor);
     } catch (error) {
       print('Error saving vendedor to local database: $error');
@@ -600,14 +618,13 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
       try {
         final response = await http.get(
             Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
-        print(response.body)
-        ;
+        print(response.body);
 
         if (response.statusCode == 200) {
           Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
           print(vendedor.value);
           print(vendedor.nombre);
-print("Exito vendedores $response");
+          print("Exito vendedores $response");
           // Guardar el vendedor en la base de datos local
           // await saveVendedorToLocalDatabase(vendedor);
 
@@ -628,7 +645,7 @@ print("Exito vendedores $response");
 
   Future<Vendedor> getSalesperson() async {
     try {
-       DatabaseHelperVendedor dbHelper =  DatabaseHelperVendedor();
+      DatabaseHelperVendedor dbHelper = DatabaseHelperVendedor();
       List<Vendedor> vendedores = await dbHelper.getVendedores();
       if (vendedores.isNotEmpty) {
         return vendedores.first;
@@ -723,7 +740,7 @@ print("Exito vendedores $response");
 
   Future<bool> _tryFetchAndStoreVendedores() async {
     try {
-      return await  DatabaseHelperVendedor().fetchAndStoreVendedores();
+      return await DatabaseHelperVendedor().fetchAndStoreVendedores();
     } catch (e) {
       print('Error fetching and storing vendedores: $e');
       return false;
@@ -784,9 +801,10 @@ print("Exito vendedores $response");
                           _selectedSalesperson = newValue!;
                           _selectedSalespersonId = newValue.value;
                         });
+                        
 
                         // Guardar el vendedor seleccionado en la base de datos
-                        await  DatabaseHelperVendedor()
+                        await DatabaseHelperVendedor()
                             .insertVendedor(_selectedSalesperson!);
                         print('Vendedor seleccionado: $newValue');
                         print(_selectedSalesperson!.value);
@@ -924,155 +942,141 @@ print("Exito vendedores $response");
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: _selectedProducts.map((product) {
-                        double unitPrice = _selectedProductPrices[product] ??
-                            product.precioFinal;
-                        int quantity = _selectedProductQuantities[product] ?? 1;
-                        double discount = _discounts[product] ?? 0;
-                        double subtotalBeforeDiscount = unitPrice * quantity;
-                        double discountAmount =
-                            subtotalBeforeDiscount * (discount / 100);
-                        double subtotal =
-                            subtotalBeforeDiscount - discountAmount;
+                   Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: _selectedProducts.map((product) {
+    double unitPrice = _selectedProductPrices[product] ?? product.precioFinal;
+    int quantity = _selectedProductQuantities[product] ?? 1;
+    double discount = _discounts[product] ?? 0;
+    double subtotalBeforeDiscount = unitPrice * quantity;
+    double discountAmount = subtotalBeforeDiscount * (discount / 100);
+    double subtotal = subtotalBeforeDiscount - discountAmount;
 
-                        List<double> availablePrices = [
-                          product.precioFinal,
-                          product.precioB,
-                          product.precioC,
-                          product.precioD,
-                        ]
-                            .where((price) => price > 0)
-                            .toList(); // Filtrar precios mayores a 0
+    List<double> availablePrices = [
+      product.precioFinal,
+      product.precioB,
+      product.precioC,
+      product.precioD,
+    ].where((price) => price > 0).toList();
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            ListTile(
-                              title: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      '${product.descripcion}',
-                                      overflow: TextOverflow.clip,
-                                    ),
-                                  ),
-                                  DropdownButton<double>(
-                                    value: availablePrices.contains(unitPrice)
-                                        ? unitPrice
-                                        : product.precioFinal,
-                                    items: availablePrices.toSet().map((price) {
-                                      return DropdownMenuItem(
-                                        value: price,
-                                        child: Text(
-                                            'Q${price.toStringAsFixed(2)}'),
-                                      );
-                                    }).toList(),
-                                    onChanged: (newPrice) {
-                                      setState(() {
-                                        _selectedProductPrices[product] =
-                                            newPrice!;
-                                        unitPrice = newPrice;
-                                        subtotalBeforeDiscount =
-                                            unitPrice * quantity;
-                                        discountAmount =
-                                            subtotalBeforeDiscount *
-                                                (discount / 100);
-                                        subtotal = subtotalBeforeDiscount -
-                                            discountAmount;
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(Icons.remove_circle),
-                                          onPressed: () {
-                                            setState(() {
-                                              if (quantity > 1) {
-                                                _selectedProductQuantities[
-                                                    product] = quantity - 1;
-                                                _saveSelectedProducts();
-                                              } else {
-                                                _selectedProducts
-                                                    .remove(product);
-                                                _selectedProductQuantities
-                                                    .remove(product);
-                                                _discounts.remove(product);
-                                                _selectedProductPrices
-                                                    .remove(product);
-                                              }
-                                            });
-                                          },
-                                        ),
-                                        Text(quantity.toString()),
-                                        IconButton(
-                                          icon: Icon(Icons.add_circle),
-                                          onPressed: () {
-                                            setState(() {
-                                              _selectedProductQuantities[
-                                                  product] = quantity + 1;
-                                              _saveSelectedProducts();
-                                            });
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                Expanded(
-                                  child: TextField(
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                          RegExp(r'^\d{1,2}$')),
-                                    ],
-                                    onChanged: (value) {
-                                      setState(() {
-                                        _discounts[product] =
-                                            double.tryParse(value) ?? 0;
-                                        discount = _discounts[product]!;
-                                        subtotalBeforeDiscount =
-                                            unitPrice * quantity;
-                                        discountAmount =
-                                            subtotalBeforeDiscount *
-                                                (discount / 100);
-                                        subtotal = subtotalBeforeDiscount -
-                                            discountAmount;
-                                      });
-                                    },
-                                    decoration: InputDecoration(
-                                      labelText: '% Desc',
-                                      floatingLabelStyle:
-                                          TextStyle(color: Colors.blue),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 5.0,
-                                        horizontal: 10.0,
-                                      ),
-                                      isDense: true,
-                                    ),
-                                  ),
-                                ),
-                                SizedBox(width: 10),
-                                Text('Q${subtotal.toStringAsFixed(2)}'),
-                              ],
-                            ),
-                            Divider(),
-                          ],
-                        );
-                      }).toList(),
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8.0),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: Colors.grey)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            title: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Text(
+                    '${product.descripcion}',
+                    overflow: TextOverflow.clip,
+                  ),
+                ),
+                DropdownButton<double>(
+                  value: availablePrices.contains(unitPrice) ? unitPrice : product.precioFinal,
+                  items: availablePrices.toSet().map((price) {
+                    return DropdownMenuItem(
+                      value: price,
+                      child: Text('Q${price.toStringAsFixed(2)}'),
+                    );
+                  }).toList(),
+                  onChanged: (newPrice) {
+                    setState(() {
+                      _selectedProductPrices[product] = newPrice!;
+                      unitPrice = newPrice;
+                      subtotalBeforeDiscount = unitPrice * quantity;
+                      discountAmount = subtotalBeforeDiscount * (discount / 100);
+                      subtotal = subtotalBeforeDiscount - discountAmount;
+                    });
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.close_sharp, color: Colors.red),
+                  onPressed: () {
+                    setState(() {
+                      _selectedProducts.remove(product);
+                      _selectedProductPrices.remove(product);
+                      _selectedProductQuantities.remove(product);
+                      _discounts.remove(product);
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Padding(
+                  padding: EdgeInsets.only(left: 16.0),
+                  child: TextField(
+                    keyboardType: TextInputType.number,
+                    onChanged: (newValue) {
+                      if (newValue.isNotEmpty) {
+                        setState(() {
+                          int newQuantity = int.tryParse(newValue) ?? 0;
+                          if (newQuantity > 0) {
+                            _selectedProductQuantities[product] = newQuantity;
+                            // _saveSelectedProducts(); // Puedes llamar a _saveSelectedProducts aquí o en otro lugar adecuado
+                          }
+                        });
+                      }
+                    },
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                      hintText: '1',
                     ),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
+                  child: TextField(
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d{1,2}$')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _discounts[product] = double.tryParse(value) ?? 0;
+                        discount = _discounts[product]!;
+                        subtotalBeforeDiscount = unitPrice * quantity;
+                        discountAmount = subtotalBeforeDiscount * (discount / 100);
+                        subtotal = subtotalBeforeDiscount - discountAmount;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: '% Desc',
+                      floatingLabelStyle: TextStyle(color: Colors.blue),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                      isDense: true,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 16.0),
+              Text('Q${subtotal.toStringAsFixed(2)}'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }).toList(),
+),
+
 
                     SizedBox(height: 20.0),
                     TextField(
@@ -1107,87 +1111,116 @@ print("Exito vendedores $response");
                           fontWeight: FontWeight.bold, fontSize: 18.0),
                     ),
 
-                    Padding(
-                      padding: const EdgeInsets.only(
-                          bottom: 10.0), // Agrega espacio entre los botones
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          // Mostrar AlertDialog de confirmación antes de agregar el pedido
-                          bool confirm = await showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text('¿Está seguro?'),
-                              content: Text('¿Desea agregar el pedido?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(
-                                        true); // Cerrar el cuadro de diálogo y devolver true
-                                  },
-                                  child: Text('Sí'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(
-                                      false), // Cerrar el cuadro de diálogo y devolver false
-                                  child: Text('No'),
-                                ),
-                              ],
-                            ),
-                          );
+                   Padding(
+  padding: const EdgeInsets.only(
+    bottom: 10.0,
+  ),
+  child: ElevatedButton(
+    onPressed: () async {
+      // Validar campos obligatorios
+      // ignore: unnecessary_null_comparison
+      if (_selectedClient == null ||
+          _selectedSalespersonId == null ||
+          // ignore: unnecessary_null_comparison
+          _selectedDate == null || _selectedProducts.isEmpty  ) {
+        // Mostrar mensaje de error si falta algún campo obligatorio
+        Fluttertoast.showToast(
+          msg: 'Por favor complete todos los campos obligatorios.',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.black,
+          textColor: Colors.white,
+          fontSize: 16.0,
+        );
+        return; // Detener la ejecución del método
+      }
 
-                          if (confirm == true) {}
-                          // Si el usuario confirma, proceder con la acción de agregar pedido
-                          if (confirm == true) {
-                            int? idPedido = await saveOrder(
-                              _selectedClient.codCliente,
-                              _observations,
-                              _selectedSalespersonId ?? 0,
-                              _selectedDate,
-                            );
-                            if (idPedido != null) {
-                              saveOrderDetail(
-                                  idPedido,
-                                  _selectedProducts,
-                                  _selectedProductQuantities,
-                                  _selectedProductPrices,
-                                  _discounts);
-                              Fluttertoast.showToast(
-                                msg: 'Pedido guardado exitosamente.',
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                timeInSecForIosWeb: 1,
-                                backgroundColor: Colors.blue,
-                                textColor: Colors.white,
-                                fontSize: 16.0,
-                              );
-                              _resetState();
-                            } else {
-                              Fluttertoast.showToast(
-                                msg: 'Error al guardar el pedido.',
-                                toastLength: Toast.LENGTH_SHORT,
-                                gravity: ToastGravity.BOTTOM,
-                                timeInSecForIosWeb: 1,
-                                backgroundColor: Colors.red,
-                                textColor: Colors.white,
-                                fontSize: 16.0,
-                              );
-                            }
-                          }
-                          print(confirm);
-                        },
-                        child: Text(
-                          'Agregar Pedido',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _buttonColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          minimumSize: Size(double.infinity, 50),
-                        ),
-                      ),
-                    ),
+      // Mostrar AlertDialog de confirmación antes de agregar el pedido
+      bool confirm = await showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('¿Está seguro?'),
+          content: Text('¿Desea agregar el pedido?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: Text('Sí'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: Text('No'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirm == true) {
+        // Proceder con el guardado del pedido
+        int? idPedido = await saveOrder(
+          _selectedClient.codCliente,
+          _observations,
+          _selectedSalespersonId ?? 0,
+          _selectedDate,
+        );
+
+        if (idPedido != null) {
+          // Guardar detalles del pedido
+          saveOrderDetail(
+            idPedido,
+           _selectedProducts, 
+            _selectedProductQuantities,
+            _selectedProductPrices,
+            _discounts,
+          );
+
+          // Mostrar mensaje de éxito
+          Fluttertoast.showToast(
+            msg: 'Pedido guardado exitosamente.',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.blue,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+
+          // Resetear estado después de guardar
+          _resetState();
+        } else {
+          // Mostrar mensaje de error si falla el guardado del pedido
+          Fluttertoast.showToast(
+            msg: 'Error al guardar el pedido.',
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            timeInSecForIosWeb: 1,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+            fontSize: 16.0,
+          );
+        }
+      }
+
+      print(confirm);
+    },
+    child: Text(
+      'Agregar Pedido',
+      style: TextStyle(color: Colors.white),
+    ),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: _buttonColor,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      minimumSize: Size(double.infinity, 50),
+    ),
+  ),
+),
+
                     Padding(
                       padding: const EdgeInsets.only(
                         top: 10.0, // Agrega espacio entre los botones
@@ -1330,7 +1363,6 @@ print("Exito vendedores $response");
         final response = await http.get(
           Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
           headers: {'Authorization': 'Bearer $token'},
-          
         );
 
         if (response.statusCode == 200) {
@@ -1379,24 +1411,24 @@ print("Exito vendedores $response");
     }
   }
 
-  Future<void> _saveSelectedProducts() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> selectedProductsJson = _selectedProducts.map((product) {
-      // Serializar el producto junto con su cantidad
-      Map<String, dynamic> productData =
-          product.toJson(_selectedProductQuantities[product] ?? 1);
-      // Convertir el mapa en una cadena JSON
-      return json.encode(productData);
-    }).toList();
-    // Guardar la lista de productos serializados en las preferencias compartidas
-    await prefs.setStringList('selectedProducts', selectedProductsJson);
-    print('PRODUCTOS SELECCIONADOS');
-    print(selectedProductsJson);
-    _selectedProducts.forEach((product) {
-      prefs.setInt(
-          product.codigo.toString(), _selectedProductQuantities[product] ?? 1);
-    });
-  }
+  // Future<void> _saveSelectedProducts() async {
+  //   SharedPreferences prefs = await SharedPreferences.getInstance();
+  //   List<String> selectedProductsJson = _selectedProducts.map((product) {
+  //     // Serializar el producto junto con su cantidad
+  //     Map<String, dynamic> productData =
+  //         product.toJson(_selectedProductQuantities[product] ?? 1);
+  //     // Convertir el mapa en una cadena JSON
+  //     return json.encode(productData);
+  //   }).toList();
+  //   // Guardar la lista de productos serializados en las preferencias compartidas
+  //   await prefs.setStringList('selectedProducts', selectedProductsJson);
+  //   print('PRODUCTOS SELECCIONADOS');
+  //   print(selectedProductsJson);
+  //   _selectedProducts.forEach((product) {
+  //     prefs.setInt(
+  //         product.codigo.toString(), _selectedProductQuantities[product] ?? 1);
+  //   });
+  // }
 
   double _calculateTotalPrice() {
     double total = 0;
@@ -1434,4 +1466,4 @@ print("Exito vendedores $response");
     List<String>? selectedProductsJson = [];
     await prefs.setStringList('selectedProducts', selectedProductsJson);
   }
-}            
+}

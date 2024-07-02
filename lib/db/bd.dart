@@ -35,40 +35,40 @@ class DatabaseHelper {
   }
 
   Future<void> _createClientesTable(Database db) async {
-    await db.execute(
-      'CREATE TABLE clientes('
-      'codCliente INTEGER PRIMARY KEY,'
-      'nombre TEXT,'
-      'cedula TEXT,'
-      'direccion TEXT,'
-      'observaciones TEXT,'
-      'telefono1 TEXT,'
-      'telefono2 TEXT,'
-      'celular TEXT,'
-      'email TEXT,'
-      'credito INTEGER,'
-      'limiteCredito REAL,'
-      'plazoCredito REAL,'
-      'tipoPrecio REAL,'
-      'restriccion INTEGER,'
-      'codMoneda REAL,'
-      'moroso INTEGER,'
-      'inHabilitado INTEGER,'
-      'fechaIngreso TEXT,'
-      'idLocalidad REAL,'
-      'idAgente REAL,'
-      'permiteDescuento INTEGER,'
-      'descuento REAL,'
-      'maxDescuento REAL,'
-      'exonerar INTEGER,'
-      'codigo TEXT,'
-      'contacto TEXT,'
-      'telContacto TEXT,'
-      'dpi REAL,'
-      'categoria REAL,'
-     'FOREIGN KEY (idAgente) REFERENCES vendedores (value)'
-     ')',
-    );
+    await db.execute('''
+      CREATE TABLE clientes(
+      codCliente INTEGER PRIMARY KEY,
+      nombre TEXT,
+      cedula TEXT,
+      direccion TEXT,
+      observaciones TEXT,
+      telefono1 TEXT,
+      telefono2 TEXT,
+      celular TEXT,
+      email TEXT,
+      credito INTEGER,
+      limiteCredito REAL,
+      plazoCredito REAL,
+      tipoPrecio REAL,
+      restriccion INTEGER,
+      codMoneda REAL,
+      moroso INTEGER,
+      inHabilitado INTEGER,
+      fechaIngreso TEXT,
+      idLocalidad REAL,
+      idAgente REAL,
+      permiteDescuento INTEGER,
+      descuento REAL,
+      maxDescuento REAL,
+      exonerar INTEGER,
+      codigo TEXT,
+      contacto TEXT,
+      telContacto TEXT,
+      dpi REAL,
+      categoria REAL,
+     FOREIGN KEY (idAgente) REFERENCES vendedores (value)
+     )
+   ''' );
   }
 
   Future<void> _createOrderDetailsTable(Database db) async {
@@ -92,6 +92,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE Orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        NumPedido INTEGER DEFAULT 0,
         CodCliente INTEGER,
         Fecha TEXT,
         Observaciones TEXT,
@@ -109,31 +110,31 @@ class DatabaseHelper {
   }
 
   Future<void> _createProductosTable(Database db) async {
-    await db.execute(
-      'CREATE TABLE productos('
-      'codigo INTEGER PRIMARY KEY,'
-      'barras TEXT,'
-      'descripcion TEXT,'
-      'existencia INTEGER,'
-      'costo REAL,'
-      'precioFinal REAL,'
-      'precioB REAL,'
-      'precioC REAL,'
-      'precioD REAL,'
-      'marcas TEXT,'
-      'categoriaSubCategoria TEXT,'
-      'observaciones TEXT'
-      ')',
-    );
+    await db.execute('''
+      CREATE TABLE productos(
+      codigo INTEGER PRIMARY KEY,
+      barras TEXT,
+      descripcion TEXT,
+      existencia INTEGER,
+      costo REAL,
+      precioFinal REAL,
+      precioB REAL,
+      precioC REAL,
+      precioD REAL,
+      marcas TEXT,
+      categoriaSubCategoria TEXT,
+      observaciones TEXT
+    )
+    ''');
   }
 
   Future<void> _createVendedoresTable(Database db) async {
-    await db.execute(
-      'CREATE TABLE vendedores('
-      'value INTEGER PRIMARY KEY,'
-      'nombre TEXT'
-      ')',
-    );
+    await db.execute('''
+      CREATE TABLE vendedores(
+      value INTEGER PRIMARY KEY,
+      nombre TEXT
+      ) 
+    ''');
   }
 
   Future<void> deleteAllTables() async {

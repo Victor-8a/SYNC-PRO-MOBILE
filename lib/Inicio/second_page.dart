@@ -5,7 +5,6 @@ import 'package:sync_pro_mobile/Pantallas/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/services/warning_widget_cubit.dart';
 import '../main.dart';
 import '../Pantallas/pagina_inventario.dart';
-import '../Pantallas/nuevo_pedido.dart';
 import '../Pantallas/pagina_cliente.dart';
 import '../Pantallas/pagina_listar_pedido.dart';
 import '../Pantallas/pagina_registrar.dart';
@@ -35,15 +34,15 @@ class SecondPage extends StatefulWidget {
 
 class _SecondPageState extends State<SecondPage> {
   int _selectedIndex = 0;
-  String _userName = '';
+  String _username = '';
     late Future<List<Product>> futureProducts;
      final ProductService productService = ProductService();
 
   final List<Widget> _pages = <Widget>[
     PaginaInventario(),
-    NuevoPedido(),
+      PaginaListarPedidos(),
     PaginaCliente(),
-    PaginaListarPedidos(),
+  
     PaginaRegistrar(),
   ];
 
@@ -56,9 +55,9 @@ class _SecondPageState extends State<SecondPage> {
 
 Future<void> _loadUserName() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  String? storedUsername = prefs.getString('userName'); // Cambiado a 'userName'
+  String? storedUsername = prefs.getString('username'); // Cambiado a 'userName'
   setState(() {
-    _userName = storedUsername ?? '';
+    _username = storedUsername ?? '';
   });
 }
 
@@ -69,11 +68,6 @@ Future<void> _loadUserName() async {
     });
   }
 
-  //   void _syncProducts() async {
-  //   setState(() {
-  //     futureProducts = productService.fetchProducts();
-  //   });
-  // }
 
 
   Future<void> _logout() async {
@@ -81,7 +75,7 @@ Future<void> _loadUserName() async {
     await prefs.remove('token');
     await prefs.remove('userId');
     await prefs.remove('idVendedor');
-    await prefs.remove('userName');
+    await prefs.remove('username');
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -113,7 +107,7 @@ Future<void> _loadUserName() async {
                 color: Colors.blue,
               ),
               child: Text(
-                'Hola, $_userName',
+                'Hola, $_username',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 24,
@@ -121,13 +115,7 @@ Future<void> _loadUserName() async {
               ),
             ),
 
-          // ListTile(
-          //     leading: const Icon(Icons.sync),
-          //     title: const Text('Sincronizar Productos'),
-          //     onTap:  _syncProducts,
-
-          //   ),
-
+        
 ListTile(
               leading: const Icon(Icons.sync),
               title: const Text('Sincronizar Pedido'),
@@ -153,9 +141,10 @@ ListTile(
         height: 50,
         items: const <Widget>[
           Icon(Icons.inventory),
+           Icon(Icons.store_sharp),
           Icon(Icons.sell_outlined),
           Icon(Icons.person),
-          Icon(Icons.store_sharp),
+         
           Icon(Icons.person_add_alt),
         ],
         onTap: _onItemTapped,

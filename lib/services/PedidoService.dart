@@ -118,7 +118,7 @@ Future<void> syncOrders() async {
               syncedDetailsCount++;
               if (syncedDetailsCount == unsyncedOrderDetails.length) {
                 print('Todos los detalles del pedido sincronizados correctamente.');
-                await dbGuardarPedido.DatabaseHelperPedidos().markOrderAsSynced(order['id']);
+                await dbGuardarPedido.DatabaseHelperPedidos().markOrderAsSynced(order['id'],idPedido);
                 Fluttertoast.showToast(
                   msg: 'Pedido y detalles sincronizados correctamente.',
                   textColor: Colors.blue,

@@ -12,7 +12,7 @@ Future<int> insertOrder(Map<String, dynamic> order) async {
   order['Anulado'] = order['Anulado'] ? 1 : 0;
 
   order['synced'] = 0; // Marcar pedido como no sincronizado
-
+order['NumPedido'] = 0;
   int id = await db.insert(
     'Orders',
     order,
@@ -31,7 +31,8 @@ Future<int> insertOrder(Map<String, dynamic> order) async {
         clientes.nombre AS nombreCliente, 
         vendedores.nombre AS nombreVendedor,
         Orders.Observaciones,
-        Orders.synced
+        Orders.synced,
+        Orders.NumPedido
       FROM 
         Orders
       JOIN 
@@ -48,11 +49,12 @@ Future<List<Map<String, dynamic>>> getUnsyncedOrders() async {
   return await db.query('Orders', where: 'synced =?', whereArgs: [0]);
 }
 
-Future<void> markOrderAsSynced(int id) async {
+Future<void> markOrderAsSynced(int id, int numPedido) async {
   final db = await dbProvider.database;
   await db.update(
     'Orders',
-    {'synced': 1},
+    {'synced': 1,
+     'NumPedido':numPedido},
     where: 'id = ?',
     whereArgs: [id],
   );
