@@ -1,3 +1,4 @@
+import 'package:sqflite/sqflite.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
 
@@ -11,7 +12,7 @@ final dbProvider = DatabaseHelper();
     await db.insert(
       'clientes',
       cliente.toJson(),
-
+conflictAlgorithm: ConflictAlgorithm.replace,
     );
     print('Cliente inserted: ${cliente.nombre}');
   }

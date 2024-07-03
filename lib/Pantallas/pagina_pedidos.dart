@@ -613,34 +613,41 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   Future<Vendedor> loadSalesperson() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? idVendedor = prefs.getString('idVendedor');
+    String? vendedorName = prefs.getString('vendedorName');
+    print('++++++++++++++++++++');
+    print(idVendedor);
+    print(vendedorName);
 
-    if (idVendedor != null) {
-      try {
-        final response = await http.get(
-            Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
-        print(response.body);
+    print('++++++++++++++++++++');
+  return Vendedor(value: int.parse(idVendedor!), nombre: vendedorName!);
 
-        if (response.statusCode == 200) {
-          Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
-          print(vendedor.value);
-          print(vendedor.nombre);
-          print("Exito vendedores $response");
-          // Guardar el vendedor en la base de datos local
-          // await saveVendedorToLocalDatabase(vendedor);
+    // if (idVendedor != null) {
+    //   try {
+    //     final response = await http.get(
+    //         Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
+    //     print(response.body);
 
-          return vendedor;
-        } else {
-          print('Failed to load salesperson: ${response.statusCode}');
-          throw Exception('Failed to load salesperson: ${response.statusCode}');
-        }
-      } catch (error) {
-        print('Error loading salesperson: $error');
-        throw Exception('Failed to load salesperson: $error');
-      }
-    } else {
-      print("Fallo Vendedores");
-      throw Exception('Failed to load salesperson: idVendedor is null');
-    }
+    //     if (response.statusCode == 200) {
+    //       Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
+    //       print(vendedor.value);
+    //       print(vendedor.nombre);
+    //       print("Exito vendedores $response");
+    //       // Guardar el vendedor en la base de datos local
+    //       // await saveVendedorToLocalDatabase(vendedor);
+
+    //       return vendedor;
+    //     } else {
+    //       print('Failed to load salesperson: ${response.statusCode}');
+    //       throw Exception('Failed to load salesperson: ${response.statusCode}');
+    //     }
+    //   } catch (error) {
+    //     print('Error loading salesperson: $error');
+    //     throw Exception('Failed to load salesperson: $error');
+    //   }
+    // } else {
+    //   print("Fallo Vendedores");
+    //   throw Exception('Failed to load salesperson: idVendedor is null');
+    // }
   }
 
   Future<Vendedor> getSalesperson() async {
@@ -660,6 +667,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   Vendedor vendedor = Vendedor(value: 1, nombre: 'Vendedor 1');
   int? _selectedSalespersonId; // ID del vendedor seleccionado
+  // ignore: unused_field
   List<Vendedor> _vendedores = [];
   Cliente _selectedClient =
       Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
@@ -751,6 +759,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   Widget build(BuildContext context) {
     // ignore: unused_local_variable
     double _totalPrice = _calculateTotalPrice();
+    // ignore: unused_local_variable
     Vendedor? _selectedSalesperson;
 
     return WillPopScope(
@@ -788,54 +797,39 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
               ),
               backgroundColor: Colors.blue,
             ),
-            body: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Ahora puedes usar _vendedores en tu DropdownButtonFormField
-                    DropdownButtonFormField<Vendedor>(
-                      value: _selectedSalesperson,
-                      onChanged: (newValue) async {
-                        setState(() {
-                          _selectedSalesperson = newValue!;
-                          _selectedSalespersonId = newValue.value;
-                        });
-                        
 
-                        // Guardar el vendedor seleccionado en la base de datos
-                        await DatabaseHelperVendedor()
-                            .insertVendedor(_selectedSalesperson!);
-                        print('Vendedor seleccionado: $newValue');
-                        print(_selectedSalesperson!.value);
-                        print(_selectedSalesperson!.nombre);
-                      },
-                      items: _vendedores.map((vendedor) {
-                        return DropdownMenuItem<Vendedor>(
-                          value: vendedor,
-                          child: Text(
-                            vendedor.nombre,
-                          ),
-                        );
-                      }).toList(),
-                      decoration: InputDecoration(
-                        labelText: 'Vendedor',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                      ),
-                      iconSize: 12, // Tamaño del ícono desplegable
-                      dropdownColor: Colors
-                          .white, // Color de fondo de la lista desplegable
-                      elevation: 100,
-                      borderRadius: BorderRadius.circular(50),
-                      menuMaxHeight: 300,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: Colors.black,
-                      ),
-                    ),
+            
+         body: SingleChildScrollView(
+  padding: const EdgeInsets.all(16.0),
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      FutureBuilder<Vendedor>(
+        future: loadSalesperson(),
+        builder: (context, snapshot) {
+           if (snapshot.connectionState == ConnectionState.waiting) {
+             return Center(child: CircularProgressIndicator());
+    //       } else if (snapshot.hasError) {
+    //         return Center(child: Text('Error: ${snapshot.error.toString()}'));
+    //       } else if (!snapshot.hasData) {
+    //         return Center(child: Text('No se encontraron vendedores'));
+            }else {
+            
+    // }
+    Vendedor _selectedSalesperson = snapshot.data!;
+_selectedSalespersonId =_selectedSalesperson.value;
+            return Column(
+              children: [
+                // Aquí puedes mostrar el nombre del vendedor seleccionado o cualquier otro contenido
+                Text(
+                  'Vendedor: ${_selectedSalesperson.nombre}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+        ),
+      )]);
+        }},
+),
                     Column(
                       children: [
                         Row(
@@ -1410,25 +1404,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
       print('Error loading products: $error');
     }
   }
-
-  // Future<void> _saveSelectedProducts() async {
-  //   SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   List<String> selectedProductsJson = _selectedProducts.map((product) {
-  //     // Serializar el producto junto con su cantidad
-  //     Map<String, dynamic> productData =
-  //         product.toJson(_selectedProductQuantities[product] ?? 1);
-  //     // Convertir el mapa en una cadena JSON
-  //     return json.encode(productData);
-  //   }).toList();
-  //   // Guardar la lista de productos serializados en las preferencias compartidas
-  //   await prefs.setStringList('selectedProducts', selectedProductsJson);
-  //   print('PRODUCTOS SELECCIONADOS');
-  //   print(selectedProductsJson);
-  //   _selectedProducts.forEach((product) {
-  //     prefs.setInt(
-  //         product.codigo.toString(), _selectedProductQuantities[product] ?? 1);
-  //   });
-  // }
 
   double _calculateTotalPrice() {
     double total = 0;

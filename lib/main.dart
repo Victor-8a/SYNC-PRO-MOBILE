@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Inicio/second_page.dart';
+import 'package:sync_pro_mobile/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/services/check_internet_connection.dart';
 
 final internetChecker = CheckInternetConnection();
@@ -24,13 +25,16 @@ Future<void> saveTokenToStorage(String token) async {
   await prefs.setString('token', token);
   print('Token guardado en el almacenamiento: $token');
 }
-
 Future<void> saveIdToStorage(String userId, int opcion) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  opcion == 1
-      ? await prefs.setString('userId', userId)
-      : await prefs.setString('idVendedor', userId);
-  print('id guardado en el almacenamiento: $userId');
+  if (userId.isNotEmpty) { // Asegurarse de que userId no esté vacío
+    opcion == 1
+        ? await prefs.setString('userId', userId)
+        : await prefs.setString('idVendedor', userId);
+    print('id guardado en el almacenamiento: $userId');
+  } else {
+    throw Exception('El userId está vacío o es nulo.');
+  }
 }
 
 Future<void> saveUsernameToStorage(String username) async {
@@ -39,10 +43,12 @@ Future<void> saveUsernameToStorage(String username) async {
   print('Nombre de usuario guardado en el almacenamiento: $username');
 }
 
+
 Future<String?> getUsernameFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getString('username');
 }
+
 Future<String?> getPasswordFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   return prefs.getString('password');
@@ -54,6 +60,47 @@ Future<void> savePasswordToStorage(String password) async {
   print('Contraseña guardada en el almacenamiento: $password');
 }
 
+
+
+Future<Vendedor> loadSalesperson() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? idVendedor = prefs.getString('idVendedor');
+
+  if (idVendedor != null) {
+    try {
+      final response = await http.get(
+          Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
+      
+      if (response.statusCode == 200) {
+        Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
+        print('Nombre del vendedor recibido: ${vendedor.nombre}');
+        await saveVendedorNameToStorage(vendedor.nombre);
+        return vendedor;
+      } else {
+        // Manejo del error en caso de que no se obtenga un código 200
+        print('Failed to load salesperson: ${response.statusCode}');
+        throw Exception('Failed to load salesperson: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error loading salesperson: $error');
+      throw Exception('Failed to load salesperson: $error');
+    }
+  } else {
+    print("Fallo Vendedores");
+    throw Exception('Failed to load salesperson: idVendedor is null');
+  }
+}
+
+Future<void> saveVendedorNameToStorage(String vendedorName) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  await prefs.setString('vendedorName', vendedorName);
+  print('Nombre del vendedor guardado en el almacenamiento: $vendedorName');
+}
+
+Future<String?> getVendedorNameFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  return prefs.getString('vendedorName');
+}
 
 class LoginApp extends StatelessWidget {
   final bool isLoggedIn;
@@ -105,15 +152,16 @@ class _LoginPageState extends State<LoginPage> {
       String? nombreUsuario = jsonDecode(response.body)['user']?['nombre'];
       id = jsonDecode(response.body)['user']?['id'] ?? 0;
 
-      saveTokenToStorage(token);
-      saveIdToStorage(id.toString(), 1);
-      saveIdToStorage(
+      await saveTokenToStorage(token);
+      await saveIdToStorage(id.toString(), 1);
+      await saveIdToStorage(
           jsonDecode(response.body)['user']?['idVendedor']?.toString() ?? '',
           2);
-      savePasswordToStorage(contrasena);  // Guarda la contraseña aquí
+      await savePasswordToStorage(contrasena);  // Guarda la contraseña aquí
 
       if (nombreUsuario != null) {
-        saveUsernameToStorage(nombreUsuario);
+        await saveUsernameToStorage(nombreUsuario);
+        await loadSalesperson(); // Llama a loadSalesperson después de guardar el nombre de usuario
       } else {
         print('No se pudo encontrar el nombre de usuario en la respuesta.');
       }
@@ -234,7 +282,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ],
           ),
-        ),  
+        ),
       ),
     );
   }
