@@ -11,3 +11,14 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 </manifest>
+
+
+<!-- <intent-filter>
+<actiom android:name="android-intent.action.VIEW" />
+<category android:name="android.intent.category.DEFAULT"  />
+<category android:name="android.intent.category" />
+<data 
+    android:host="test.com"
+    android:scheme="https"
+    />
+    </intent-filter> -->
