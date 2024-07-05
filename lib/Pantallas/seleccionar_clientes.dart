@@ -1,15 +1,14 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import '../Models/Cliente.dart';
+import 'package:sync_pro_mobile/services/localidad_service.dart';
+import '../Models/Cliente.dart'; // Asegúrate de importar el modelo Ruta
 import '../db/dbCliente.dart';
 
-
 class SeleccionarCliente extends StatefulWidget {
-  const SeleccionarCliente({Key? key, required List clientes})
-      : super(key: key);
+  const SeleccionarCliente({Key? key, required List clientes}) : super(key: key);
 
   @override
   _SeleccionarClienteState createState() => _SeleccionarClienteState();
@@ -21,13 +20,15 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
   TextEditingController _searchController = TextEditingController();
   bool _isLoading = true;
   bool _isMounted = false;
+  // ignore: unused_field
+  bool _localidadCargada = false; // Variable para verificar si la localidad está cargada
 
   @override
   void initState() {
     super.initState();
     _isMounted = true;
-    fetchClientes();
     _searchController.addListener(_onSearchChanged);
+    fetchClientes(); // Llama a un método que obtenga primero la localidad y luego los clientes
   }
 
   @override
@@ -36,32 +37,43 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
     super.dispose();
   }
 
+  // Future<void> fetchRutaAndClientes() async {
+  //   try {
+  //     await fetchRuta(); // Llama a tu método para obtener la localidad (ajusta el ID según tu necesidad)
+  //     _localidadCargada = true; // Marca que la localidad está cargada correctamente
+  //     if (_isMounted) {
+  //       await fetchClientes(); // Llama a tu método para obtener los clientes si la localidad está cargada
+  //     }
+  //   } catch (error) {
+  //     print('Error fetching ruta and clientes: $error');
+  //   }
+  // }
+
   Future<void> fetchClientes() async {
     try {
       var connectivityResult = await Connectivity()
           .checkConnectivity()
           .timeout(Duration(seconds: 5));
       if (connectivityResult == ConnectivityResult.none) {
-        print('No internet connection, retrieving clients from local database');
+        print('No hay conexión a Internet, recuperando clientes de la base de datos local');
         return await retrieveClientesFromLocalDatabase();
       }
-
+      await fetchRuta();
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
 
       if (token == null) {
-        throw Exception('No token found');
+        throw Exception('No se encontró el token');
       }
 
       final response = await http.get(
         Uri.parse('http://192.168.1.212:3000/cliente'),
         headers: {'Authorization': 'Bearer $token'},
-      ).timeout(Duration(seconds: 5)); 
+      ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonResponse = json.decode(response.body);
-        final clientes =
-            jsonResponse.map((json) => Cliente.fromJson(json)).toList();
+        final clientes = jsonResponse.map((json) => Cliente.fromJson(json)).toList();
         if (_isMounted) {
           setState(() {
             _clientes = clientes;
@@ -71,10 +83,10 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
           });
         }
       } else {
-        throw Exception('Failed to load clientes');
+        throw Exception('Fallo al cargar clientes');
       }
     } catch (error) {
-      print('Error fetching clientes: $error');
+      print('Error al obtener clientes: $error');
       if (_isMounted) {
         await retrieveClientesFromLocalDatabase();
       }
@@ -87,10 +99,10 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
       await databaseHelper.deleteAllClientes();
       for (var cliente in clientes) {
         await databaseHelper.insertCliente(cliente);
-        print('Cliente ${cliente.nombre} inserted into local database');
+    
       }
     } catch (error) {
-      print('Error saving clientes to local database: $error');
+      print('Error al guardar clientes en la base de datos local: $error');
     }
   }
 
@@ -104,7 +116,7 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
         _isLoading = false;
       });
     } catch (error) {
-      print('Error retrieving clientes from local database: $error');
+      print('Error al recuperar clientes de la base de datos local: $error');
       setState(() {
         _isLoading = false;
       });

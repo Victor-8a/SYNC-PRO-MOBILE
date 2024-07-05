@@ -17,7 +17,6 @@ order['NumPedido'] = 0;
     'Orders',
     order,
   );
-  print('Pedido insertado en la base de datos: $order');
   return id;
 }
 
@@ -44,6 +43,34 @@ order['NumPedido'] = 0;
     print(result);
     return result;
   }
+  Future<Map<String, dynamic>?> getOrderById(int id) async {
+    final db = await dbProvider.database;
+    List<Map<String, dynamic>> result = await db.rawQuery('''
+      SELECT 
+       Orders.id,
+        Orders.FechaEntrega, 
+        clientes.nombre AS nombreCliente, 
+        vendedores.nombre AS nombreVendedor,
+        Orders.Observaciones,
+        Orders.synced,
+        Orders.NumPedido
+      FROM 
+        Orders
+      JOIN 
+        clientes ON Orders.CodCliente = clientes.codCliente
+      JOIN 
+        vendedores ON Orders.idVendedor = vendedores.value
+      WHERE Orders.Anulado = 0
+      AND Orders.id = $id
+    ''');
+    if (result.isNotEmpty) {
+    return result.first; // Devuelve el primer elemento de la lista, que es un mapa
+  } else {
+    return null; // Devuelve null si no se encontró ningún resultado
+  }
+}
+
+
 Future<List<Map<String, dynamic>>> getUnsyncedOrders() async {
   final db = await dbProvider.database;
   return await db.query('Orders', where: 'synced =?', whereArgs: [0]);

@@ -1,10 +1,13 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Inicio/second_page.dart';
+import 'package:sync_pro_mobile/Models/Empresa.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/services/check_internet_connection.dart';
+import 'package:sync_pro_mobile/services/empresa_service.dart';
 
 final internetChecker = CheckInternetConnection();
 
@@ -25,9 +28,11 @@ Future<void> saveTokenToStorage(String token) async {
   await prefs.setString('token', token);
   print('Token guardado en el almacenamiento: $token');
 }
+
 Future<void> saveIdToStorage(String userId, int opcion) async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  if (userId.isNotEmpty) { // Asegurarse de que userId no esté vacío
+  if (userId.isNotEmpty) {
+    // Asegurarse de que userId no esté vacío
     opcion == 1
         ? await prefs.setString('userId', userId)
         : await prefs.setString('idVendedor', userId);
@@ -42,7 +47,6 @@ Future<void> saveUsernameToStorage(String username) async {
   await prefs.setString('username', username); // Cambiado a 'userName'
   print('Nombre de usuario guardado en el almacenamiento: $username');
 }
-
 
 Future<String?> getUsernameFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -60,17 +64,15 @@ Future<void> savePasswordToStorage(String password) async {
   print('Contraseña guardada en el almacenamiento: $password');
 }
 
-
-
 Future<Vendedor> loadSalesperson() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? idVendedor = prefs.getString('idVendedor');
 
   if (idVendedor != null) {
     try {
-      final response = await http.get(
-          Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
-      
+      final response = await http
+          .get(Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
+
       if (response.statusCode == 200) {
         Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
         print('Nombre del vendedor recibido: ${vendedor.nombre}');
@@ -144,24 +146,47 @@ class _LoginPageState extends State<LoginPage> {
         'password': contrasena,
       }),
     );
-    print('prueba de id para ver si devuelve algo');
-    print('id: $id');
 
     if (response.statusCode == 200) {
       String token = jsonDecode(response.body)['token'];
       String? nombreUsuario = jsonDecode(response.body)['user']?['nombre'];
-      id = jsonDecode(response.body)['user']?['id'] ?? 0;
+      int id = jsonDecode(response.body)['user']?['id'] ?? 0;
 
       await saveTokenToStorage(token);
       await saveIdToStorage(id.toString(), 1);
       await saveIdToStorage(
-          jsonDecode(response.body)['user']?['idVendedor']?.toString() ?? '',
-          2);
-      await savePasswordToStorage(contrasena);  // Guarda la contraseña aquí
+        jsonDecode(response.body)['user']?['idVendedor']?.toString() ?? '',
+        2,
+      );
+      await savePasswordToStorage(contrasena); // Guarda la contraseña aquí
 
       if (nombreUsuario != null) {
         await saveUsernameToStorage(nombreUsuario);
         await loadSalesperson(); // Llama a loadSalesperson después de guardar el nombre de usuario
+
+        // Llamar a fetchEmpresa después de cargar el vendedor
+        try {
+          Empresa empresa = await fetchEmpresa(id);
+          print('Empresa cargada exitosamente: ${empresa.empresa}');
+        } catch (error) {
+          print('Error al obtener la empresa: $error');
+        }
+
+        print('++++++++++++');
+        print(fetchEmpresa);
+        print('++++++++++++');
+
+        // Descarga y guarda la imagen
+        try {
+          await fetchImage().then((imageModel) async {
+            await saveImageToFile(imageModel);
+            print('Imagen guardada correctamente en el dispositivo.');
+          }).catchError((error) {
+            print('Error al obtener la imagen: $error');
+          });
+        } catch (error) {
+          print('Error en la descarga y guardado de imagen: $error');
+        }
       } else {
         print('No se pudo encontrar el nombre de usuario en la respuesta.');
       }

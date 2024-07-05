@@ -16,15 +16,12 @@ final dbProvider = DatabaseHelper();
       vendedor.toJson(),
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
-    print('Vendedor inserted: ${vendedor.nombre}');
   }
 
   Future<List<Vendedor>> getVendedores() async {
  final db = await dbProvider.database;
     final List<Map<String, dynamic>> maps = await db.query('vendedores');
-    print('Vendedores retrieved: ${maps.length}');
     return List.generate(maps.length, (i) {
-      print('Vendedor map: ${maps[i]}');
       return Vendedor.fromJson(maps[i]);
     });
   }
@@ -41,12 +38,9 @@ final dbProvider = DatabaseHelper();
           .checkConnectivity()
           .timeout(Duration(seconds: 5));
       if (connectivityResult == ConnectivityResult.none) {
-        print('No internet connection, retrieving clients from local database');
         return false;
       }
       final response = await http.get(Uri.parse('http://192.168.1.212:3000/vendedor')).timeout(Duration(seconds: 5)); 
-      print("RESPUESTO DE API VENDEDORES *********************");
-      print(response.body);
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
         List<Vendedor> vendedores = jsonResponse.map((data) => Vendedor.fromJson(data)).toList();

@@ -105,7 +105,7 @@ Future<String?> login() async {
 Future<void> syncOrders() async {
   List<Map<String, dynamic>> unsyncedOrders =
       await dbGuardarPedido.DatabaseHelperPedidos().getUnsyncedOrders();
-  String? token = await getTokenFromStorage();
+  String? token = await login();
 
   // ignore: unnecessary_null_comparison
   if (token == null) {
@@ -140,7 +140,7 @@ Future<void> syncOrders() async {
 
       if (response.statusCode == 401) {
         // Token expirado o inválido, intentar iniciar sesión nuevamente
-        // token = await login();
+        // ignore: unnecessary_null_comparison
         if (token != null) {
           headers['Authorization'] = 'Bearer $token';
           response = await http.post(url, headers: headers, body: body);
@@ -153,9 +153,9 @@ Future<void> syncOrders() async {
           return;
         }
       }
-      print('++++Respuesta del S ervidor+++++');
+  
       print(response.statusCode);
-      print('++++respuesta del login+++++');
+  
       print(login());
 
       if (response.statusCode == 200) {
@@ -194,23 +194,23 @@ Future<void> syncOrders() async {
             var detailResponse =
                 await http.post(detailUrl, headers: headers, body: detailBody);
 
-            if (detailResponse.statusCode == 401) {
-              // Token expirado o inválido, intentar iniciar sesión nuevamente
-              token = await login();
-              if (token != null) {
-                headers['Authorization'] = 'Bearer $token';
-                detailResponse = await http.post(detailUrl,
-                    headers: headers, body: detailBody);
-              } else {
-                Fluttertoast.showToast(
-                  msg:
-                      'Error al iniciar sesión nuevamente. No se pueden sincronizar los detalles del pedido.',
-                  toastLength: Toast.LENGTH_LONG,
-                  gravity: ToastGravity.BOTTOM,
-                );
-                return;
-              }
-            }
+            // if (detailResponse.statusCode == 401) {
+            //   // Token expirado o inválido, intentar iniciar sesión nuevamente
+            //   token = await login();
+            //   if (token != null) {
+            //     headers['Authorization'] = 'Bearer $token';
+            //     detailResponse = await http.post(detailUrl,
+            //         headers: headers, body: detailBody);
+            //   } else {
+            //     Fluttertoast.showToast(
+            //       msg:
+            //           'Error al iniciar sesión nuevamente. No se pueden sincronizar los detalles del pedido.',
+            //       toastLength: Toast.LENGTH_LONG,
+            //       gravity: ToastGravity.BOTTOM,
+            //     );
+            //     return;
+            //   }
+            // }
 
             if (detailResponse.statusCode == 200) {
               syncedDetailsCount++;
@@ -229,6 +229,14 @@ Future<void> syncOrders() async {
             } else {
               print(
                   'Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
+
+                   Fluttertoast.showToast(
+          msg: 'Error,.No se pueden sincronizar los detalles del pedido.',
+          textColor: Colors.red,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
+
             }
           } catch (error) {
             print('Error al sincronizar detalle del pedido: $error');
@@ -581,7 +589,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   void _loadSelectedClientName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     // String? cliente = prefs.getString('selectedClient');
-    print('IMPRESION DE CLIENTE');
+
 
     List<String>? selectedClientJson = prefs.getStringList('selectedClient');
     if (selectedClientJson != null) {
@@ -614,11 +622,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? idVendedor = prefs.getString('idVendedor');
     String? vendedorName = prefs.getString('vendedorName');
-    print('++++++++++++++++++++');
-    print(idVendedor);
-    print(vendedorName);
-
-    print('++++++++++++++++++++');
+  
   return Vendedor(value: int.parse(idVendedor!), nombre: vendedorName!);
 
     // if (idVendedor != null) {
@@ -714,7 +718,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           vendedor = vendedor;
         });
       }
-      print('Vendedores cargados: $vendedor.nombre');
+
     }).catchError((error) {
       print('Error cargando vendedores: $error');
     });
@@ -1287,7 +1291,7 @@ _selectedSalespersonId =_selectedSalesperson.value;
     final response =
         await http.get(Uri.parse('http://192.168.1.212:3000/vendedor'));
     if (response.statusCode == 200) {
-      print("Exito vendedores $response");
+    
       List<dynamic> jsonResponse = json.decode(response.body);
       final vendedores =
           jsonResponse.map((data) => Vendedor.fromJson(data)).toList();
