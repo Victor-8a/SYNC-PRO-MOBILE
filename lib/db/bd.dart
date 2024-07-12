@@ -57,8 +57,8 @@ class DatabaseHelper {
         moroso INTEGER,
         inHabilitado INTEGER,
         fechaIngreso TEXT,
-        idLocalidad REAL,
-        idAgente REAL,
+        idLocalidad INTEGER,
+        idAgente INTEGER,
         permiteDescuento INTEGER,
         descuento REAL,
         maxDescuento REAL,
@@ -99,7 +99,7 @@ class DatabaseHelper {
         CodCliente INTEGER,
         Fecha TEXT,
         Observaciones TEXT,
-        IdUsuario TEXT,
+        IdUsuario INTEGER,
         FechaEntrega TEXT,
         CodMoneda INTEGER,
         TipoCambio REAL,
@@ -173,7 +173,7 @@ class DatabaseHelper {
     await db.execute('''
       CREATE TABLE localidad(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT
+        Nombre TEXT
       )
     ''');
   }

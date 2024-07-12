@@ -26,6 +26,7 @@ class DatabaseHelperRuta {
     try {
       final List<Map<String, dynamic>> maps = await db.query('localidad');
       return maps.map((map) {
+        print(Ruta.fromJson(map));
         return Ruta.fromJson(map);
       }).toList();
     } catch (e, stackTrace) {

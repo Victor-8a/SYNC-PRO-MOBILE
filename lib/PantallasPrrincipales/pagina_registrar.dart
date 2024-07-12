@@ -34,7 +34,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
   Cliente? clienteSeleccionado;
   Ruta? rutaSeleccionada; // Variable para almacenar la ruta seleccionada
   String estadoSeleccionado = 'Visitado'; // Estado inicial seleccionado
-  List<String> estados = ['Visitado', 'No visitado', 'Pidió', 'No encontrado'];
+  List<String> estados = ['Ausente', 'Visitado', 'No Visitado', 'Ordeno'];
   TextEditingController observacionesController = TextEditingController();
 
   List<Cliente> clientes = []; // Lista de clientes
@@ -49,7 +49,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
     try {
       // Obtener los clientes desde la base de datos local
       DatabaseHelperCliente databaseHelperCliente = DatabaseHelperCliente();
-      clientes = await databaseHelperCliente.getClientes();
+      clientes = await databaseHelperCliente.getClientesLocalidad(rutaSeleccionada!.id);
 
       setState(() {
         // Actualizar la interfaz con los clientes cargados
@@ -93,6 +93,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
     if (resultado != null) {
       setState(() {
         rutaSeleccionada = resultado;
+        _cargarClientes();
       });
     }
   }

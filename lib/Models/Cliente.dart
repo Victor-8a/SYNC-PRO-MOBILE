@@ -17,8 +17,8 @@ class Cliente {
   bool moroso;
   bool inHabilitado;
   String fechaIngreso;
-  double idLocalidad;
-  double idAgente;
+  int idLocalidad;
+  int idAgente;
   bool permiteDescuento;
   double descuento;
   double maxDescuento;
@@ -48,8 +48,8 @@ class Cliente {
     this.moroso = false,
     this.inHabilitado = false,
     this.fechaIngreso = '',
-    this.idLocalidad = 0.0,
-    this.idAgente = 0.0,
+    this.idLocalidad = 0,
+    this.idAgente = 0,
     this.permiteDescuento = false,
     this.descuento = 0.0,
     this.maxDescuento = 0.0,
@@ -82,8 +82,8 @@ class Cliente {
       moroso: json['moroso'] == 1,
       inHabilitado: json['inHabilitado'] == 1,
       fechaIngreso: json['fechaIngreso'] ?? '',
-      idLocalidad: (json['idLocalidad'] ?? 0.0).toDouble(),
-      idAgente: (json['idAgente'] ?? 0.0).toDouble(),
+      idLocalidad: (json['IdLocalidad'] ?? 0),
+      idAgente: (json['idAgente'] ?? 0),
       permiteDescuento: json['permiteDescuento'] == 1,
       descuento: (json['descuento'] ?? 0.0).toDouble(),
       maxDescuento: (json['maxDescuento'] ?? 0.0).toDouble(),
