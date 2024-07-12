@@ -40,7 +40,7 @@ order['NumPedido'] = 0;
         vendedores ON Orders.idVendedor = vendedores.value
       WHERE Orders.Anulado = 0
     ''');
-    print(result);
+
     return result;
   }
   Future<Map<String, dynamic>?> getOrderById(int id) async {

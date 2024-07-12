@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:sync_pro_mobile/Pantallas/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
 import 'package:sync_pro_mobile/db/dbEmpresa.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart';
@@ -229,7 +229,7 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                                           fontWeight: pw.FontWeight.bold),
                                     ),
                                     pw.Center(
-                                      child: pw.Text('*********************',
+                                      child: pw.Text('*****************************',
                                           style: pw.TextStyle(fontSize: 12)),
                                     ),
                                     pw.Center(

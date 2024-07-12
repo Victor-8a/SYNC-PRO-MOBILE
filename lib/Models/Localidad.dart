@@ -10,7 +10,7 @@ class Ruta {
   factory Ruta.fromJson(Map<String, dynamic> json) {
     return Ruta(
       id: json['id'] ?? 0,
-      nombre: json['Nombre'] ?? '',
+      nombre: json['nombre'] ?? '',
     );
   }
 

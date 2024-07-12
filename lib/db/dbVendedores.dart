@@ -29,7 +29,6 @@ final dbProvider = DatabaseHelper();
   Future<void> deleteAllVendedores() async {
  final db = await dbProvider.database;
     await db.delete('vendedores');
-    print('All vendedores deleted');
   }
 
   Future<bool> fetchAndStoreVendedores() async {
@@ -50,16 +49,13 @@ final dbProvider = DatabaseHelper();
 
         // Insert the new vendedores
         for (var vendedor in vendedores) {
-          print(vendedor.nombre);
           await insertVendedor(vendedor);
         }
-        print('Vendedores fetched and stored');
         return true;
       } else {
         throw Exception('Failed to load vendedores');
       }
     } catch (e) {
-      print('Error fetching and storing vendedores: $e');
     }
     return false;
   }

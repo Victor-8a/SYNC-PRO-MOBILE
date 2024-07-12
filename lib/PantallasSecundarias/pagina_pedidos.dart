@@ -9,7 +9,7 @@ import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbVendedores.dart';
 import 'package:sync_pro_mobile/main.dart';
 import '../db/dbProducto.dart' as product;
-import 'package:sync_pro_mobile/Pantallas/seleccionar_clientes.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/seleccionar_clientes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../Models/Producto.dart';

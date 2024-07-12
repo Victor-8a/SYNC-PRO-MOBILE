@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sync_pro_mobile/Pantallas/crear_cliente.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/crear_cliente.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 

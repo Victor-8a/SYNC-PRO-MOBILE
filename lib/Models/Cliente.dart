@@ -62,7 +62,7 @@ class Cliente {
   });
 
   factory Cliente.fromJson(Map<String, dynamic> json) {
-    print(json);
+
     return Cliente(
       codCliente: (json['CodCliente'] == null) ? json['codCliente'] : json['CodCliente'],
       nombre: (json['Nombre'] == null) ? json['nombre'] : json['Nombre'],

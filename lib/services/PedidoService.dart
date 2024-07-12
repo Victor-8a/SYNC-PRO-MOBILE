@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:http/http.dart' as http;
-import 'package:sync_pro_mobile/Pantallas/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 
 import 'package:sync_pro_mobile/db/dbPedidos.dart' as dbGuardarPedido;
 
