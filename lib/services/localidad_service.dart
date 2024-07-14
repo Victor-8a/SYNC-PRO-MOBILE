@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Localidad.dart';
 import 'package:sync_pro_mobile/db/dbLocalidad.dart'; // Importa tu clase DatabaseHelperRuta
 
-Future<List<Ruta>> fetchRuta() async {
+Future<List<Localidad>> fetchRuta() async {
   try {
     // Obtener el token del almacenamiento local
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -29,12 +29,12 @@ Future<List<Ruta>> fetchRuta() async {
     if (response.statusCode == 200) {
       // Decodificar la respuesta JSON
       final List<dynamic> jsonResponse = json.decode(response.body);
-      List<Ruta> rutas = jsonResponse.map((data) => Ruta.fromJson(data)).toList();
+      List<Localidad> rutas = jsonResponse.map((data) => Localidad.fromJson(data)).toList();
 
       // Insertar las rutas en la base de datos local
-      DatabaseHelperRuta databaseHelperRuta = DatabaseHelperRuta();
+      DatabaseHelperLocalidad databaseHelperRuta = DatabaseHelperLocalidad();
       for (var ruta in rutas) {
-        await databaseHelperRuta.insertRuta(ruta.toMap());
+        await databaseHelperRuta.insertLocalidad(ruta.toMap());
       }
 
       // Imprimir el número de rutas cargadas

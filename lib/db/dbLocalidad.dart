@@ -2,32 +2,32 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sync_pro_mobile/Models/Localidad.dart';
 import 'bd.dart';
 
-class DatabaseHelperRuta {
+class DatabaseHelperLocalidad {
   final dbProvider = DatabaseHelper();
 
   // Método para insertar una ruta en la base de datos
-  Future<void> insertRuta(Map<String, dynamic> ruta) async {
+  Future<void> insertLocalidad(Map<String, dynamic> localidad) async {
     final db = await dbProvider.database;
     try {
       await db.insert(
         'localidad',
-        ruta,
+        localidad,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      print('Ruta inserted: $ruta');
+      print('Localidad inserted: $localidad');
     } catch (e) {
-      print('Error inserting ruta: $e');
+      print('Error inserting localidad: $e');
     }
   }
 
   // Método para obtener todas las rutas de la base de datos
-  Future<List<Ruta>> getRutas() async {
+  Future<List<Localidad>> getLocalidades() async {
     final db = await dbProvider.database;
     try {
       final List<Map<String, dynamic>> maps = await db.query('localidad');
       return maps.map((map) {
-        print(Ruta.fromJson(map));
-        return Ruta.fromJson(map);
+        print(Localidad.fromJson(map));
+        return Localidad.fromJson(map);
       }).toList();
     } catch (e, stackTrace) {
       print('Error retrieving rutas: $e');
@@ -37,7 +37,7 @@ class DatabaseHelperRuta {
   }
 
   // Método para eliminar todas las rutas de la base de datos
-  Future<void> deleteAllRutas() async {
+  Future<void> deleteAllLocalidades() async {
     final db = await dbProvider.database;
     try {
       await db.delete('localidad');

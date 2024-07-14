@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Models/Localidad.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
 import 'package:sync_pro_mobile/db/dbLocalidad.dart';
 
@@ -32,8 +33,9 @@ class PaginaRegistrar extends StatefulWidget {
 
 class _PaginaRegistrarState extends State<PaginaRegistrar> {
   Cliente? clienteSeleccionado;
-  Ruta? rutaSeleccionada; // Variable para almacenar la ruta seleccionada
+  Localidad? rutaSeleccionada; // Variable para almacenar la ruta seleccionada
   String estadoSeleccionado = 'Visitado'; // Estado inicial seleccionado
+  bool esIniciar = true; // Controla el estado del botón Iniciar/Finalizar
   List<String> estados = ['Ausente', 'Visitado', 'No Visitado', 'Ordeno'];
   TextEditingController observacionesController = TextEditingController();
 
@@ -49,7 +51,8 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
     try {
       // Obtener los clientes desde la base de datos local
       DatabaseHelperCliente databaseHelperCliente = DatabaseHelperCliente();
-      clientes = await databaseHelperCliente.getClientesLocalidad(rutaSeleccionada!.id);
+      clientes = await databaseHelperCliente
+          .getClientesLocalidad(rutaSeleccionada!.id);
 
       setState(() {
         // Actualizar la interfaz con los clientes cargados
@@ -62,11 +65,11 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
 
   void _seleccionarRuta() async {
     // Obtener las rutas desde la base de datos local
-    DatabaseHelperRuta databaseHelperRuta = DatabaseHelperRuta();
-    List<Ruta> rutas = await databaseHelperRuta.getRutas();
+    DatabaseHelperLocalidad databaseHelperRuta = DatabaseHelperLocalidad();
+    List<Localidad> rutas = await databaseHelperRuta.getLocalidades();
 
     // Mostrar el diálogo de selección de rutas
-    final Ruta? resultado = await showDialog<Ruta>(
+    final Localidad? resultado = await showDialog<Localidad>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -142,144 +145,200 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
     }
   }
 
+  void _mostrarDetallesCliente(Cliente cliente) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String estado = estadoSeleccionado;
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              content: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          cliente.nombre,
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DropdownButton<String>(
+                        value: estado,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            estado = newValue!;
+                          });
+                        },
+                        items: estados.map<DropdownMenuItem<String>>((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value, style: TextStyle(fontSize: 14)),
+                          );
+                        }).toList(),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.red),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Container(
+                    constraints: BoxConstraints(maxHeight: 50),
+                    child: SingleChildScrollView(
+                      child: TextField(
+                        controller: observacionesController,
+                        decoration: InputDecoration(
+                          labelText: 'Observaciones',
+                          border: OutlineInputBorder(),
+                        ),
+                        maxLines: null,
+                        style: TextStyle(fontSize: 10),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+    Row(
+       mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+    Align(
+      alignment: Alignment.center,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.blue,
+        ),
+        onPressed: () {
+          _guardarCliente();
+          Navigator.of(context).pop();
+        },
+        child: Text('Guardar', style: TextStyle(fontSize: 15)),
+      ),
+    ),
+    SizedBox(width: 10), // Espacio entre los botones
+    ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.blue,
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 5,
+      ),
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null,))
+        ).then((_) { 
+          // Código a ejecutar después de regresar de PaginaPedidos
+        });
+      },
+      child: Icon(Icons.add, color: Colors.white)
+    ),
+      ],
+    ),
+              
+
+                  Center(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          esIniciar = !esIniciar;
+                        });
+                      },
+                      child: Text(esIniciar ? 'Iniciar' : 'Finalizar'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(8.0), // Ajustar el padding
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceEvenly, // Alinea los botones
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0), // Ajustar el padding
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ElevatedButton(
-                  onPressed: _seleccionarRuta,
-                  child: const Text('Ruta'),
+                Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceEvenly, // Alinea los botones
+                  children: [
+                    ElevatedButton(
+                      onPressed: _seleccionarRuta,
+                      child: const Text('Ruta'),
+                    ),
+                    ElevatedButton(
+                      onPressed: _iniciarRuta,
+                      child: const Text('Iniciar'),
+                    ),
+                    ElevatedButton(
+                      onPressed: _finalizarRuta,
+                      child: const Text('Finalizar'),
+                    ),
+                  ],
                 ),
-                ElevatedButton(
-                  onPressed: _iniciarRuta,
-                  child: const Text('Iniciar'),
+                const SizedBox(height: 10), // Reducir el espacio vertical
+                Text(
+                  'Ruta de hoy:',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold), // Reducir el tamaño del texto
                 ),
-                ElevatedButton(
-                  onPressed: _finalizarRuta,
-                  child: const Text('Finalizar'),
+                Text(
+                  '${rutaSeleccionada?.nombre ?? "No se ha seleccionado ninguna ruta"}',
+                  style: TextStyle(fontSize: 14), // Reducir el tamaño del texto
+                ),
+                const SizedBox(height: 20), // Reducir el espacio vertical
+                Text(
+                  'Clientes',
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold), // Reducir el tamaño del texto
+                ),
+                const SizedBox(height: 10), // Reducir el espacio vertical
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: clientes.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        elevation: 2,
+                        child: ListTile(
+                          title: Text(clientes[index].nombre,
+                              style: TextStyle(
+                                  fontSize: 14)), // Reducir el tamaño del texto
+                          trailing: IconButton(
+                            icon: Icon(Icons.info, color: Colors.blue),
+                            onPressed: () {
+                              setState(() {
+                                clienteSeleccionado = clientes[index];
+                              });
+                              _mostrarDetallesCliente(clientes[index]);
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 10), // Reducir el espacio vertical
-            Text(
-              'Ruta de hoy:',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold), // Reducir el tamaño del texto
-            ),
-            Text(
-              '${rutaSeleccionada?.nombre ?? "No se ha seleccionado ninguna ruta"}',
-              style: TextStyle(fontSize: 14), // Reducir el tamaño del texto
-            ),
-            const SizedBox(height: 20), // Reducir el espacio vertical
-            Text(
-              'Clientes',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold), // Reducir el tamaño del texto
-            ),
-            const SizedBox(height: 10), // Reducir el espacio vertical
-            Expanded(
-              child: ListView.builder(
-                itemCount: clientes.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    elevation: 2,
-                    child: ListTile(
-                      title: Text(clientes[index].nombre,
-                          style: TextStyle(
-                              fontSize: 14)), // Reducir el tamaño del texto
-                      onTap: () {
-                        setState(() {
-                          clienteSeleccionado = clientes[index];
-                        });
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-          if (clienteSeleccionado != null) ...[
- SingleChildScrollView(
-  child: Card(
-    elevation: 2,
-    child: Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  clienteSeleccionado != null ? clienteSeleccionado!.nombre : '',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ),
-              DropdownButton<String>(
-                value: estadoSeleccionado,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    estadoSeleccionado = newValue!;
-                  });
-                },
-                items: estados.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value, style: TextStyle(fontSize: 14)),
-                  );
-                }).toList(),
-              ),
-              IconButton(
-                icon: Icon(Icons.close),
-                onPressed: () {
-                  setState(() {
-                    clienteSeleccionado = null;
-                  });
-                },
-              ),
-            ],
-          ),
-          SizedBox(height: 10),
-          Container(
-            constraints: BoxConstraints(maxHeight: 200),
-            child: SingleChildScrollView(
-              child: TextField(
-                controller: observacionesController,
-                decoration: InputDecoration(
-                  labelText: 'Observaciones',
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: null,
-                style: TextStyle(fontSize: 14),
-              ),
-            ),
-          ),
-          SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerRight,
-            child: ElevatedButton(
-              onPressed: _guardarCliente,
-              child: Text('Guardar', style: TextStyle(fontSize: 14)),
-       ),
           ),
         ],
-      ),
-    ),
-  ),
-)
-],
-
-          ],
-        ),
       ),
     );
   }
