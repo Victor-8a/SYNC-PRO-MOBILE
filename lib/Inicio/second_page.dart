@@ -4,10 +4,10 @@ import 'package:sync_pro_mobile/Models/Producto.dart';
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/services/warning_widget_cubit.dart';
 import '../main.dart';
-import '../PantallasPrrincipales/pagina_inventario.dart';
-import '../PantallasPrrincipales/pagina_cliente.dart';
-import '../PantallasPrrincipales/pagina_listar_pedido.dart';
-import '../PantallasPrrincipales/pagina_registrar.dart';
+import '../PantallasPrincipales/pagina_inventario.dart';
+import '../PantallasPrincipales/pagina_cliente.dart';
+import '../PantallasPrincipales/pagina_listar_pedido.dart';
+import '../PantallasPrincipales/pagina_registrar.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:sync_pro_mobile/services/ProductoService.dart';
 void main() {

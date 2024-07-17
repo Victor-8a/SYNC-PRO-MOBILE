@@ -172,9 +172,7 @@ class _LoginPageState extends State<LoginPage> {
           print('Error al obtener la empresa: $error');
         }
 
-        print('++++++++++++');
-        print(fetchEmpresa);
-        print('++++++++++++');
+      
 
         // Descarga y guarda la imagen
         try {

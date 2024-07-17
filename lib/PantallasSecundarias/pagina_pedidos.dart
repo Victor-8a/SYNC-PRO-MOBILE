@@ -625,33 +625,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   
   return Vendedor(value: int.parse(idVendedor!), nombre: vendedorName!);
 
-    // if (idVendedor != null) {
-    //   try {
-    //     final response = await http.get(
-    //         Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
-    //     print(response.body);
-
-    //     if (response.statusCode == 200) {
-    //       Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
-    //       print(vendedor.value);
-    //       print(vendedor.nombre);
-    //       print("Exito vendedores $response");
-    //       // Guardar el vendedor en la base de datos local
-    //       // await saveVendedorToLocalDatabase(vendedor);
-
-    //       return vendedor;
-    //     } else {
-    //       print('Failed to load salesperson: ${response.statusCode}');
-    //       throw Exception('Failed to load salesperson: ${response.statusCode}');
-    //     }
-    //   } catch (error) {
-    //     print('Error loading salesperson: $error');
-    //     throw Exception('Failed to load salesperson: $error');
-    //   }
-    // } else {
-    //   print("Fallo Vendedores");
-    //   throw Exception('Failed to load salesperson: idVendedor is null');
-    // }
   }
 
   Future<Vendedor> getSalesperson() async {

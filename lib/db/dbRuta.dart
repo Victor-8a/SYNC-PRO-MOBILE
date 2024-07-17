@@ -5,14 +5,27 @@ import 'bd.dart';
 class DatabaseHelperRuta {
   final dbProvider = DatabaseHelper();
 
-  Future<void> insertRuta(Ruta ruta) async {
-    final db = await dbProvider.database;
-    await db.insert(
-      'ruta',
-      ruta.toMap(),
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+ Future<Ruta> insertRuta(Map<String, dynamic>  ruta) async {
+  final db = await dbProvider.database;
+  int id = await db.insert(
+    'ruta',
+    ruta,
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+
+  // Recuperar el registro insertado
+  List<Map<String, dynamic>> result = await db.query(
+    'ruta',
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
+  if (result.isNotEmpty) {
+    return Ruta.fromMap(result.first);
+  } else {
+    throw Exception('Error al recuperar la ruta insertada');
   }
+}
 
   Future<List<Ruta>> getRutas() async {
     final db = await dbProvider.database;
@@ -30,6 +43,16 @@ class DatabaseHelperRuta {
       return Ruta.fromMap(maps[i]);
     });
   }
+
+ Future<void> updateFechaFinRuta(int id, String fechaFin) async {
+  final db = await dbProvider.database;
+  print(id);
+   print(fechaFin);
+  await db.rawUpdate(
+    'UPDATE Ruta SET fechaFin = ? WHERE id = ?',
+    [fechaFin, id],
+  );
+}
 
   Future<void> deleteAllRutas() async {
     final db = await dbProvider.database;
