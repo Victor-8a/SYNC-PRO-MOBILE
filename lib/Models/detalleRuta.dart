@@ -1,43 +1,50 @@
 class DetalleRuta {
-  int id;
+  int? id;
   int idRuta;
-  int idCodCliente;
+  int codCliente; // Un solo ID de cliente
   String estado;
   String observaciones;
   int idPedido;
   String inicio;
   String fin;
+  String? nombreCliente;
 
   DetalleRuta({
-    required this.id,
     required this.idRuta,
-    required this.idCodCliente,
+    required this.codCliente, // Un solo ID de cliente
     required this.estado,
     required this.observaciones,
     required this.idPedido,
     required this.inicio,
     required this.fin,
+    this.id,
+    this.nombreCliente,
   });
 
-  factory DetalleRuta.fromMap(Map<String, dynamic> map) => DetalleRuta(
-        id: map['id'],
-        idRuta: map['idRuta'],
-        idCodCliente: map['idCodCliente'],
-        estado: map['estado'],
-        observaciones: map['observaciones'],
-        idPedido: map['idPedido'],
-        inicio: map['inicio'],
-        fin: map['fin'],
-      );
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'idRuta': idRuta,
+      'codCliente': codCliente,
+      'estado': estado,
+      'observaciones': observaciones,
+      'idPedido': idPedido,
+      'inicio': inicio,
+      'fin': fin,
+    };
+  }
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
-        'idRuta': idRuta,
-        'idCodCliente': idCodCliente,
-        'estado': estado,
-        'observaciones': observaciones,
-        'idPedido': idPedido,
-        'inicio': inicio,
-        'fin': fin,
-      };
+  factory DetalleRuta.fromMap(Map<String, dynamic> map) {
+    return DetalleRuta(
+      id: map['id'],
+      nombreCliente: map['nombreCliente'],
+      idRuta: map['idRuta'],
+      codCliente: map['CodCliente'],
+      estado: map['estado'],
+      observaciones: map['observaciones'],
+      idPedido: map['idPedido'],
+      inicio: map['inicio'],
+      fin: map['fin'],
+    );
+  }
 }

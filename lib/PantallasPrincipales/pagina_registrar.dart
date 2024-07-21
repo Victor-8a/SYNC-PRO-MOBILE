@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
+import 'package:sync_pro_mobile/Models/DetalleRuta.dart';
 import 'package:sync_pro_mobile/Models/Localidad.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
+
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
 import 'package:sync_pro_mobile/db/dbLocalidad.dart';
 import 'package:sync_pro_mobile/Models/Ruta.dart';
-import 'package:sync_pro_mobile/db/dbRuta.dart'; // Asegúrate de importar el modelo Ruta si no lo has hecho aún
+import 'package:sync_pro_mobile/db/dbRuta.dart';
+
+import '../db/dbDetalleRuta.dart'; // Asegúrate de importar el modelo Ruta si no lo has hecho aún
 
  Future<Vendedor> loadSalesperson() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -24,10 +28,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Cliente App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
       home: const PaginaRegistrar(),
     );
   }
@@ -58,13 +58,28 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
   @override
   void initState() {
     super.initState();
-  }  
 
-  void _iniciarRuta() async {
+    loadRutaActiva().then((ruta) {
+      print(ruta.idLocalidad);
+      print('HOLA RUTA');
+      if (mounted) {
+        setState(() {
+          miRuta = ruta;
+        });
+        loadDetalleRutaActiva();
+      }
+
+    }).catchError((error) {
+      print('Error cargando ruta: $error');
+    });
+  }  
+void _iniciarRuta() async {
   if (rutaIniciada) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('La ruta ya está iniciada')),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('La ruta ya está iniciada')),
+      );
+    }
     return;
   }
 
@@ -89,6 +104,10 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                 try {
                   // Cargar el vendedor desde SharedPreferences
                   Vendedor vendedor = await loadSalesperson();
+
+                  // Verificar si el widget sigue montado después de una operación asincrónica
+                  if (!mounted) return;
+
                   // Crear el mapa de datos para la ruta
                   Map<String, dynamic> ruta = {
                     "idVendedor": vendedor.value,
@@ -101,24 +120,48 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                   // Insertar la ruta en la base de datos
                   Ruta rutaInsertada = await DatabaseHelperRuta().insertRuta(ruta);
 
+                  if (!mounted) return;
+
                   setState(() {
                     miRuta = rutaInsertada;
                   });
-                  print(miRuta?.id);
-                  // Mostrar un mensaje de confirmación
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Ruta iniciada: ${rutaSeleccionada!.nombre}')),
-                  );
 
-                  // Actualizar el estado local para indicar que la ruta está iniciada
-                  setState(() {
-                    rutaIniciada = true;
-                  });
+                  // Crear un detalle de ruta para cada cliente en la localidad
+                  for (Cliente cliente in clientes) {
+                    DetalleRuta detalleRuta = DetalleRuta(
+                      idRuta: miRuta!.id,
+                      codCliente: cliente.codCliente,
+                      estado: 'NV',
+                      observaciones: '',
+                      idPedido: 0, // O el id del pedido si lo tienes
+                      inicio: '',
+                      fin: '',
+                     // O el id si lo tienes
+                    );
+
+                    await DatabaseHelperDetalleRuta().insertDetalleRuta(detalleRuta);
+                    if (!mounted) return;
+                  }
+
+                  // Verificar si el widget sigue montado antes de mostrar el SnackBar
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Ruta iniciada: ${rutaSeleccionada!.nombre}')),
+                    );
+
+                    // Actualizar el estado local para indicar que la ruta está iniciada
+                    setState(() {
+                      rutaIniciada = true;
+                    });
+                  }
                 } catch (error) {
                   print('Error al insertar ruta: $error');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error al iniciar la ruta')),
-                  );
+                  // Verificar si el widget sigue montado antes de mostrar el SnackBar
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error al iniciar la ruta')),
+                    );
+                  }
                 }
               },
             ),
@@ -127,11 +170,14 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
       },
     );
   } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('No se ha seleccionado ninguna ruta')),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('No se ha seleccionado ninguna ruta')),
+      );
+    }
   }
 }
+
 
   @override
   void dispose() {
@@ -199,6 +245,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
       setState(() {
         rutaSeleccionada = resultado;
         _cargarClientes();
+
       });
     }
   }
@@ -571,5 +618,20 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
         );
       },
     );
+  }
+  
+  Future<Ruta> loadRutaActiva() async {
+  DatabaseHelperRuta dbHelper = DatabaseHelperRuta();
+  // await dbHelper.deleteAllRutas();
+  final ruta =await dbHelper.getRutaActiva();
+  print(ruta);
+  return ruta;
+  }
+  
+  Future<List<DetalleRuta>> loadDetalleRutaActiva() async {
+DatabaseHelperDetalleRuta dbHelper = DatabaseHelperDetalleRuta ();
+final detalleRuta = await dbHelper. getDetalleRutaActiva(miRuta!.id);
+
+return detalleRuta;
   }
 }
