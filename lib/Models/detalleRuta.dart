@@ -7,7 +7,7 @@ class DetalleRuta {
   int idPedido;
   String inicio;
   String fin;
-  String? nombreCliente;
+  String? nombreCliente ;
 
   DetalleRuta({
     required this.idRuta,
@@ -35,16 +35,18 @@ class DetalleRuta {
   }
 
   factory DetalleRuta.fromMap(Map<String, dynamic> map) {
-    return DetalleRuta(
+     DetalleRuta detalle= new DetalleRuta(
       id: map['id'],
       nombreCliente: map['nombreCliente'],
       idRuta: map['idRuta'],
-      codCliente: map['CodCliente'],
+     codCliente: (map['CodCliente'] != null) ? map['CodCliente'] : map['codCliente'],
+
       estado: map['estado'],
       observaciones: map['observaciones'],
       idPedido: map['idPedido'],
       inicio: map['inicio'],
       fin: map['fin'],
     );
+    return detalle;
   }
 }

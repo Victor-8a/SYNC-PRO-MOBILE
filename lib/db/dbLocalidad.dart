@@ -19,6 +19,11 @@ class DatabaseHelperLocalidad {
       print('Error inserting localidad: $e');
     }
   }
+  Future<Localidad> getLocalidadById(int id) async {
+  final db = await dbProvider.database;
+    final result = await db.query('localidad', where: 'id = ?', whereArgs: [id]);
+    return Localidad.fromJson(result.first);
+  }
 
   // Método para obtener todas las rutas de la base de datos
   Future<List<Localidad>> getLocalidades() async {

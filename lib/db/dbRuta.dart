@@ -38,7 +38,7 @@ class DatabaseHelperRuta {
   Future<Ruta> getRutaActiva() async {
     final db = await dbProvider.database;
     final result = await db.rawQuery('''
-      SELECT  * FROM Ruta WHERE fechaFin ='' ORDER BY id DESC  LIMIT 1;
+      SELECT  * FROM Ruta WHERE fechaFin ='' ORDER BY id  LIMIT 1;
     ''');
     print("CONSULTA RUTA");
     print(result);

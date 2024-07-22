@@ -18,6 +18,8 @@ class DatabaseHelperDetalleRuta {
     final db = await dbProvider.database;
     final List<Map<String, dynamic>> maps = await db.query('detalleRuta');
     return List.generate(maps.length, (i) {
+      print(maps[i]['nombreCliente']);
+      print(maps[i]['idRuta']);
       return DetalleRuta.fromMap(maps[i]);
     });
   }
@@ -33,6 +35,8 @@ class DatabaseHelperDetalleRuta {
 
   Future<List<DetalleRuta>> getDetalleRutaActiva(int idRuta) async {
     final db = await dbProvider.database;
+    print('+++++');
+      print(idRuta);
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
       SELECT  D.id,
       D.idRuta,
@@ -49,6 +53,32 @@ class DatabaseHelperDetalleRuta {
     return List.generate(maps.length, (i) {
       print(maps[i]['nombreCliente']);
       return DetalleRuta.fromMap(maps[i]);
+    });
+  }
+
+  Future<List<DetalleRuta>> getClientesDetalle(int idLocalidad) async {
+    final db = await dbProvider.database;
+    final List<Map<String, dynamic>> maps = await db.rawQuery('''
+      SELECT  0 AS id,
+      0 AS idRuta,
+      C.codCliente, 
+      C.nombre as nombreCliente,
+      'NO VISITADO' AS estado,
+      '' AS observaciones, 
+      0 AS idPedido, '' AS inicio, '' AS fin  
+      FROM clientes C WHERE idLocalidad = $idLocalidad
+    ''');
+    print("CONSULTA DETALLE CLIENTES RUTA");
+    return List.generate(maps.length, (i) {
+      print(maps[i]['nombreCliente']);
+      DetalleRuta detalle = DetalleRuta.fromMap(maps[i]);
+      print(detalle.codCliente);
+      print(detalle.nombreCliente);
+
+      return detalle;
+
+
+
     });
   }
 

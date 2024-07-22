@@ -22,6 +22,13 @@ conflictAlgorithm: ConflictAlgorithm.replace,
       return Cliente.fromJson(maps[i]);
     });
   }
+
+  Future<Cliente> getClientesById(int id) async {
+  final db = await dbProvider.database;
+    final result = await db.query('clientes', where: 'codCliente = ?', whereArgs: [id]);
+    return Cliente.fromJson(result.first);
+  }
+
 Future<List<Cliente>> getClientesLocalidad(int idLocalidad) async {
   final db = await dbProvider.database;
     final List<Map<String, dynamic>> maps = await db.query('clientes', where: 'idLocalidad = ?', whereArgs: [idLocalidad]);
