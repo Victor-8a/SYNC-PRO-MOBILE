@@ -36,7 +36,7 @@ class DatabaseHelperDetalleRuta {
   Future<List<DetalleRuta>> getDetalleRutaActiva(int idRuta) async {
     final db = await dbProvider.database;
     print('+++++');
-      print(idRuta);
+    print(idRuta);
     final List<Map<String, dynamic>> maps = await db.rawQuery('''
       SELECT  D.id,
       D.idRuta,
@@ -54,6 +54,16 @@ class DatabaseHelperDetalleRuta {
       print(maps[i]['nombreCliente']);
       return DetalleRuta.fromMap(maps[i]);
     });
+  }
+
+  Future<void> updateDetalleRuta(DetalleRuta detalleRuta) async {
+    final db = await dbProvider.database;
+    await db.update(
+      'DetalleRuta',
+      detalleRuta.toMap(),
+      where: 'id = ?',
+      whereArgs: [detalleRuta.id],
+    );
   }
 
   Future<List<DetalleRuta>> getClientesDetalle(int idLocalidad) async {
@@ -76,11 +86,34 @@ class DatabaseHelperDetalleRuta {
       print(detalle.nombreCliente);
 
       return detalle;
-
-
-
     });
   }
+
+Future<void> updateDetallesRuta(DetalleRuta detalleRutaActualizado) async {
+  try {
+    final db = await dbProvider.database;
+
+  
+    final Map<String, String> estadoConversion = {
+      'Ausente': 'A',
+      'Visitado': 'V',
+      'No Visitado': 'NV',
+      'Ordeno': 'O',
+    };
+
+  
+    final nuevoEstado = estadoConversion[detalleRutaActualizado.estado] ?? detalleRutaActualizado.estado;
+    await db.rawUpdate('''
+      UPDATE DetalleRuta 
+      SET estado = ?, observaciones = ? 
+      WHERE id = ?
+    ''', [nuevoEstado, detalleRutaActualizado.observaciones, detalleRutaActualizado.id]);
+
+    print("Consulta de actualización de detalles de ruta completada");
+  } catch (e) {
+    print("Error al actualizar los detalles de la ruta: $e");
+  }
+}
 
   Future<void> deleteAllDetallesRuta() async {
     final db = await dbProvider.database;

@@ -4,13 +4,11 @@ import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Models/DetalleRuta.dart';
 import 'package:sync_pro_mobile/Models/Localidad.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
-
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
 import 'package:sync_pro_mobile/db/dbLocalidad.dart';
 import 'package:sync_pro_mobile/Models/Ruta.dart';
 import 'package:sync_pro_mobile/db/dbRuta.dart';
-
 import '../db/dbDetalleRuta.dart'; // Asegúrate de importar el modelo Ruta si no lo has hecho aún
 
 Future<Vendedor> loadSalesperson() async {
@@ -304,7 +302,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
 
     observacionesController.text = ''; // Limpiar el texto al mostrar el diálogo
 
-    String estado = estadoSeleccionado;
+    // String estado = estadoSeleccionado;
     // ignore: unused_local_variable
     bool esIniciarVisita = false;
 
@@ -328,6 +326,8 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                     esIniciarVisita = true;
                   });
                   Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('La visita ha sido iniciada')));
                 },
               ),
             ],
@@ -353,9 +353,9 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                 child: Text('Aceptar'),
                 onPressed: () {
                   setState(() {
-                    esIniciarVisita = false;
+                    esIniciarVisita = true;
                     rutaIniciada =
-                        false; // Bloquear clientes al finalizar la visita
+                        true; // Bloquear clientes al finalizar la visita
                   });
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -370,31 +370,31 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
       );
     }
 
-    void _mostrarDialogoGuardarCambios() {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('¿Está seguro de guardar los cambios?'),
-            actions: <Widget>[
-              TextButton(
-                child: Text('Cancelar'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              TextButton(
-                child: Text('Guardar'),
-                onPressed: () {
-                  _guardarCliente();
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
-        },
+  void mostrarDialogoGuardarCambios() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('¿Está seguro de guardar los cambios?'),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancelar'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Guardar'),
+            onPressed: () {
+              _guardarCliente();
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
       );
-    }
+    },
+  );
+}
 
     showDialog(
       context: context,
@@ -430,10 +430,10 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                     Row(
                       children: [
                         DropdownButton<String>(
-                          value: estado,
+                          value: estadoSeleccionado,
                           onChanged: (String? newValue) {
                             setState(() {
-                              estado = newValue!;
+                              estadoSeleccionado = newValue!;
                             });
                           },
                           items: estados.map((String value) {
@@ -495,16 +495,17 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                           child: const Icon(Icons.add, color: Colors.white),
                         ),
                         const SizedBox(width: 12),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.blue,
-                          ),
-                          onPressed: () {
-                            _mostrarDialogoGuardarCambios();
-                          },
-                          child: const Text('✓'),
-                        ),
+                     ElevatedButton(
+  style: ElevatedButton.styleFrom(
+    foregroundColor: Colors.white,
+    backgroundColor: Colors.blue,
+  ),
+  onPressed: () {
+    mostrarDialogoGuardarCambios();
+  },
+  child: const Text('✓'),
+),
+
                         const SizedBox(width: 12),
                       ],
                     ),
@@ -517,28 +518,39 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
       },
     );
   }
+  
+void _guardarCliente() async {
 
-  void _guardarCliente() async {
-    // Verifica si hay un cliente seleccionado
-    if (clienteSeleccionado != null) {
-      // Lógica para guardar el cliente seleccionado con sus observaciones y estado
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-              Text('Cliente guardado: ${clienteSeleccionado!.nombreCliente}'),
-        ),
-      );
 
-      // Lógica para guardar el estado y las observaciones en la base de datos (aquí agregarías tu lógica)
-    } else {
-      // Muestra un mensaje si no se ha seleccionado ningún cliente
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No se ha seleccionado ningún cliente'),
-        ),
+  if (clienteSeleccionado != null) {
+      // Actualiza el detalle de la ruta con el nuevo estado y observaciones
+      DetalleRuta detalleRutaActualizado = DetalleRuta(
+        id: clienteSeleccionado!.id,
+        idRuta: clienteSeleccionado!.idRuta,
+        codCliente: clienteSeleccionado!.codCliente,
+        estado: estadoSeleccionado,
+        observaciones: observacionesController.text,
+        idPedido: 0,
+        inicio: '',
+        fin: '',
       );
-    }
+    // Llama al método para actualizar el detalle en la base de datos
+    await DatabaseHelperDetalleRuta().updateDetallesRuta(detalleRutaActualizado);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Cliente guardado: ${clienteSeleccionado!.nombreCliente}'),
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('No se ha seleccionado ningún cliente'),
+      ),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
