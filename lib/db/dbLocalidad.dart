@@ -31,7 +31,6 @@ class DatabaseHelperLocalidad {
     try {
       final List<Map<String, dynamic>> maps = await db.query('localidad');
       return maps.map((map) {
-        print(Localidad.fromJson(map));
         return Localidad.fromJson(map);
       }).toList();
     } catch (e, stackTrace) {

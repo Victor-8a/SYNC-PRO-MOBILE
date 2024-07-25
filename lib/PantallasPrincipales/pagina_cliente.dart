@@ -46,7 +46,6 @@ class _PaginaClienteState extends State<PaginaCliente> {
         });
       }
     } catch (error) {
-      print('Error fetching clientes: $error');
       if (mounted) {
         setState(() {
           _isLoading = false;

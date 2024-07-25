@@ -40,8 +40,7 @@ class DatabaseHelperRuta {
     final result = await db.rawQuery('''
       SELECT  * FROM Ruta WHERE fechaFin ='' ORDER BY id  LIMIT 1;
     ''');
-    print("CONSULTA RUTA");
-    print(result);
+
     return Ruta.fromMap(result.first);
   }
 
@@ -56,8 +55,6 @@ class DatabaseHelperRuta {
 
   Future<void> updateFechaFinRuta(int id, String fechaFin) async {
     final db = await dbProvider.database;
-    print(id);
-    print(fechaFin);
     await db.rawUpdate(
       'UPDATE Ruta SET fechaFin = ? WHERE id = ?',
       [fechaFin, id],
@@ -68,4 +65,5 @@ class DatabaseHelperRuta {
     final db = await dbProvider.database;
     await db.delete('ruta');
   }
+  
 }
