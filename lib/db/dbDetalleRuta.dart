@@ -65,6 +65,25 @@ class DatabaseHelperDetalleRuta {
       whereArgs: [detalleRuta.id],
     );
   }
+Future<void> updateInicioDetalleRuta(int id, String inicio) async {
+  final db = await dbProvider.database;
+  await db.update(
+    'DetalleRuta',
+    {'inicio': inicio},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+}
+
+Future<void> updateFinDetalleRuta(int id, String fin) async {
+  final db = await dbProvider.database;
+  await db.update(
+    'DetalleRuta',
+    {'fin': fin},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+}
 
   Future<List<DetalleRuta>> getClientesDetalle(int idLocalidad) async {
     final db = await dbProvider.database;

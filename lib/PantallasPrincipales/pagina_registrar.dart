@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Models/DetalleRuta.dart';
@@ -302,8 +303,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
 
     observacionesController.text = ''; // Limpiar el texto al mostrar el diálogo
 
-    // String estado = estadoSeleccionado;
-    // ignore: unused_local_variable
+  
     bool esIniciarVisita = false;
 
     void _mostrarDialogoIniciarVisita() {
@@ -321,47 +321,36 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
               ),
               TextButton(
                 child: Text('Aceptar'),
-                onPressed: () {
+                onPressed: () async {
                   setState(() {
                     esIniciarVisita = true;
                   });
                   Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('La visita ha sido iniciada')));
-                },
-              ),
-            ],
-          );
-        },
-      );
-    }
 
-    void _mostrarDialogoFinalizarVisita() {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('¿Está seguro de finalizar la visita?'),
-            actions: <Widget>[
-              TextButton(
-                child: Text('Cancelar'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              TextButton(
-                child: Text('Aceptar'),
-                onPressed: () {
-                  setState(() {
-                    esIniciarVisita = true;
-                    rutaIniciada =
-                        true; // Bloquear clientes al finalizar la visita
-                  });
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('La visita ha sido finalizada')),
+                  Fluttertoast.showToast(
+                    msg: "La visita ha sido inicada",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.black,
+                    textColor: Colors.white,
                   );
+
+                  // Obtener la hora actual para el campo 'inicio'
+                  String fin = DateTime.now().toIso8601String();
+
+                  // Asegúrate de que el cliente seleccionado no sea nulo
+                  if (clienteSeleccionado != null) {
+                    // Actualizar solo el campo 'inicio' en la base de datos
+                    await updateInicioDetalleRuta(clienteSeleccionado!.id, fin);
+                  } else {
+                    Fluttertoast.showToast(
+                      msg: "No se ha seleccionado ningún cliente",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.BOTTOM,
+                      backgroundColor: Colors.red,
+                      textColor: Colors.white,
+                    );
+                  }
                 },
               ),
             ],
@@ -370,12 +359,13 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
       );
     }
 
-  void mostrarDialogoGuardarCambios() {
+
+void _mostrarDialogoFinalizarVisita() {
   showDialog(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text('¿Está seguro de guardar los cambios?'),
+        title: Text('¿Está seguro de finalizar la visita?'),
         actions: <Widget>[
           TextButton(
             child: Text('Cancelar'),
@@ -384,10 +374,54 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
             },
           ),
           TextButton(
-            child: Text('Guardar'),
-            onPressed: () {
-              _guardarCliente();
-              Navigator.of(context).pop();
+            child: Text('Aceptar'),
+            onPressed: () async {
+              // Verificar si la visita está iniciada
+              if (esIniciarVisita) {
+                // Obtener la hora actual para el campo 'fin'
+                String fin = DateTime.now().toIso8601String();
+
+                // Asegúrate de que el cliente seleccionado no sea nulo
+                if (clienteSeleccionado != null) {
+                  // Actualizar el campo 'fin' en la base de datos
+                  await updateFinDetalleRuta(clienteSeleccionado!.id, fin);
+
+                  setState(() {
+                    esIniciarVisita = false; // Indicar que la visita ha finalizado
+                    rutaIniciada = true; // Bloquear clientes al finalizar la visita
+                  });
+
+                  // Mostrar mensaje de éxito
+                  Fluttertoast.showToast(
+                    msg: "La visita ha sido finalizada",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.black,
+                    textColor: Colors.white,
+                  );
+                  // Cerrar el diálogo
+                  Navigator.of(context).pop();
+                } else {
+                  // Mostrar mensaje de error si no hay cliente seleccionado
+                  Fluttertoast.showToast(
+                    msg: "No se ha seleccionado ningún cliente",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.red,
+                    textColor: Colors.white,
+                  );
+                }
+              } else {
+                // Mostrar mensaje de error si la visita no ha sido iniciada
+                Fluttertoast.showToast(
+                  msg: "La visita no ha sido iniciada",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                );
+                Navigator.of(context).pop();
+              }
             },
           ),
         ],
@@ -395,6 +429,33 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
     },
   );
 }
+
+
+    void mostrarDialogoGuardarCambios() {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('¿Está seguro de guardar los cambios?'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Cancelar'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Guardar'),
+                onPressed: () {
+                  _guardarCliente();
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
 
     showDialog(
       context: context,
@@ -495,17 +556,16 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                           child: const Icon(Icons.add, color: Colors.white),
                         ),
                         const SizedBox(width: 12),
-                     ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    foregroundColor: Colors.white,
-    backgroundColor: Colors.blue,
-  ),
-  onPressed: () {
-    mostrarDialogoGuardarCambios();
-  },
-  child: const Text('✓'),
-),
-
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.blue,
+                          ),
+                          onPressed: () {
+                            mostrarDialogoGuardarCambios();
+                          },
+                          child: const Text('✓'),
+                        ),
                         const SizedBox(width: 12),
                       ],
                     ),
@@ -518,11 +578,9 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
       },
     );
   }
-  
-void _guardarCliente() async {
 
-
-  if (clienteSeleccionado != null) {
+  void _guardarCliente() async {
+    if (clienteSeleccionado != null) {
       // Actualiza el detalle de la ruta con el nuevo estado y observaciones
       DetalleRuta detalleRutaActualizado = DetalleRuta(
         id: clienteSeleccionado!.id,
@@ -534,23 +592,24 @@ void _guardarCliente() async {
         inicio: '',
         fin: '',
       );
-    // Llama al método para actualizar el detalle en la base de datos
-    await DatabaseHelperDetalleRuta().updateDetallesRuta(detalleRutaActualizado);
+      // Llama al método para actualizar el detalle en la base de datos
+      await DatabaseHelperDetalleRuta()
+          .updateDetallesRuta(detalleRutaActualizado);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Cliente guardado: ${clienteSeleccionado!.nombreCliente}'),
-      ),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('No se ha seleccionado ningún cliente'),
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Cliente guardado: ${clienteSeleccionado!.nombreCliente}'),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se ha seleccionado ningún cliente'),
+        ),
+      );
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -694,6 +753,20 @@ void _guardarCliente() async {
   Future<List<DetalleRuta>> loadDetalleRutaActiva() async {
     DatabaseHelperDetalleRuta dbHelper = DatabaseHelperDetalleRuta();
     final detalleRuta = await dbHelper.getDetalleRutaActiva(miRuta!.id);
+
+    return detalleRuta;
+  }
+
+  updateInicioDetalleRuta(id, String inicio) async {
+    DatabaseHelperDetalleRuta dbHelper = DatabaseHelperDetalleRuta();
+    final detalleRuta = await dbHelper.updateInicioDetalleRuta(id, inicio);
+
+    return detalleRuta;
+  }
+
+  updateFinDetalleRuta(int? id, fin) async {
+    DatabaseHelperDetalleRuta dbHelper = DatabaseHelperDetalleRuta();
+    final detalleRuta = await dbHelper.updateFinDetalleRuta(id!, fin);
 
     return detalleRuta;
   }
