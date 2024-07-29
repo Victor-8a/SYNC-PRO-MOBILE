@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
+import 'package:sync_pro_mobile/Models/Ruta.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart' as dbGuardarPedido;
 import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbVendedores.dart';
@@ -17,6 +19,10 @@ import '../Models/Vendedor.dart';
 import 'crear_cliente.dart';
 import '../services/local_storage.dart';
 import '../db/dbDetallePedidos.dart' as dbDetallePedidos;
+import '../db/dbDetalleRuta.dart' as dbDetalleRuta;
+import '../db/dbRuta.dart';
+
+
 
 void saveSalesperson(Vendedor salesperson) async {
   String salespersonJson = jsonEncode(salesperson.toJson());
@@ -429,6 +435,7 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
   List<bool> _productSelected = [];
   TextEditingController _searchController = TextEditingController();
 
+
   @override
   void initState() {
     super.initState();
@@ -564,6 +571,11 @@ class PaginaPedidos extends StatefulWidget {
 }
 
 class _PaginaPedidosState extends State<PaginaPedidos> {
+final DatabaseHelperConfiguraciones dbHelper = DatabaseHelperConfiguraciones();
+final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
+
+  bool usarRuta = false;
+  Ruta? miRuta;
   // Porcentaje de descuento
 
   void _loadSelectedProducts() async {
@@ -785,14 +797,10 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         future: loadSalesperson(),
         builder: (context, snapshot) {
            if (snapshot.connectionState == ConnectionState.waiting) {
-             return Center(child: CircularProgressIndicator());
-    //       } else if (snapshot.hasError) {
-    //         return Center(child: Text('Error: ${snapshot.error.toString()}'));
-    //       } else if (!snapshot.hasData) {
-    //         return Center(child: Text('No se encontraron vendedores'));
+             return SizedBox();
+    
             }else {
             
-    // }
     Vendedor _selectedSalesperson = snapshot.data!;
 _selectedSalespersonId =_selectedSalesperson.value;
             return Column(
@@ -1142,6 +1150,7 @@ _selectedSalespersonId =_selectedSalesperson.value;
         if (idPedido != null) {
           // Guardar detalles del pedido
           saveOrderDetail(
+            
             idPedido,
            _selectedProducts, 
             _selectedProductQuantities,
@@ -1159,6 +1168,10 @@ _selectedSalespersonId =_selectedSalesperson.value;
             textColor: Colors.white,
             fontSize: 16.0,
           );
+          // await _loadUsaRuta;
+          bool usaConfigRuta = await dbHelper.getUsaRuta();
+          if (usaConfigRuta) miRuta= await dbHelperRuta.getRutaActiva();
+          if (usaConfigRuta && miRuta!= null) await dbDetalleRuta.DatabaseHelperDetalleRuta().updateIdPedidoDetalleRuta(_selectedClient.codCliente,idPedido,miRuta!.id);
 
           // Resetear estado después de guardar
           _resetState();

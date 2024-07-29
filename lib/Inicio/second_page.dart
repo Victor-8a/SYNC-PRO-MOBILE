@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Producto.dart';
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/services/Configuraciones.dart';
 import 'package:sync_pro_mobile/services/warning_widget_cubit.dart';
 import '../main.dart';
 import '../PantallasPrincipales/pagina_inventario.dart';
@@ -96,11 +97,10 @@ Future<void> _loadUserName() async {
       ),
 
 
-      drawer: Drawer(
+           drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-
             DrawerHeader(
               decoration: BoxDecoration(
                 color: Colors.blue,
@@ -113,21 +113,33 @@ Future<void> _loadUserName() async {
                 ),
               ),
             ),
-
-        
-ListTile(
+            ListTile(
               leading: const Icon(Icons.sync),
               title: const Text('Sincronizar Pedido'),
               onTap: syncOrders,
             ),
             ListTile(
+              leading: const Icon(Icons.settings), // Icono para configuraciones
+              title: const Text('Configuraciones'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ConfiguracionesPage()),
+                );
+              },
+            ),
+            ListTile(
               leading: const Icon(Icons.logout),
               title: const Text('Cerrar sesión'),
               onTap: _logout,
+
             ),
           ],
         ),
       ),
+
+
+
 
       body: Column(
         children: [

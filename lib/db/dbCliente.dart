@@ -36,6 +36,9 @@ Future<List<Cliente>> getClientesLocalidad(int idLocalidad) async {
       return Cliente.fromJson(maps[i]);
     });
   }
+
+
+  
   Future<void> deleteAllClientes() async {
   final db = await dbProvider.database;
     await db.delete('clientes');

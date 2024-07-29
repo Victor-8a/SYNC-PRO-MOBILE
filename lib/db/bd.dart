@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await _createVendedoresTable(db);
         await _createLocalidadTable(db);
@@ -32,6 +32,7 @@ class DatabaseHelper {
         await _createEmpresaTable(db);
         await _createRutaTable(db);
         await _createDetalleRutaTable(db);
+        await _createConfiguracionTable(db);
 
         print('Database created and tables initialized');
       },
@@ -179,8 +180,9 @@ class DatabaseHelper {
       )
     ''');
   }
+
   Future<void> _createRutaTable(Database db) async {
-  await db.execute('''
+    await db.execute('''
     CREATE TABLE Ruta (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       idVendedor INTEGER,
@@ -192,9 +194,10 @@ class DatabaseHelper {
       FOREIGN KEY (idLocalidad) REFERENCES localidad(id)
     )
   ''');
-}
-Future<void> _createDetalleRutaTable(Database db) async {
-  await db.execute('''
+  }
+
+  Future<void> _createDetalleRutaTable(Database db) async {
+    await db.execute('''
     CREATE TABLE DetalleRuta (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       idRuta INTEGER,
@@ -209,8 +212,16 @@ Future<void> _createDetalleRutaTable(Database db) async {
       FOREIGN KEY (idPedido) REFERENCES Orders(id)
     )
   ''');
-}
+  }
 
+   Future<void> _createConfiguracionTable(Database db) async {
+    await db.execute('''
+    CREATE TABLE Configuraciones(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      usaRuta INTEGER DEFAULT 0
+    )
+    ''');
+  }
 
   // Future<void> deleteAllTables() async {
   //   final db = await database;

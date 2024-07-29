@@ -70,6 +70,18 @@ class DatabaseHelperDetalleRuta {
       whereArgs: [id],
     );
   }
+  Future<void> updateIdPedidoDetalleRuta(int codCliente, int idPedido, int idRuta) async {
+    final db = await dbProvider.database;
+    print('cliente ${codCliente} , pedido: ${idPedido}  idruta ${idRuta}');
+    await db.update(
+      'DetalleRuta',
+      {'idPedido': idPedido, 'estado':'O'},
+      where: 'idRuta = ? AND CodCliente = ?',
+      whereArgs: [idRuta, codCliente],
+    );
+  }
+
+
   
 
   Future<void> updateFinDetalleRuta(int id, String fin) async {
@@ -140,6 +152,32 @@ Future<int> getDetalleRutaCount(int idRuta) async {
   int count = Sqflite.firstIntValue(result) ?? 0;
   return count;
 }
+Future<int> getDetalleRutaCountAndUpdate(int idRuta) async {
+  final db = await dbProvider.database;
+  int count = 0;
+
+  await db.transaction((txn) async {
+    // Contar las filas
+    var result = await txn.rawQuery(
+      'SELECT COUNT(*) FROM DETALLERUTA WHERE FIN = \'\' AND INICIO <> \'\' AND idRuta = ?',
+      [idRuta]
+    );
+    count = Sqflite.firstIntValue(result) ?? 0;
+
+    // Si hay filas que cumplen la condición, actualizar el campo `FIN`
+    if (count > 0) {
+      await txn.update(
+        'DETALLERUTA',
+        {'FIN': DateTime.now().toIso8601String()}, // Aquí puedes usar el valor que desees para el campo `FIN`
+        where: 'FIN = \'\' AND INICIO <> \'\' AND idRuta = ?',
+        whereArgs: [idRuta]
+      );
+    }
+  });
+
+  return count;
+}
+
 
 Future<List<Map<String, dynamic>>> getDetallesNoFinalizados(int idRuta) async {
   final db = await dbProvider.database;
@@ -149,6 +187,16 @@ Future<List<Map<String, dynamic>>> getDetallesNoFinalizados(int idRuta) async {
   );
   return result;
 }
+
+Future<List<Map<String, dynamic>>> getDetalleRealizado(int idRuta) async {
+  final db = await dbProvider.database;
+  var result = await db.rawQuery(
+    'SELECT CASE WHEN inicio <> '' AND fin = '' THEN 1 ELSE 0 END AS realizaPedido  FROM DetalleRuta WHERE id = ?',
+    [idRuta]
+  );
+  return result;
+}
+
 
 
   Future<void> deleteAllDetallesRuta() async {
