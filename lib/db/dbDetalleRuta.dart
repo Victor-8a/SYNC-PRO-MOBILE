@@ -191,7 +191,7 @@ Future<List<Map<String, dynamic>>> getDetallesNoFinalizados(int idRuta) async {
 Future<List<Map<String, dynamic>>> getDetalleRealizado(int idRuta) async {
   final db = await dbProvider.database;
   var result = await db.rawQuery(
-    'SELECT CASE WHEN inicio <> '' AND fin = '' THEN 1 ELSE 0 END AS realizaPedido  FROM DetalleRuta WHERE id = ?',
+    '''SELECT CASE WHEN (inicio <> '' AND fin = '') THEN 1 ELSE 0 END AS realizaPedido  FROM DetalleRuta WHERE id = ?''',
     [idRuta]
   );
   return result;

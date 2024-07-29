@@ -10,6 +10,7 @@ import 'package:sync_pro_mobile/db/dbPedidos.dart' as dbGuardarPedido;
 import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbVendedores.dart';
 import 'package:sync_pro_mobile/main.dart';
+import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import '../db/dbProducto.dart' as product;
 import 'package:sync_pro_mobile/PantallasSecundarias/seleccionar_clientes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,7 +85,7 @@ Future<String?> login() async {
   }
 
   final response = await http.post(
-    Uri.parse('http://192.168.1.212:3000/auth/signIn'),
+    ApiRoutes.buildUri('auth/signIn'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
@@ -129,7 +130,7 @@ Future<void> syncOrders() async {
 
   for (var order in unsyncedOrders) {
     try {
-      var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
+      var url = ApiRoutes.buildUri('pedidos/save');
       var headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -193,30 +194,14 @@ Future<void> syncOrders() async {
             print(detailCopy);
 
             var detailUrl =
-                Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
+               ApiRoutes.buildUri('detalle_pedidos/save');
             var detailBody = jsonEncode(detailCopy);
 
             print('Enviando detalle del pedido: $detailBody');
             var detailResponse =
                 await http.post(detailUrl, headers: headers, body: detailBody);
 
-            // if (detailResponse.statusCode == 401) {
-            //   // Token expirado o inválido, intentar iniciar sesión nuevamente
-            //   token = await login();
-            //   if (token != null) {
-            //     headers['Authorization'] = 'Bearer $token';
-            //     detailResponse = await http.post(detailUrl,
-            //         headers: headers, body: detailBody);
-            //   } else {
-            //     Fluttertoast.showToast(
-            //       msg:
-            //           'Error al iniciar sesión nuevamente. No se pueden sincronizar los detalles del pedido.',
-            //       toastLength: Toast.LENGTH_LONG,
-            //       gravity: ToastGravity.BOTTOM,
-            //     );
-            //     return;
-            //   }
-            // }
+        
 
             if (detailResponse.statusCode == 200) {
               syncedDetailsCount++;
@@ -358,7 +343,7 @@ Future<void> saveOrderDetail(
       throw Exception('Token de autorización no válido');
     }
 
-    var url = Uri.parse('https://tu_api_url/detalle_pedido');
+    var url =ApiRoutes.buildUri('paraElFuturo');
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -564,7 +549,8 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
 }
 
 class PaginaPedidos extends StatefulWidget {
-  const PaginaPedidos({Key? key, required cliente}) : super(key: key);
+  final Cliente cliente;
+  const PaginaPedidos({Key? key, required this.cliente}) : super(key: key);
 
   @override
   _PaginaPedidosState createState() => _PaginaPedidosState();
@@ -697,18 +683,19 @@ final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
   @override
   void initState() {
     super.initState();
+    _selectedClient=widget.cliente;
     loadSalesperson().then((vendedor) {
       if (mounted) {
         setState(() {
           vendedor = vendedor;
         });
-      }
+      } 
 
     }).catchError((error) {
       print('Error cargando vendedores: $error');
     });
-
-    _loadSelectedClientName();
+    if (widget.cliente.codCliente == 0) _loadSelectedClientName();
+    
     _loadSelectedProducts();
     // Inicializa _selectedProductPrices con precioFinal por defecto
     _selectedProducts.forEach((product) {
@@ -1275,7 +1262,7 @@ _selectedSalespersonId =_selectedSalesperson.value;
 
   Future<void> fetchVendedores() async {
     final response =
-        await http.get(Uri.parse('http://192.168.1.212:3000/vendedor'));
+        await http.get(ApiRoutes.buildUri('vendedor'));
     if (response.statusCode == 200) {
     
       List<dynamic> jsonResponse = json.decode(response.body);
@@ -1345,7 +1332,7 @@ _selectedSalespersonId =_selectedSalesperson.value;
       } else {
         // Si no hay productos en la base de datos, hacer la llamada HTTP para obtenerlos
         final response = await http.get(
-          Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
+          ApiRoutes.buildUri('dashboard/personalizado'),
           headers: {'Authorization': 'Bearer $token'},
         );
 

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
 import 'package:sync_pro_mobile/db/dbEmpresa.dart';
@@ -394,7 +395,7 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => PaginaPedidos(cliente: null)),
+                          builder: (context) => PaginaPedidos(cliente: Cliente(codCliente: 0, nombre: '', cedula: '', direccion: ''))),
                     );
                   },
                   child: Row(

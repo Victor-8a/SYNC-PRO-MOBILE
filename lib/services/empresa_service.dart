@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Empresa.dart';
 import 'package:sync_pro_mobile/db/dbEmpresa.dart';
+import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 
 
 
@@ -43,7 +44,7 @@ Future<Empresa> fetchEmpresa(int id) async {
     }
 
     // Configurar la URL y los headers para la solicitud HTTP
-    var url = Uri.parse('http://192.168.1.212:3000/empresa/id/1');
+    var url = ApiRoutes.buildUri('empresa/id/1');
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -84,7 +85,7 @@ Future<ImageModel> fetchImage() async {
   }
 
   final response = await http.get(
-    Uri.parse('http://192.168.1.212:3000/empresa/imagen'),
+    ApiRoutes.buildUri('empresa/imagen'),
     headers: {
       'Authorization': 'Bearer $token',
     },

@@ -56,6 +56,8 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
 
   @override
   void initState() {
+
+  
     super.initState();
 
     loadRutaActiva().then((ruta) {
@@ -198,21 +200,21 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
       }
     }
   }
-  Color _getColorByEstado(String estado) {
-  switch (estado) {
-    case 'Ausente':
-      return const Color.fromARGB(255, 248, 86, 75);
-    case 'Visitado':
-      return Colors.green;
-    case 'No Visitado':
-      return Colors.grey;
-    case 'Ordeno':
-      return Colors.blue;
-    default:
-      return Colors.white; 
-  }
-}
 
+  Color _getColorByEstado(String estado) {
+    switch (estado) {
+      case 'Ausente':
+        return const Color.fromARGB(255, 248, 86, 75);
+      case 'Visitado':
+        return Colors.green;
+      case 'No Visitado':
+        return Colors.grey;
+      case 'Ordeno':
+        return Colors.blue;
+      default:
+        return Colors.white;
+    }
+  }
 
   Future<void> cargarDetallesRuta() async {
     // Cargar los detalles de la ruta activa
@@ -447,6 +449,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
       );
     }
 
+
     void mostrarDialogoGuardarCambios() {
       showDialog(
         context: context,
@@ -502,143 +505,166 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
       );
     }
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return AlertDialog(
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            detalle.nombreCliente ?? '',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.red),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    esIniciarVisita
-                        ? Text(
-                            'Inicio:${detalle.inicio.substring(11, 16) + ' ' + detalle.inicio.substring(0, 10)}',
-                            style: const TextStyle(fontSize: 14),
-                          )
-                        : SizedBox(width: 0),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        estadoSeleccionado == 'No Visitado'
-                            ? DropdownButton<String>(
-                                value: estadoSeleccionado,
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    estadoSeleccionado = newValue!;
-                                  });
-                                },
-                                items: estados.map((String value) {
-                                  return DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value,
-                                        style: const TextStyle(fontSize: 14)),
-                                  );
-                                }).toList(),
-                              )
-                            : Text(
-                                estadoSeleccionado,
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                        SizedBox(width: 20),
-                        !esIniciarVisita
-                            ? IconButton(
-                                onPressed: () {
-                                  _mostrarDialogoIniciarVisita();
-                                },
-                                icon:
-                                    Icon(Icons.play_arrow, color: Colors.blue),
-                                tooltip: 'Iniciar Visita',
-                              )
-                            : SizedBox(width: 0),
-                        SizedBox(width: 10),
-                        IconButton(
-                          onPressed: () {
-                            _mostrarDialogoFinalizarVisita();
-                          },
-                          icon: Icon(Icons.stop, color: Colors.blue),
-                          tooltip: 'Finalizar Visita',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: observacionesController,
-                      decoration: const InputDecoration(
-                        labelText: 'Observaciones',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 2,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    const SizedBox(height: 10),
 
-                  
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.blue,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    PaginaPedidos(cliente: clienteRuta),
-                              ),
-                            ).then((_) {
-                              // Código a ejecutar después de regresar de PaginaPedidos
-                            });
-                          },
-                          child: const Icon(Icons.add, color: Colors.white),
+
+   
+
+showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return StatefulBuilder(
+      builder: (BuildContext context, StateSetter setState) {
+        bool puedeRealizarPedido = true;
+
+        Future<void> verificarEstadoPedido() async {
+          List<Map<String, dynamic>> resultado = await getDetalleRealizado(detalle.id ?? 0);
+          setState(() {
+            puedeRealizarPedido = resultado.isNotEmpty && resultado.first['realizaPedido'] == 1;
+          });
+        }
+
+        return AlertDialog(
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        detalle.nombreCliente ?? '',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors.white,
-                            backgroundColor: Colors.blue,
-                          ),
-                          onPressed: () {
-                            mostrarDialogoGuardarCambios();
-                          },
-                          child: const Text('✓'),
-                        ),
-                        const SizedBox(width: 12),
-                      ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
                     ),
                   ],
                 ),
-              ),
-            );
-          },
+                const SizedBox(height: 10),
+             esIniciarVisita
+  ? Text(
+      // ignore: unnecessary_null_comparison
+      (detalle.inicio != null && detalle.inicio.length >= 16)
+          ? 'Inicio: ${detalle.inicio.substring(11, 16) + ' ' + detalle.inicio.substring(0, 10)}'
+          : 'Inicio: ${detalle.inicio}',
+      style: const TextStyle(fontSize: 14),
+    )
+  : SizedBox(width: 0),
+const SizedBox(height: 10),
+                Row(
+                  children: [
+                    estadoSeleccionado == 'No Visitado'
+                        ? DropdownButton<String>(
+                            value: estadoSeleccionado,
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                estadoSeleccionado = newValue!;
+                              });
+                            },
+                            items: estados.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value, style: const TextStyle(fontSize: 14)),
+                              );
+                            }).toList(),
+                          )
+                        : Text(
+                            estadoSeleccionado,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                    SizedBox(width: 20),
+                    !esIniciarVisita
+                        ? IconButton(
+                            onPressed: () {
+                              _mostrarDialogoIniciarVisita();
+                            },
+                            icon: Icon(Icons.play_arrow, color: Colors.blue),
+                            tooltip: 'Iniciar Visita',
+                          )
+                        : SizedBox(width: 0),
+                    SizedBox(width: 10),
+                    IconButton(
+                      onPressed: () {
+                        _mostrarDialogoFinalizarVisita();
+                      },
+                      icon: Icon(Icons.stop, color: Colors.blue),
+                      tooltip: 'Finalizar Visita',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: observacionesController,
+                  decoration: const InputDecoration(
+                    labelText: 'Observaciones',
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 2,
+                  style: const TextStyle(fontSize: 12),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: puedeRealizarPedido ? Colors.blue : Colors.grey,
+                      ),
+                      onPressed: () async {
+                        await verificarEstadoPedido();
+                        if (puedeRealizarPedido) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PaginaPedidos(cliente: clienteRuta),
+                            ),
+                          ).then((_) {
+                            // Código a ejecutar después de regresar de PaginaPedidos
+                          });
+                        }
+                        Fluttertoast.showToast(
+                      msg:
+                          "Inicia tu visita primero",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.BOTTOM,
+                      backgroundColor: Colors.red,
+                      textColor: Colors.white,
+                    );
+                      },
+                      child: const Icon(Icons.add, color: Colors.white),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.blue,
+                      ),
+                      onPressed: () {
+                        mostrarDialogoGuardarCambios();
+                      },
+                      child: const Text('✓'),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                ),
+              ],
+            ),
+          ),
         );
       },
     );
+  },
+);
+
   }
 
   void _guardarCliente() async {
@@ -716,41 +742,44 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                   style: TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 10), // Reducir el espacio vertical
-        Expanded(
-  child: ListView.builder(
-    itemCount: _detallesRuta.length,
-    itemBuilder: (context, index) {
-      final detalle = _detallesRuta[index];
-      return Card(
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: _getColorByEstado(detalle.estado), // Color del borde
-              width: 1.50, // Ancho del borde
-            ),
-            borderRadius: BorderRadius.circular(4.0), // Radio del borde
-          ),
-          child: ListTile(
-            title: Text(
-              detalle.nombreCliente ?? '',
-              style: TextStyle(
-                fontSize: 14, // Reducir el tamaño del texto
-              ),
-            ),
-            onTap: () async {
-              DatabaseHelperCliente dbHelper = DatabaseHelperCliente();
-              Cliente cliente = await dbHelper.getClientesById(detalle.codCliente);
-              setState(() {
-                clienteSeleccionado = detalle;
-              });
-              _mostrarDetallesCliente(detalle, cliente);
-          },
-        ),
-      )
-      );
-    },
-  ),
-),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _detallesRuta.length,
+                    itemBuilder: (context, index) {
+                      final detalle = _detallesRuta[index];
+                      return Card(
+                          child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: _getColorByEstado(
+                                detalle.estado), // Color del borde
+                            width: 1.50, // Ancho del borde
+                          ),
+                          borderRadius:
+                              BorderRadius.circular(4.0), // Radio del borde
+                        ),
+                        child: ListTile(
+                          title: Text(
+                            detalle.nombreCliente ?? '',
+                            style: TextStyle(
+                              fontSize: 14, // Reducir el tamaño del texto
+                            ),
+                          ),
+                          onTap: () async {
+                            DatabaseHelperCliente dbHelper =
+                                DatabaseHelperCliente();
+                            Cliente cliente = await dbHelper
+                                .getClientesById(detalle.codCliente);
+                            setState(() {
+                              clienteSeleccionado = detalle;
+                            });
+                            _mostrarDetallesCliente(detalle, cliente);
+                          },
+                        ),
+                      ));
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -813,7 +842,8 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                     fechaFin, // Fecha actual de finalización
                   );
 
-                  await DatabaseHelperDetalleRuta().getDetalleRutaCountAndUpdate(miRuta!.id);
+                  await DatabaseHelperDetalleRuta()
+                      .getDetalleRutaCountAndUpdate(miRuta!.id);
 
                   // Actualizar el estado de la ruta
                   setState(() {
@@ -909,6 +939,12 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
     DatabaseHelperDetalleRuta dbHelper = DatabaseHelperDetalleRuta();
     final detalleRuta = await dbHelper.updateFinDetalleRuta(id!, fin);
 
+    return detalleRuta;
+  }
+
+  getDetalleRealizado(int idRuta) async {
+    DatabaseHelperDetalleRuta dbHelper = DatabaseHelperDetalleRuta();
+    final detalleRuta = await dbHelper.getDetalleRealizado(idRuta);
     return detalleRuta;
   }
 }

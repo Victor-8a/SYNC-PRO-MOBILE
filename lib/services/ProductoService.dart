@@ -4,17 +4,17 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/Models/Producto.dart';
+import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 
 class ProductService {
   Future<List<Product>> fetchProducts() async {
     try {
       var connectivityResult = await Connectivity().checkConnectivity();
       if (connectivityResult == ConnectivityResult.none) {
-        print("NO HAY CONEXIÓN");
+     
         return await getProductsFromLocalDatabase();
       }
 
-      print("SI HAY CONEXIÓN");
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('token');
 
@@ -23,7 +23,7 @@ class ProductService {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.212:3000/dashboard/personalizado'),
+      ApiRoutes.buildUri('dashboard/personalizado'),
         headers: {
           'Authorization': 'Bearer $token',
         },

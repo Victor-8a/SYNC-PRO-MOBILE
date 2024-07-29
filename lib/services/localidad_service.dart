@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Localidad.dart';
-import 'package:sync_pro_mobile/db/dbLocalidad.dart'; // Importa tu clase DatabaseHelperRuta
+import 'package:sync_pro_mobile/db/dbLocalidad.dart';
+import 'package:sync_pro_mobile/services/ApiRoutes.dart'; // Importa tu clase DatabaseHelperRuta
 
 Future<List<Localidad>> fetchRuta() async {
   try {
@@ -16,7 +17,7 @@ Future<List<Localidad>> fetchRuta() async {
     }
 
     // Configurar la URL y los headers para la solicitud HTTP
-    var url = Uri.parse('http://192.168.1.212:3000/localidad'); // Ajusta la URL según tu endpoint
+    var url = ApiRoutes.buildUri('localidad'); // Ajusta la URL según tu endpoint
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',

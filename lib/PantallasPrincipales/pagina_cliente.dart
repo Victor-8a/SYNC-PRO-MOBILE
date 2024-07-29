@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/PantallasSecundarias/crear_cliente.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
+import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/services/localidad_service.dart';
 
 class PaginaCliente extends StatefulWidget {
@@ -57,7 +58,7 @@ class _PaginaClienteState extends State<PaginaCliente> {
       }
 
       final response = await http.get(
-        Uri.parse('http://192.168.1.212:3000/cliente'),
+       ApiRoutes.buildUri('cliente'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(Duration(seconds: 5));
 

@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Inicio/second_page.dart';
 import 'package:sync_pro_mobile/Models/Empresa.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
+import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/services/check_internet_connection.dart';
 import 'package:sync_pro_mobile/services/empresa_service.dart';
 
@@ -71,7 +72,7 @@ Future<Vendedor> loadSalesperson() async {
   if (idVendedor != null) {
     try {
       final response = await http
-          .get(Uri.parse('http://192.168.1.212:3000/vendedor/id/$idVendedor'));
+          .get(ApiRoutes.buildUri('vendedor/id/$idVendedor'));
 
       if (response.statusCode == 200) {
         Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
@@ -136,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
     String contrasena = _contrasenaController.text;
 
     final response = await http.post(
-      Uri.parse('http://192.168.1.212:3000/auth/signIn'),
+      ApiRoutes.buildUri('auth/signIn'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 
 // import 'pagina_pedidos.dart';
 
@@ -106,7 +107,7 @@ class _CrearClienteState extends State<CrearCliente> {
     });
 
     final response = await http.post(
-      Uri.parse('http://192.168.1.212:3000/cliente/save'),
+     ApiRoutes.buildUri('cliente/save'),
       headers: {
         "Content-Type": "application/json",
         "Authorization": "Bearer $token",

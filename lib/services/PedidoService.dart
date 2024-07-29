@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 
 import 'package:sync_pro_mobile/db/dbPedidos.dart' as dbGuardarPedido;
+import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 
 import '../db/dbDetallePedidos.dart' as dbDetallePedidos;
 
@@ -32,7 +33,7 @@ Future<void> syncOrders() async {
 
   for (var order in unsyncedOrders) {
     try {
-      var url = Uri.parse('http://192.168.1.212:3000/pedidos/save');
+      var url =ApiRoutes.buildUri('pedidos/save');
       var headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -92,7 +93,7 @@ Future<void> syncOrders() async {
             detailCopy['IdPedido'] = idPedido;
             print(detailCopy);
 
-            var detailUrl = Uri.parse('http://192.168.1.212:3000/detalle_pedidos/save');
+            var detailUrl = ApiRoutes.buildUri('detalle_pedidos/save');
             var detailBody = jsonEncode(detailCopy);
 
             print('Enviando detalle del pedido: $detailBody');
