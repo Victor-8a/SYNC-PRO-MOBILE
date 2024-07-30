@@ -17,7 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../Models/Producto.dart';
 import '../Models/Vendedor.dart';
-import 'crear_cliente.dart';
+// import 'crear_cliente.dart';
 import '../services/local_storage.dart';
 import '../db/dbDetallePedidos.dart' as dbDetallePedidos;
 import '../db/dbDetalleRuta.dart' as dbDetalleRuta;
@@ -802,29 +802,30 @@ _selectedSalespersonId =_selectedSalesperson.value;
       )]);
         }},
 ),
+SizedBox(height: 20.0),
                     Column(
                       children: [
                         Row(
                           children: [
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => CrearCliente(),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors
-                                    .blue, // Cambia el color de fondo a azul
-                              ),
-                              child: Text('+',
-                                  style: TextStyle(
-                                    fontSize: 20.0,
-                                    color: Colors.white,
-                                  )),
-                            ),
+                            // ElevatedButton(
+                            //   onPressed: () {
+                            //     Navigator.push(
+                            //       context,
+                            //       MaterialPageRoute(
+                            //         builder: (context) => CrearCliente(),
+                            //       ),
+                            //     );
+                            //   },
+                            //   style: ElevatedButton.styleFrom(
+                            //     backgroundColor: Colors
+                            //         .blue, // Cambia el color de fondo a azul
+                            //   ),
+                            //   child: Text('+',
+                            //       style: TextStyle(
+                            //         fontSize: 20.0,
+                            //         color: Colors.white,
+                            //       )),
+                            // ),
                             Expanded(
                               child: Text(
                                 'Cliente: ' + _selectedClient.nombre,

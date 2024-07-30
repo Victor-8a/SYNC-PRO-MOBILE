@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
 import 'package:sync_pro_mobile/db/dbEmpresa.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart';
@@ -21,6 +22,10 @@ class PaginaListarPedidos extends StatefulWidget {
 class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
   late List<Map<String, dynamic>> _orders;
   List<Map<String, dynamic>> _filteredOrders = [];
+   bool _usaRuta = false;
+  final _databaseHelperConfiguraciones = DatabaseHelperConfiguraciones();
+
+
 
   TextEditingController _searchController = TextEditingController();
 
@@ -28,13 +33,19 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
   void initState() {
     super.initState();
     _loadOrders();
+    
   }
 
   void _loadOrders() async {
     _orders = await DatabaseHelperPedidos().getOrdersWithClientAndSeller();
     _filteredOrders = List.from(_orders); // Copia de la lista original
     setState(() {});
+
   }
+  
+//   Future<void> _initializeConfiguration() async {
+//   await _loadConfiguracion();
+// }
 
   void _filterOrders(String searchText) {
     _filteredOrders.clear();
@@ -288,6 +299,13 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
   );
 }
 
+ Future<void> _loadConfiguracion() async {
+    bool usaRuta = await _databaseHelperConfiguraciones.getUsaRuta();
+    setState(() {
+      _usaRuta = usaRuta;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -376,40 +394,50 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                     },
                   ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    backgroundColor: Colors.blue,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    elevation: 5,
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => PaginaPedidos(cliente: Cliente(codCliente: 0, nombre: '', cedula: '', direccion: ''))),
-                    );
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add, color: Colors.white),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+        Padding(
+  padding: const EdgeInsets.all(8.0),
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.end,
+    children: [
+      ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          foregroundColor: Colors.white,
+          backgroundColor: Colors.blue,
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-        ],
+          elevation: 5,
+        ),
+        onPressed: _usaRuta
+            ? null // Deshabilita el botón si usaRuta es verdadero
+            : () async {
+                // Llama a la función asíncrona
+                await _loadConfiguracion();
+                // Navega a la página de pedidos
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PaginaPedidos(
+                      cliente: Cliente(codCliente: 0, nombre: '', cedula: '', direccion: ''),
+                    ),
+                  ),
+                );
+              },
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.add, color: Colors.white),
+          ],
+        ),
       ),
+    ],
+  ),
+)
+
+    ]
+    )
+    
     );
   }
 }

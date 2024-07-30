@@ -376,78 +376,93 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
         },
       );
     }
+void _mostrarDialogoFinalizarVisita() {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('¿Está seguro de finalizar la visita?'),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancelar'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Aceptar'),
+            onPressed: () async {
+              // Verificar si la visita está iniciada
+              if (esIniciarVisita) {
+                // Asegúrate de que el cliente seleccionado no sea nulo
+                if (clienteSeleccionado != null) {
+                  // Consultar el campo 'fin' de la visita actual en la base de datos
+                final String? fin = await DatabaseHelperDetalleRuta().obtenerFinDetalleRuta(detalle.id ?? 0);
 
-    void _mostrarDialogoFinalizarVisita() {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('¿Está seguro de finalizar la visita?'),
-            actions: <Widget>[
-              TextButton(
-                child: Text('Cancelar'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              TextButton(
-                child: Text('Aceptar'),
-                onPressed: () async {
-                  // Verificar si la visita está iniciada
-                  if (esIniciarVisita) {
-                    // Obtener la hora actual para el campo 'fin'
-                    String fin = DateTime.now().toIso8601String();
-
-                    // Asegúrate de que el cliente seleccionado no sea nulo
-                    if (clienteSeleccionado != null) {
-                      // Actualizar el campo 'fin' en la base de datos
-                      await updateFinDetalleRuta(clienteSeleccionado!.id, fin);
-                      cargarDetallesRuta();
-                      setState(() {
-                        esIniciarVisita =
-                            false; // Indicar que la visita ha finalizado
-                        rutaIniciada =
-                            true; // Bloquear clientes al finalizar la visita
-                      });
-
-                      // Mostrar mensaje de éxito
-                      Fluttertoast.showToast(
-                        msg: "La visita ha sido finalizada",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.black,
-                        textColor: Colors.white,
-                      );
-                      // Cerrar el diálogo
-                      Navigator.of(context).pop();
-                    } else {
-                      // Mostrar mensaje de error si no hay cliente seleccionado
-                      Fluttertoast.showToast(
-                        msg: "No se ha seleccionado ningún cliente",
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        backgroundColor: Colors.red,
-                        textColor: Colors.white,
-                      );
-                    }
-                  } else {
-                    // Mostrar mensaje de error si la visita no ha sido iniciada
+                  // Verificar si el campo 'fin' ya está establecido
+                
+                  // ignore: unnecessary_null_comparison
+                  if (fin != null) {
+                    // Mostrar mensaje de error si la visita ya ha sido finalizada
                     Fluttertoast.showToast(
-                      msg: "La visita no ha sido iniciada",
+                      msg: "La visita ya ha sido finalizada",
                       toastLength: Toast.LENGTH_SHORT,
                       gravity: ToastGravity.BOTTOM,
                       backgroundColor: Colors.red,
                       textColor: Colors.white,
                     );
                     Navigator.of(context).pop();
+                  } else {
+                    // Obtener la hora actual para el campo 'fin'
+                    String fin = DateTime.now().toIso8601String();
+
+                    // Actualizar el campo 'fin' en la base de datos
+                    await updateFinDetalleRuta(clienteSeleccionado!.id, fin);
+                    cargarDetallesRuta();
+                    setState(() {
+                      esIniciarVisita = false; // Indicar que la visita ha finalizado
+                      rutaIniciada = true; // Bloquear clientes al finalizar la visita
+                    });
+
+                    // Mostrar mensaje de éxito
+                    Fluttertoast.showToast(
+                      msg: "La visita ha sido finalizada",
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.BOTTOM,
+                      backgroundColor: Colors.black,
+                      textColor: Colors.white,
+                    );
+                    // Cerrar el diálogo
+                    Navigator.of(context).pop();
                   }
-                },
-              ),
-            ],
-          );
-        },
+                } else {
+                  // Mostrar mensaje de error si no hay cliente seleccionado
+                  Fluttertoast.showToast(
+                    msg: "No se ha seleccionado ningún cliente",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    backgroundColor: Colors.red,
+                    textColor: Colors.white,
+                  );
+                }
+              } else {
+                // Mostrar mensaje de error si la visita no ha sido iniciada
+                Fluttertoast.showToast(
+                  msg: "La visita no ha sido iniciada",
+                  toastLength: Toast.LENGTH_SHORT,
+                  gravity: ToastGravity.BOTTOM,
+                  backgroundColor: Colors.red,
+                  textColor: Colors.white,
+                );
+                Navigator.of(context).pop();
+              }
+            },
+          ),
+        ],
       );
-    }
+    },
+  );
+}
 
 
     void mostrarDialogoGuardarCambios() {
@@ -543,7 +558,8 @@ showDialog(
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.red),
                       onPressed: () {
-                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();                          
+
                       },
                     ),
                   ],
@@ -561,7 +577,7 @@ showDialog(
 const SizedBox(height: 10),
                 Row(
                   children: [
-                    estadoSeleccionado == 'No Visitado'
+                    detalle.estado == 'No Visitado'
                         ? DropdownButton<String>(
                             value: estadoSeleccionado,
                             onChanged: (String? newValue) {
@@ -628,19 +644,13 @@ const SizedBox(height: 10),
                               builder: (context) => PaginaPedidos(cliente: clienteRuta),
                             ),
                           ).then((_) {
-                            // Código a ejecutar después de regresar de PaginaPedidos
+                            Navigator.of(context).pop();
+                            cargarDetallesRuta();
                           });
                         }
-                        Fluttertoast.showToast(
-                      msg:
-                          "Inicia tu visita primero",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      backgroundColor: Colors.red,
-                      textColor: Colors.white,
-                    );
+                        
                       },
-                      child: const Icon(Icons.add, color: Colors.white),
+                      child: const Icon(Icons.add, color: Colors.white),                
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
@@ -947,5 +957,7 @@ const SizedBox(height: 10),
     final detalleRuta = await dbHelper.getDetalleRealizado(idRuta);
     return detalleRuta;
   }
+  
+
 }
 

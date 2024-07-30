@@ -196,6 +196,23 @@ Future<List<Map<String, dynamic>>> getDetalleRealizado(int idRuta) async {
   );
   return result;
 }
+// Método para obtener el campo 'fin' de la visita actual
+Future<String?> obtenerFinDetalleRuta(int id) async {
+  final db = await  dbProvider.database;
+  var result = await db.query(
+    'DetalleRuta',
+    columns: ['fin'],
+    where: 'id = ?',
+    whereArgs: [id],
+  );
+
+   if (result.isNotEmpty) {
+    String? fin = result.first['fin'] as String?;
+    return (fin != null && fin.isNotEmpty) ? fin : null;
+  } else {
+    return null;
+  }
+}
 
 
 

@@ -14,7 +14,6 @@ class DatabaseHelperLocalidad {
         localidad,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      print('Localidad inserted: $localidad');
     } catch (e) {
       print('Error inserting localidad: $e');
     }
@@ -40,7 +39,8 @@ class DatabaseHelperLocalidad {
     }
   }
 
-  // Método para eliminar todas las rutas de la base de datos
+  // Método para
+  // eliminar todas las rutas de la base de datos
   Future<void> deleteAllLocalidades() async {
     final db = await dbProvider.database;
     try {
