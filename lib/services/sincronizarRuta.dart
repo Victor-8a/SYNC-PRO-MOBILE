@@ -1,0 +1,172 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter/material.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/db/dbDetalleRuta.dart';
+import 'package:sync_pro_mobile/db/dbRuta.dart';
+import 'package:sync_pro_mobile/services/ApiRoutes.dart';
+
+Future<void> syncRutas() async {
+  List<Map<String, dynamic>> unsyncedRutas = await DatabaseHelperRuta().getUnsyncedRutas();
+  String? token = await login();
+
+  for (var ruta in unsyncedRutas) {
+    try {
+      var rutaCopy = Map<String, dynamic>.from(ruta);
+      rutaCopy.remove('sincronizado');
+      rutaCopy.remove('id');
+
+      // Método para eliminar la 'T' de la fecha y dejar solo 3 dígitos en los milisegundos
+      String modificarFecha(String fechaOriginal) {
+        String sinT = fechaOriginal.replaceAll('T', ' ');
+        int puntoIndex = sinT.lastIndexOf('.');
+        
+        if (puntoIndex != -1 && sinT.length > puntoIndex + 4) {
+          return sinT.substring(0, puntoIndex + 4);
+        } else {
+          return sinT;
+        }
+      }
+
+      // Modificar fechaInicio
+      if (rutaCopy.containsKey('fechaInicio')) {
+        String fechaOriginal = rutaCopy['fechaInicio'];
+        String fechaModificada = modificarFecha(fechaOriginal);
+        rutaCopy['fechaInicio'] = fechaModificada;
+        print('Fecha Inicio Modificada: $fechaModificada');
+      }
+
+      // Modificar fechaFin
+      if (rutaCopy.containsKey('fechaFin')) {
+        String fechaOriginal = rutaCopy['fechaFin'];
+        String fechaModificada = modificarFecha(fechaOriginal);
+        rutaCopy['fechaFin'] = fechaModificada;
+        print('Fecha Fin Modificada: $fechaModificada');
+      }
+
+      var body = jsonEncode(rutaCopy);
+      var url = ApiRoutes.buildUri('ruta/save');
+      var headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      };
+
+      print('Enviando ruta: $body');
+      var response = await http.post(url, headers: headers, body: body);
+
+      if (response.statusCode == 401) {
+        // Reintentar con un nuevo token
+        token = await login();
+        headers['Authorization'] = 'Bearer $token';
+        response = await http.post(url, headers: headers, body: body);
+      }
+
+      if (response.statusCode == 200) {
+        var jsonResponse = json.decode(response.body);
+        print('Respuesta de la API: $jsonResponse'); // Imprimir la respuesta completa para depurar
+
+        if (jsonResponse != null && jsonResponse.containsKey('savedRoute')) {
+          var savedRoute = jsonResponse['savedRoute'];
+          if (savedRoute.containsKey('Id')) {
+            int idRuta = savedRoute['Id'];
+            print('Ruta sincronizada correctamente: $ruta');
+            Fluttertoast.showToast(
+              msg: 'Ruta sincronizada correctamente.',
+              textColor: Colors.blue,
+              toastLength: Toast.LENGTH_SHORT,
+              gravity: ToastGravity.BOTTOM,
+            );
+
+         List<Map<String, dynamic>> unsyncedDetalleRuta = await DatabaseHelperDetalleRuta().getUnsyncedDetalleRuta(ruta['id']);
+print(unsyncedDetalleRuta);
+
+int syncedDetailsCount = 0;
+for (var detail in unsyncedDetalleRuta) {
+  try {
+    var detailCopy = Map<String, dynamic>.from(detail);
+    
+    // Verificar si idPedido es 0 y eliminarlo si es el caso
+    if (detailCopy.containsKey('idPedido') && detailCopy['idPedido'] == 0) {
+      detailCopy.remove('idPedido');
+    }
+
+    detailCopy.remove('id');
+    detailCopy['idRuta'] = idRuta;
+    print(detailCopy);
+    print('detalle de la ruta');
+
+    var detailUrl = ApiRoutes.buildUri('detalle_ruta/save');
+    var detailBody = jsonEncode(detailCopy);
+
+
+                print('Enviando detalle de la ruta: $detailBody');
+                var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
+
+                if (detailResponse.statusCode == 200) {
+                  syncedDetailsCount++;
+                  if (syncedDetailsCount == unsyncedDetalleRuta.length) {
+                    print('Todos los detalles de la ruta sincronizados correctamente.');
+                    await DatabaseHelperRuta().markRutaAsSynced(ruta['id'], idRuta);
+                    Fluttertoast.showToast(
+                      msg: 'Ruta y detalles sincronizados correctamente.',
+                      textColor: Colors.blue,
+                      toastLength: Toast.LENGTH_SHORT,
+                      gravity: ToastGravity.BOTTOM,
+                    );
+                  }
+                } else {
+                  print('Error al sincronizar detalle de la ruta: ${detailResponse.statusCode} - ${detailResponse.body}');
+                  Fluttertoast.showToast(
+                    msg: 'Error. No se pueden sincronizar los detalles de la ruta.',
+                    textColor: Colors.red,
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                  );
+                }
+              } catch (error) {
+                print('Error al sincronizar detalle de la ruta: $error');
+                Fluttertoast.showToast(
+                  msg: 'Error al sincronizar detalle de la ruta.',
+                  toastLength: Toast.LENGTH_LONG,
+                  gravity: ToastGravity.BOTTOM,
+                );
+              }
+            }
+          } else {
+            print('Error: la respuesta de la API no contiene el campo esperado.');
+            Fluttertoast.showToast(
+              msg: 'Error al sincronizar ruta: campo esperado no encontrado.',
+              textColor: Colors.red,
+              toastLength: Toast.LENGTH_LONG,
+              gravity: ToastGravity.BOTTOM,
+            );
+          }
+        } else {
+          print('Error: la respuesta de la API no contiene el campo esperado.');
+          Fluttertoast.showToast(
+            msg: 'Error al sincronizar ruta: campo esperado no encontrado.',
+            textColor: Colors.red,
+            toastLength: Toast.LENGTH_LONG,
+            gravity: ToastGravity.BOTTOM,
+          );
+        }
+      } else {
+        print('Error al sincronizar ruta: ${response.statusCode} - ${response.body}');
+        Fluttertoast.showToast(
+          msg: 'Error al sincronizar ruta: ${response.statusCode}',
+          textColor: Colors.red,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+      }
+    } catch (error) {
+      print('Error al sincronizar ruta: $error');
+      Fluttertoast.showToast(
+        msg: 'Error al sincronizar ruta.',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
+    }
+  }
+}

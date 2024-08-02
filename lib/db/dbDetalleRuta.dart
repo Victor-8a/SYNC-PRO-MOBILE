@@ -214,7 +214,10 @@ Future<String?> obtenerFinDetalleRuta(int id) async {
   }
 }
 
-
+Future<List<Map<String, dynamic>>> getUnsyncedDetalleRuta(int idRuta) async {
+  final db = await dbProvider.database;
+  return await db.query('DetalleRuta', where: 'idRuta = ?', whereArgs: [idRuta]);
+}
 
   Future<void> deleteAllDetallesRuta() async {
     final db = await dbProvider.database;

@@ -61,9 +61,28 @@ class DatabaseHelperRuta {
     );
   }
 
+  
+
   Future<void> deleteAllRutas() async {
     final db = await dbProvider.database;
     await db.delete('ruta');
   }
-  
+
+
+    Future<List<Map<String, dynamic>>> getUnsyncedRutas() async {
+    final db = await dbProvider.database;
+    return await db.query('Ruta', where: 'sincronizado = ?', whereArgs: [0]);
+  }
+
+  Future<void> markRutaAsSynced(int localId, int remoteId) async {
+    final db = await dbProvider.database;
+    await db.update(
+      'Ruta',
+      {'sincronizado': 1, 'id': remoteId},
+      where: 'id = ?',
+      whereArgs: [localId],
+    );
+  }
 }
+
+  

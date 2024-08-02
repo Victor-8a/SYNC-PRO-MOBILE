@@ -131,7 +131,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                     Map<String, dynamic> ruta = {
                       "idVendedor": vendedor.value,
                       "idLocalidad": rutaSeleccionada?.id ?? 0,
-                      "fechaInicio": DateTime.now().toIso8601String(),
+                      "fechaInicio":DateTime.now().toIso8601String(),
                       "fechaFin": '',
                       "anulado": 0,
                     };
@@ -827,7 +827,7 @@ const SizedBox(height: 10),
               mainAxisSize: MainAxisSize.min,
               children: detallesNoFinalizados.map((detalle) {
                 return ListTile(
-                  title: Text('Cliente: ${detalle['CodCliente']}'),
+                  title: Text('Cliente: ${ detalle['nombreCliente'] ?? ''}'),
                   subtitle: Text(
                       'Estado: ${detalle['estado']}, Observaciones: ${detalle['observaciones']}'),
                 );

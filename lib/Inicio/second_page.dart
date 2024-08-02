@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Producto.dart';
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/services/Configuraciones.dart';
+import 'package:sync_pro_mobile/services/sincronizarRuta.dart';
 import 'package:sync_pro_mobile/services/warning_widget_cubit.dart';
 import '../main.dart';
 import '../PantallasPrincipales/pagina_inventario.dart';
@@ -117,6 +118,11 @@ Future<void> _loadUserName() async {
               leading: const Icon(Icons.sync),
               title: const Text('Sincronizar Pedido'),
               onTap: syncOrders,
+            ),
+               ListTile(
+              leading: const Icon(Icons.sync),
+              title: const Text('Sincronizar Ruta'),
+              onTap: syncRutas,
             ),
             ListTile(
               leading: const Icon(Icons.settings), // Icono para configuraciones

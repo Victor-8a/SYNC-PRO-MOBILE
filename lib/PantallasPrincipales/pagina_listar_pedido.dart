@@ -33,7 +33,7 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
   void initState() {
     super.initState();
     _loadOrders();
-    
+    _initializeConfiguration();
   }
 
   void _loadOrders() async {
@@ -43,9 +43,9 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
 
   }
   
-//   Future<void> _initializeConfiguration() async {
-//   await _loadConfiguracion();
-// }
+  Future<void> _initializeConfiguration() async {
+  await _loadConfiguracion();
+}
 
   void _filterOrders(String searchText) {
     _filteredOrders.clear();
@@ -88,7 +88,7 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
               });
               return Container(
                 width: double.maxFinite,
-                child: Column(
+                child: Column(                      
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Expanded(

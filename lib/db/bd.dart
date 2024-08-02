@@ -190,6 +190,7 @@ class DatabaseHelper {
       fechaInicio TEXT,
       fechaFin TEXT,
       anulado INTEGER DEFAULT 0,
+      sincronizado INTEGER DEFAULT 0,
       FOREIGN KEY (idVendedor) REFERENCES vendedores(value),
       FOREIGN KEY (idLocalidad) REFERENCES localidad(id)
     )
