@@ -26,7 +26,7 @@ Future<void> syncRutas() async {
           return sinT.substring(0, puntoIndex + 4);
         } else {
           return sinT;
-        }
+        } 
       }
 
       // Modificar fechaInicio
@@ -78,27 +78,41 @@ Future<void> syncRutas() async {
               gravity: ToastGravity.BOTTOM,
             );
 
-         List<Map<String, dynamic>> unsyncedDetalleRuta = await DatabaseHelperDetalleRuta().getUnsyncedDetalleRuta(ruta['id']);
-print(unsyncedDetalleRuta);
+            List<Map<String, dynamic>> unsyncedDetalleRuta = await DatabaseHelperDetalleRuta().getUnsyncedDetalleRuta(ruta['id']);
+            print(unsyncedDetalleRuta);
 
-int syncedDetailsCount = 0;
-for (var detail in unsyncedDetalleRuta) {
-  try {
-    var detailCopy = Map<String, dynamic>.from(detail);
-    
-    // Verificar si idPedido es 0 y eliminarlo si es el caso
-    if (detailCopy.containsKey('idPedido') && detailCopy['idPedido'] == 0) {
-      detailCopy.remove('idPedido');
-    }
+            int syncedDetailsCount = 0;
+            for (var detail in unsyncedDetalleRuta) {
+              try {
+                var detailCopy = Map<String, dynamic>.from(detail);
+                
+                // Modificar campos inicio y fin
+                if (detailCopy.containsKey('inicio')) {
+                  String fechaOriginal = detailCopy['inicio'];
+                  String fechaModificada = modificarFecha(fechaOriginal);
+                  detailCopy['inicio'] = fechaModificada;
+                  print('Inicio Modificado: $fechaModificada');
+                }
 
-    detailCopy.remove('id');
-    detailCopy['idRuta'] = idRuta;
-    print(detailCopy);
-    print('detalle de la ruta');
+                if (detailCopy.containsKey('fin')) {
+                  String fechaOriginal = detailCopy['fin'];
+                  String fechaModificada = modificarFecha(fechaOriginal);
+                  detailCopy['fin'] = fechaModificada;
+                  print('Fin Modificado: $fechaModificada');
+                }
 
-    var detailUrl = ApiRoutes.buildUri('detalle_ruta/save');
-    var detailBody = jsonEncode(detailCopy);
+                // Verificar si idPedido es 0 y establecerlo como cadena vacía
+                if (detailCopy.containsKey('idPedido') && detailCopy['idPedido'] == 0) {
+                  detailCopy['idPedido'] = "";  // Establecer el valor como cadena vacía
+                }
 
+                detailCopy.remove('id');
+                detailCopy['idRuta'] = idRuta;
+                print(detailCopy);
+                print('detalle de la ruta');
+
+                var detailUrl = ApiRoutes.buildUri('detalle_ruta/save');
+                var detailBody = jsonEncode(detailCopy);
 
                 print('Enviando detalle de la ruta: $detailBody');
                 var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
