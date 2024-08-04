@@ -42,16 +42,12 @@ Future<String> getTokenFromStorage() async {
 Future<String?> getUsernameFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? username = prefs.getString('username');
-  print('aqui se recupera el username');
-  print(username);
   return username;
 }
 
 Future<String?> getPasswordFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? password = prefs.getString('password');
-  print('aqui se recupera el password');
-  print(password);
   return password;
 }
 
@@ -142,7 +138,7 @@ Future<void> syncOrders() async {
       orderCopy.remove('NumPedido');
 
       var body = jsonEncode(orderCopy);
-      print('Enviando pedido: $body');
+  
       var response = await http.post(url, headers: headers, body: body);
 
       if (response.statusCode == 401) {
@@ -161,9 +157,7 @@ Future<void> syncOrders() async {
         }
       }
   
-      print(response.statusCode);
   
-      print(login());
 
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
@@ -181,7 +175,6 @@ Future<void> syncOrders() async {
         List<Map<String, dynamic>> unsyncedOrderDetails =
             await dbDetallePedidos.DatabaseHelperDetallePedidos()
                 .getUnsyncedOrderDetails(order['id']);
-        print(unsyncedOrderDetails);
 
         int syncedDetailsCount = 0;
 
@@ -191,12 +184,11 @@ Future<void> syncOrders() async {
             var detailCopy = Map<String, dynamic>.from(detail);
             detailCopy.remove('Id');
             detailCopy['IdPedido'] = idPedido;
-            print(detailCopy);
 
             var detailUrl =
                ApiRoutes.buildUri('detalle_pedidos/save');
             var detailBody = jsonEncode(detailCopy);
-
+  
             print('Enviando detalle del pedido: $detailBody');
             var detailResponse =
                 await http.post(detailUrl, headers: headers, body: detailBody);
@@ -268,7 +260,6 @@ Future<int?> saveOrder(int selectedClient, String observations,
       {}; // Declarar dataPedido fuera del bloque try-catch
 
   try {
-    print('INGRESO A SAVEORDER...');
     var url = Uri.parse('/');
     var headers = {
       'Content-Type': 'application/json',
@@ -292,6 +283,7 @@ Future<int?> saveOrder(int selectedClient, String observations,
     var response = await http.post(url, headers: headers, body: body);
     print(
         'Server responded with status code ${response.statusCode} and body: ${response.body}');
+
 
     if (response.statusCode == 200) {
       var jsonResponse = json.decode(response.body);
@@ -349,15 +341,9 @@ Future<void> saveOrderDetail(
       'Authorization': 'Bearer $token',
     };
 
-    print('Número de productos seleccionados: ${selectedProducts.length}');
-    print('Productos seleccionados: $selectedProducts');
 
     for (var product in selectedProducts) {
       try {
-        print('Procesando producto: ${product.codigo}');
-        print('Cantidad: ${selectedProductQuantities[product]}');
-        print('Precio: ${selectedProductPrices[product]}');
-        print('Descuento: ${discounts[product]}');
 
         var orderDetailData = {
           "IdPedido": idPedido,
@@ -444,7 +430,6 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
 
     // print("Obteniendo productos de la base de datos local...");
     List<Product> products = await dbHelper.getProducts();
-    print("Productos obtenidos: $products");
 
     return products;
   }
@@ -635,7 +620,6 @@ final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
         throw Exception('Vendedor no encontrado en la base de datos local');
       }
     } catch (error) {
-      print('Error en obtener el vendedor desde la base de datos: $error');
       throw Exception('Fallo en obtener el vendedorde manera Local $error');
     }
   }
@@ -692,7 +676,6 @@ final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
       } 
 
     }).catchError((error) {
-      print('Error cargando vendedores: $error');
     });
     if (widget.cliente.codCliente == 0) _loadSelectedClientName();
     
@@ -1177,7 +1160,6 @@ SizedBox(height: 20.0),
         }
       }
 
-      print(confirm);
     },
     child: Text(
       'Agregar Pedido',
@@ -1316,7 +1298,6 @@ SizedBox(height: 20.0),
     String? token = prefs.getString('token');
 
     if (token == null) {
-      print('No token found');
       return;
     }
 
@@ -1338,33 +1319,26 @@ SizedBox(height: 20.0),
         );
 
         if (response.statusCode == 200) {
-          print("Exito vendedores $response");
           List<dynamic> jsonResponse = json.decode(response.body);
 
           for (var productData in jsonResponse) {
             products.add(Product.fromJson(productData));
           }
         } else {
-          print("Fallo vendedores $response");
-          print('Failed to load products: ${response.statusCode}');
+        
           return;
         }
       }
 
       // Mostrar los productos, ya sean de la base de datos o de la solicitud HTTP
-      print("PRODUCTOD BD");
-      print(productsFromDB);
+  
       Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => SeleccionarProducto(productos: products),
           )).then((selectedProduct) {
         if (selectedProduct != null) {
-          print(selectedProduct.precioFinal);
-          print(selectedProduct.precioB);
-          print(selectedProduct.precioC);
-          print(selectedProduct.precioD);
-          print('PRODUCTOS');
+  
           setState(() {
             _selectedProducts.add(selectedProduct);
             if (_selectedProductQuantities.containsKey(selectedProduct)) {
@@ -1414,9 +1388,9 @@ SizedBox(height: 20.0),
         codCliente: 0,
         nombre: 'CONSUMIDOR FINAL ',
         cedula: 'CF',
-        direccion: 'CIUDAD'));
+        direccion: 'CIUDAD'));    
     await prefs.remove('selectedProducts');
     List<String>? selectedProductsJson = [];
     await prefs.setStringList('selectedProducts', selectedProductsJson);
-  }
+  } 
 }

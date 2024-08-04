@@ -10,6 +10,7 @@ import 'package:sync_pro_mobile/db/dbCliente.dart';
 import 'package:sync_pro_mobile/db/dbLocalidad.dart';
 import 'package:sync_pro_mobile/Models/Ruta.dart';
 import 'package:sync_pro_mobile/db/dbRuta.dart';
+import 'package:sync_pro_mobile/services/sincronizarRuta.dart';
 import '../db/dbDetalleRuta.dart'; // Asegúrate de importar el modelo Ruta si no lo has hecho aún
 
 Future<Vendedor> loadSalesperson() async {
@@ -797,92 +798,53 @@ const SizedBox(height: 10),
       ),
     );
   }
+// Método para finalizar la ruta
+void _finalizarRuta() async {
+  if (!rutaIniciada) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content:
+              Text('No se puede finalizar la ruta porque no está iniciada')),
+    );
+    return;
+  }
 
-  void _finalizarRuta() async {
-    if (!rutaIniciada) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content:
-                Text('No se puede finalizar la ruta porque no está iniciada')),
-      );
-      return;
-    }
+  // Verificar sincronización de la ruta
+  int pedidosNoSincronizados = await verificarSincronizacionRuta(miRuta!.id);
 
-    // Ejecutar la consulta para verificar las condicione
-    int count =
-        await DatabaseHelperDetalleRuta().getDetalleRutaCount(miRuta!.id);
+  if (pedidosNoSincronizados > 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(
+              'No se puede finalizar la ruta. Hay $pedidosNoSincronizados pedidos no sincronizados.')),
+    );
+    return;
+  }
 
-    if (count > 0) {
-      // Obtener detalles sin finalizar
-      List<Map<String, dynamic>> detallesNoFinalizados =
-          await DatabaseHelperDetalleRuta()
-              .getDetallesNoFinalizados(miRuta!.id);
+  // Ejecutar la consulta para verificar las condiciones
+  int count =
+      await DatabaseHelperDetalleRuta().getDetalleRutaCount(miRuta!.id);
 
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Detalles sin finalizar'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: detallesNoFinalizados.map((detalle) {
-                return ListTile(
-                  title: Text('Cliente: ${ detalle['nombreCliente'] ?? ''}'),
-                  subtitle: Text(
-                      'Estado: ${detalle['estado']}, Observaciones: ${detalle['observaciones']}'),
-                );
-              }).toList(),
-            ),
-            actions: <Widget>[
-              TextButton(
-                child: Text('Cancelar'),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-              TextButton(
-                child: Text('Finalizar ruta de todos modos'),
-                onPressed: () async {
-                  // Obtener la fecha actual
-                  String fechaFin = DateTime.now().toIso8601String();
+  if (count > 0) {
+    // Obtener detalles sin finalizar
+    List<Map<String, dynamic>> detallesNoFinalizados =
+        await DatabaseHelperDetalleRuta().getDetallesNoFinalizados(miRuta!.id);
 
-                  // Actualizar la fecha de finalización en la base de datos
-                  await DatabaseHelperRuta().updateFechaFinRuta(
-                    miRuta!.id, // Id de la ruta que se está finalizando
-                    fechaFin, // Fecha actual de finalización
-                  );
-
-                  await DatabaseHelperDetalleRuta()
-                      .getDetalleRutaCountAndUpdate(miRuta!.id);
-
-                  // Actualizar el estado de la ruta
-                  setState(() {
-                    rutaIniciada = false;
-                  });
-
-                  Navigator.of(context)
-                      .pop(); // Cerrar el diálogo de confirmación
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            'Ruta finalizada: ${rutaSeleccionada!.nombre}')),
-                  );
-                },
-              ),
-            ],
-          );
-        },
-      );
-      return;
-    }
-
-    // Si no hay detalles sin finalizar, proceder a finalizar la ruta directamente
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('¿Está seguro de finalizar la ruta?'),
+          title: Text('Detalles sin finalizar'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: detallesNoFinalizados.map((detalle) {
+              return ListTile(
+                title: Text('Cliente: ${detalle['nombreCliente'] ?? ''}'),
+                subtitle: Text(
+                    'Estado: ${detalle['estado']}, Observaciones: ${detalle['observaciones']}'),
+              );
+            }).toList(),
+          ),
           actions: <Widget>[
             TextButton(
               child: Text('Cancelar'),
@@ -891,7 +853,7 @@ const SizedBox(height: 10),
               },
             ),
             TextButton(
-              child: Text('Aceptar'),
+              child: Text('Finalizar ruta de todos modos'),
               onPressed: () async {
                 // Obtener la fecha actual
                 String fechaFin = DateTime.now().toIso8601String();
@@ -901,6 +863,9 @@ const SizedBox(height: 10),
                   miRuta!.id, // Id de la ruta que se está finalizando
                   fechaFin, // Fecha actual de finalización
                 );
+
+                await DatabaseHelperDetalleRuta()
+                    .getDetalleRutaCountAndUpdate(miRuta!.id);
 
                 // Actualizar el estado de la ruta
                 setState(() {
@@ -921,7 +886,58 @@ const SizedBox(height: 10),
         );
       },
     );
+    return;
   }
+
+  // Si no hay detalles sin finalizar, proceder a finalizar la ruta directamente
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('¿Está seguro de finalizar la ruta?'),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancelar'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Aceptar'),
+            onPressed: () async {
+
+              syncRutas();
+              // Obtener la fecha actual
+              String fechaFin = DateTime.now().toIso8601String();
+
+              // Actualizar la fecha de finalización en la base de datos
+              await DatabaseHelperRuta().updateFechaFinRuta(
+                miRuta!.id, // Id de la ruta que se está finalizando
+                fechaFin, // Fecha actual de finalización
+              );
+
+              // Actualizar el estado de la ruta
+              setState(() {
+                rutaIniciada = false;
+              });
+
+              Navigator.of(context)
+                  .pop(); // Cerrar el diálogo de confirmación
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                    content:
+                        Text('Ruta finalizada: ${rutaSeleccionada!.nombre}')),
+              );
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
 
   Future<Ruta> loadRutaActiva() async {
     DatabaseHelperRuta dbHelper = DatabaseHelperRuta();
@@ -956,6 +972,14 @@ const SizedBox(height: 10),
     DatabaseHelperDetalleRuta dbHelper = DatabaseHelperDetalleRuta();
     final detalleRuta = await dbHelper.getDetalleRealizado(idRuta);
     return detalleRuta;
+  }
+  
+  verificarSincronizacionRuta(int id) async {
+    DatabaseHelperDetalleRuta dbHelper = DatabaseHelperDetalleRuta();
+    final detalleRuta = await dbHelper.verificarSincronizacionRuta(id);
+
+    return detalleRuta;
+
   }
   
 
