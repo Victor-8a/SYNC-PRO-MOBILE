@@ -78,7 +78,7 @@ Future<void> syncRutas() async {
               gravity: ToastGravity.BOTTOM,
             );
 
-            List<Map<String, dynamic>> unsyncedDetalleRuta = await DatabaseHelperDetalleRuta().getUnsyncedDetalleRuta(ruta['id']);
+            List<Map<String, dynamic>> unsyncedDetalleRuta = await DatabaseHelperDetalleRuta().getNumeroPedidoReal(ruta['id']);
             print(unsyncedDetalleRuta);
 
             int syncedDetailsCount = 0;

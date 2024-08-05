@@ -131,25 +131,16 @@ Future<int> verificarSincronizacionRuta(int idRuta) async {
     return 0;
   }
 }
-
-
-
-   Future<List<DetalleRuta>> numeroPedidoReal(int idLocalidad) async {
-    final db = await dbProvider.database;
-    final List<Map<String, dynamic>> maps = await db.rawQuery('''
-SELECT D.id, D.idRuta, D.codCliente, D.estado, D.observaciones, O.NumPedido AS idPedido,
-		D.inicio, D.fin
-	FROM DetalleRuta D 
-	LEFT JOIN ORDERS O ON D.idPedido= O.id
-	
-    ''');
-
-    return List.generate(maps.length, (i) {
-      DetalleRuta detalle = DetalleRuta.fromMap(maps[i]);
-
-      return detalle;
-    });
-  }
+Future<List<Map<String, dynamic>>> getNumeroPedidoReal(int idRuta) async {
+  final db = await dbProvider.database;
+  return await db.rawQuery('''
+    SELECT D.id, D.idRuta, D.codCliente, D.estado, D.observaciones, O.NumPedido AS idPedido,
+    D.inicio, D.fin
+    FROM DetalleRuta D 
+    LEFT JOIN ORDERS O ON D.idPedido = O.id
+    WHERE D.idRuta = ?
+  ''', [idRuta]);
+}
 
 
   Future<void> updateDetallesRuta(DetalleRuta detalleRutaActualizado) async {
