@@ -7,7 +7,8 @@ import 'package:sync_pro_mobile/db/dbCliente.dart';
 
 class ListarRuta extends StatelessWidget {
   final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
-  final DatabaseHelperDetalleRuta dbHelperDetalleRuta = DatabaseHelperDetalleRuta();
+  final DatabaseHelperDetalleRuta dbHelperDetalleRuta =
+      DatabaseHelperDetalleRuta();
   final DatabaseHelperCliente dbHelperCliente = DatabaseHelperCliente();
 
   @override
@@ -34,36 +35,56 @@ class ListarRuta extends StatelessWidget {
                 return FutureBuilder<Localidad>(
                   future: dbHelperRuta.getLocalidadById(ruta.idLocalidad),
                   builder: (context, localidadSnapshot) {
-                    if (localidadSnapshot.connectionState == ConnectionState.waiting) {
-                      return ListTile(
-                        title: Text('Cargando...'),
+                    if (localidadSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return Card(
+                        margin: EdgeInsets.all(8.0),
+                        child: ListTile(
+                          title: Text('Cargando...'),
+                        ),
                       );
                     } else if (localidadSnapshot.hasError) {
-                      return ListTile(
-                        title: Text('Error al cargar la localidad'),
+                      return Card(
+                        margin: EdgeInsets.all(8.0),
+                        child: ListTile(
+                          title: Text('Error al cargar la localidad'),
+                        ),
                       );
                     } else if (!localidadSnapshot.hasData) {
-                      return ListTile(
-                        title: Text('Localidad no encontrada'),
+                      return Card(
+                        margin: EdgeInsets.all(8.0),
+                        child: ListTile(
+                          title: Text('Localidad no encontrada'),
+                        ),
                       );
                     } else {
                       final localidad = localidadSnapshot.data!;
-                      final estadoRuta = (ruta.fechaFin.isEmpty) ? 'No finalizada' : 'Finalizada';
-                      final syncedStatus = ruta.sincronizado == 1 ? 'Sincronizada' : 'No sincronizada';
+                      final estadoRuta = (ruta.fechaFin.isEmpty)
+                          ? 'No finalizada'
+                          : 'Finalizada';
+                      final syncedStatus = ruta.sincronizado == 1
+                          ? 'Sincronizada'
+                          : 'No sincronizada';
                       final fechaInicio = _formatearFecha(ruta.fechaInicio);
                       final fechaFin = _formatearFecha(ruta.fechaFin);
 
-                      return ListTile(
-                        title: Text('Ruta: ${localidad.nombre}'),
-                        subtitle: Text(
-                          'Estado: $estadoRuta\n'
-                          'Fecha de inicio: $fechaInicio\n'
-                          'Fecha de fin: $fechaFin\n'
-                          'Sincronización: $syncedStatus',
+                      return Card(
+                        margin: EdgeInsets.all(8.0),
+                        elevation: 5.0,
+                        child: ListTile(
+                          contentPadding: EdgeInsets.all(16.0),
+                          title: Text('Ruta: ${localidad.nombre}'),
+                          subtitle: Text(
+                            'Estado: $estadoRuta\n'
+                            'Fecha de inicio: $fechaInicio\n'
+                            'Fecha de fin: $fechaFin\n'
+                            'Sincronización: $syncedStatus\n'
+                            'Número de Ruta: ${ruta.numRuta}', // Aquí se muestra numPedido
+                          ),
+                          onTap: () {
+                            _showRutaDetails(context, ruta.id);
+                          },
                         ),
-                        onTap: () {
-                          _showRutaDetails(context, ruta);
-                        },
                       );
                     }
                   },
@@ -76,20 +97,29 @@ class ListarRuta extends StatelessWidget {
     );
   }
 
-  String _formatearFecha(String? fecha) {
-    if (fecha == null || fecha.length < 16) {
-      return 'No disponible';
+
+  String _transformarEstado(String estado) {
+    switch (estado) {
+      case 'NV':
+        return 'No Visitado';
+      case 'O':
+        return 'Ordenado';
+      case 'A':
+        return 'Ausente';
+      case 'V':
+        return 'Visitado';
+      default:
+        return 'No Visitado';
     }
-    return fecha.substring(0, 16);
   }
 
-  void _showRutaDetails(BuildContext context, Ruta ruta) async {
-    final detalles = await dbHelperDetalleRuta.getDetallesRuta(); // Asumiendo que este método obtiene los detalles de la ruta
+  void _showRutaDetails(BuildContext context, int rutaId) async {
+    final detalles = await dbHelperDetalleRuta.getDetallesRutaPorRuta(rutaId);
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Detalles de la Ruta: ${ruta.id}'),
+          title: Text('Detalles de la Ruta: $rutaId'),
           content: detalles.isEmpty
               ? Text('No hay detalles para esta ruta')
               : Container(
@@ -99,9 +129,30 @@ class ListarRuta extends StatelessWidget {
                     itemCount: detalles.length,
                     itemBuilder: (context, index) {
                       final detalle = detalles[index];
-                      return ListTile(
-                        title: Text('Cliente: ${detalle.codCliente}'),
-                        subtitle: Text('Estado: ${detalle.estado}\nObservaciones: ${detalle.observaciones}'),
+                      return FutureBuilder<String?>(
+                        future: dbHelperCliente.getClienteNombre(detalle.codCliente),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return ListTile(
+                              title: Text('Cargando...'),
+                            );
+                          } else if (snapshot.hasError) {
+                            return ListTile(
+                              title: Text('Error al cargar nombre del cliente'),
+                            );
+                          } else {
+                            final clienteNombre = snapshot.data ?? 'Desconocido';
+                            final estadoTransformado = _transformarEstado(detalle.estado);
+                            return ListTile(
+                              title: Text('Cliente: $clienteNombre'),
+                              subtitle: Text(
+                                'Estado: $estadoTransformado\n'
+                                'Observaciones: ${detalle.observaciones}\n'
+                                'Pedido: ${detalle.idPedido}',
+                              ),
+                            );
+                          }
+                        },
                       );
                     },
                   ),
@@ -117,5 +168,12 @@ class ListarRuta extends StatelessWidget {
         );
       },
     );
+  }
+
+  String _formatearFecha(String? fecha) {
+    if (fecha == null || fecha.length < 16) {
+      return 'No disponible';
+    }
+    return fecha.substring(0, 16);
   }
 }

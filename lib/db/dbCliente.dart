@@ -29,6 +29,7 @@ conflictAlgorithm: ConflictAlgorithm.replace,
     return Cliente.fromJson(result.first);
   }
 
+
 Future<List<Cliente>> getClientesLocalidad(int idLocalidad) async {
   final db = await dbProvider.database;
     final List<Map<String, dynamic>> maps = await db.query('clientes', where: 'idLocalidad = ?', whereArgs: [idLocalidad]);
@@ -46,4 +47,19 @@ Future<List<Cliente>> getClientesLocalidad(int idLocalidad) async {
 
   insertVendedor(Vendedor vendedor) {}
 
+
+  Future<String?> getClienteNombre(int codCliente) async {
+    final db = await dbProvider.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'clientes',
+      columns: ['nombre'],
+      where: 'codCliente = ?',
+      whereArgs: [codCliente],
+    );
+    if (maps.isNotEmpty) {
+      return maps.first['nombre'] as String?;
+    }
+    return null;
+  }
 }
+

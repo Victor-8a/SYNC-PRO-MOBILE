@@ -33,7 +33,7 @@ class DatabaseHelper {
         await _createRutaTable(db);
         await _createDetalleRutaTable(db);
         await _createConfiguracionTable(db);
-
+        await _createRangoPrecioProductoTable(db);
         print('Database created and tables initialized');
       },
     );
@@ -185,6 +185,7 @@ class DatabaseHelper {
     await db.execute('''
     CREATE TABLE Ruta (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      numRuta INTEGER DEFAULT 0,
       idVendedor INTEGER,
       idLocalidad INTEGER,
       fechaInicio TEXT,
@@ -242,4 +243,21 @@ class DatabaseHelper {
     _database = null; // Limpiar referencia de base de datos al cerrar
     print('Database closed');
   }
+
+
+Future<void> _createRangoPrecioProductoTable(Database db) async {
+  await db.execute('''
+    CREATE TABLE RangoPrecioProducto(
+      Id INTEGER PRIMARY KEY AUTOINCREMENT,
+      CodProducto INTEGER,
+      CantidadInicio REAL,
+      CantidadFinal REAL,
+      Precio REAL,
+      Inhabilitado INTEGER DEFAULT 0,
+      FOREIGN KEY (CodProducto) REFERENCES productos(codigo)
+    )
+  ''');
+}
+
+  
 }

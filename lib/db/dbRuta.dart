@@ -79,7 +79,7 @@ class DatabaseHelperRuta {
     final db = await dbProvider.database;
     await db.update(
       'Ruta',
-      {'sincronizado': 1, 'id': remoteId},
+      {'sincronizado': 1, 'numRuta': remoteId},
       where: 'id = ?',
       whereArgs: [localId],
     );

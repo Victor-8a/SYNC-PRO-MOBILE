@@ -1,5 +1,6 @@
 class Ruta {
   int id;
+  int? numRuta;
   int idVendedor;
   int idLocalidad;
   String fechaInicio;
@@ -9,6 +10,7 @@ class Ruta {
 
   Ruta({
     required this.id,
+    this.numRuta,
     required this.idVendedor,
     required this.idLocalidad,
     required this.fechaInicio,
@@ -19,6 +21,7 @@ class Ruta {
 
   factory Ruta.fromMap(Map<String, dynamic> map) => Ruta(
         id: map['id'],
+           numRuta: map['numRuta'],
         idVendedor: map['idVendedor'],
         idLocalidad: map['idLocalidad'],
         fechaInicio: map['fechaInicio'],
@@ -30,6 +33,7 @@ class Ruta {
   Map<String, dynamic> toMap() => {
         'id': id,
         'idVendedor': idVendedor,
+         'numRuta': numRuta,
         'idLocalidad': idLocalidad,
         'fechaInicio': fechaInicio,
         'fechaFin': fechaFin,

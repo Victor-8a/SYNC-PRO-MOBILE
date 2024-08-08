@@ -2,9 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:path_provider/path_provider.dart';
+
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:printing/printing.dart'; // Importa el paquete para impresión
+
 
 class PdfViewerPage extends StatefulWidget {
   final String path;
@@ -127,8 +128,8 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
       try {
         await file.writeAsBytes(await File(widget.path).readAsBytes());
 
-        final pdfFile = File(filePath);
-        await Printing.sharePdf(bytes: await pdfFile.readAsBytes(), filename: fileName);
+        // final pdfFile = File(filePath);
+        // await Printing.sharePdf(bytes: await pdfFile.readAsBytes(), filename: fileName);
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error al imprimir el PDF')),
