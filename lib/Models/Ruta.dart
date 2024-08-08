@@ -4,6 +4,7 @@ class Ruta {
   int idLocalidad;
   String fechaInicio;
   String fechaFin;
+  int? sincronizado;
   int anulado;
 
   Ruta({
@@ -12,6 +13,7 @@ class Ruta {
     required this.idLocalidad,
     required this.fechaInicio,
     required this.fechaFin,
+    this.sincronizado,
     required this.anulado,
   });
 
@@ -21,6 +23,7 @@ class Ruta {
         idLocalidad: map['idLocalidad'],
         fechaInicio: map['fechaInicio'],
         fechaFin: map['fechaFin'],
+        sincronizado: map['sincronizado'],
         anulado: map['anulado'],
       );
 
@@ -30,6 +33,7 @@ class Ruta {
         'idLocalidad': idLocalidad,
         'fechaInicio': fechaInicio,
         'fechaFin': fechaFin,
+        'sincronizado': sincronizado,
         'anulado': anulado,
       };
 }

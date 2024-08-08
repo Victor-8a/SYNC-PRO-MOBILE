@@ -1,4 +1,5 @@
 import 'package:sqflite/sqflite.dart';
+import 'package:sync_pro_mobile/Models/Localidad.dart';
 import 'package:sync_pro_mobile/Models/Ruta.dart';
 import 'bd.dart';
 
@@ -83,6 +84,18 @@ class DatabaseHelperRuta {
       whereArgs: [localId],
     );
   }
-}
+Future<Localidad> getLocalidadById(int id) async {
+  final db = await dbProvider.database;
+  final List<Map<String, dynamic>> maps = await db.query(
+    'localidad',
+    where: 'id = ?',
+    whereArgs: [id],
+  );
 
-  
+  if (maps.isNotEmpty) {
+    return Localidad.fromJson(maps.first);
+  } else {
+    throw Exception('Localidad no encontrada'); // Lanzar excepción si no se encuentra la Localidad
+  }
+}
+}

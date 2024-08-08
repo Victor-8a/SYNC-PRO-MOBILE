@@ -5,6 +5,7 @@ import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Models/DetalleRuta.dart';
 import 'package:sync_pro_mobile/Models/Localidad.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/listar_ruta.dart';
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
 import 'package:sync_pro_mobile/db/dbLocalidad.dart';
@@ -796,6 +797,16 @@ const SizedBox(height: 10),
           ),
         ],
       ),
+
+       floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => ListarRuta()), // Redirige a la página ListarRuta
+          );
+        },
+        child: Icon(Icons.local_shipping), // Icono de camión
+    )
     );
   }
 // Método para finalizar la ruta

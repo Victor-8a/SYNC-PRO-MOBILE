@@ -8,6 +8,8 @@ import 'package:sync_pro_mobile/db/dbRuta.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 
 Future<void> syncRutas() async {
+  
+  
   List<Map<String, dynamic>> unsyncedRutas = await DatabaseHelperRuta().getUnsyncedRutas();
   String? token = await login();
 
