@@ -23,8 +23,6 @@ import '../db/dbDetallePedidos.dart' as dbDetallePedidos;
 import '../db/dbDetalleRuta.dart' as dbDetalleRuta;
 import '../db/dbRuta.dart';
 
-
-
 void saveSalesperson(Vendedor salesperson) async {
   String salespersonJson = jsonEncode(salesperson.toJson());
   SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -138,7 +136,7 @@ Future<void> syncOrders() async {
       orderCopy.remove('NumPedido');
 
       var body = jsonEncode(orderCopy);
-  
+
       var response = await http.post(url, headers: headers, body: body);
 
       if (response.statusCode == 401) {
@@ -156,8 +154,6 @@ Future<void> syncOrders() async {
           return;
         }
       }
-  
-  
 
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
@@ -185,15 +181,12 @@ Future<void> syncOrders() async {
             detailCopy.remove('Id');
             detailCopy['IdPedido'] = idPedido;
 
-            var detailUrl =
-               ApiRoutes.buildUri('detalle_pedidos/save');
+            var detailUrl = ApiRoutes.buildUri('detalle_pedidos/save');
             var detailBody = jsonEncode(detailCopy);
-  
+
             print('Enviando detalle del pedido: $detailBody');
             var detailResponse =
                 await http.post(detailUrl, headers: headers, body: detailBody);
-
-        
 
             if (detailResponse.statusCode == 200) {
               syncedDetailsCount++;
@@ -201,7 +194,7 @@ Future<void> syncOrders() async {
                 print(
                     'Todos los detalles del pedido sincronizados correctamente.');
                 await dbGuardarPedido.DatabaseHelperPedidos()
-                    .markOrderAsSynced(order['id'],idPedido);
+                    .markOrderAsSynced(order['id'], idPedido);
                 Fluttertoast.showToast(
                   msg: 'Pedido y detalles sincronizados correctamente.',
                   textColor: Colors.blue,
@@ -213,13 +206,12 @@ Future<void> syncOrders() async {
               print(
                   'Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
 
-                   Fluttertoast.showToast(
-          msg: 'Error,.No se pueden sincronizar los detalles del pedido.',
-          textColor: Colors.red,
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-        );
-
+              Fluttertoast.showToast(
+                msg: 'Error,.No se pueden sincronizar los detalles del pedido.',
+                textColor: Colors.red,
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+              );
             }
           } catch (error) {
             print('Error al sincronizar detalle del pedido: $error');
@@ -284,7 +276,6 @@ Future<int?> saveOrder(int selectedClient, String observations,
     print(
         'Server responded with status code ${response.statusCode} and body: ${response.body}');
 
-
     if (response.statusCode == 200) {
       var jsonResponse = json.decode(response.body);
       int idPedido = jsonResponse['savedOrder']['id'];
@@ -335,16 +326,14 @@ Future<void> saveOrderDetail(
       throw Exception('Token de autorización no válido');
     }
 
-    var url =ApiRoutes.buildUri('paraElFuturo');
+    var url = ApiRoutes.buildUri('paraElFuturo');
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
     };
 
-
     for (var product in selectedProducts) {
       try {
-
         var orderDetailData = {
           "IdPedido": idPedido,
           "CodArticulo": product.codigo,
@@ -405,7 +394,6 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
   List<Product> _filteredProducts = [];
   List<bool> _productSelected = [];
   TextEditingController _searchController = TextEditingController();
-
 
   @override
   void initState() {
@@ -542,8 +530,9 @@ class PaginaPedidos extends StatefulWidget {
 }
 
 class _PaginaPedidosState extends State<PaginaPedidos> {
-final DatabaseHelperConfiguraciones dbHelper = DatabaseHelperConfiguraciones();
-final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
+  final DatabaseHelperConfiguraciones dbHelper =
+      DatabaseHelperConfiguraciones();
+  final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
 
   bool usarRuta = false;
   Ruta? miRuta;
@@ -572,7 +561,6 @@ final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
   void _loadSelectedClientName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     // String? cliente = prefs.getString('selectedClient');
-
 
     List<String>? selectedClientJson = prefs.getStringList('selectedClient');
     if (selectedClientJson != null) {
@@ -605,9 +593,8 @@ final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? idVendedor = prefs.getString('idVendedor');
     String? vendedorName = prefs.getString('vendedorName');
-  
-  return Vendedor(value: int.parse(idVendedor!), nombre: vendedorName!);
 
+    return Vendedor(value: int.parse(idVendedor!), nombre: vendedorName!);
   }
 
   Future<Vendedor> getSalesperson() async {
@@ -667,18 +654,16 @@ final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
   @override
   void initState() {
     super.initState();
-    _selectedClient=widget.cliente;
+    _selectedClient = widget.cliente;
     loadSalesperson().then((vendedor) {
       if (mounted) {
         setState(() {
           vendedor = vendedor;
         });
-      } 
-
-    }).catchError((error) {
-    });
+      }
+    }).catchError((error) {});
     if (widget.cliente.codCliente == 0) _loadSelectedClientName();
-    
+
     _loadSelectedProducts();
     // Inicializa _selectedProductPrices con precioFinal por defecto
     _selectedProducts.forEach((product) {
@@ -756,36 +741,40 @@ final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();
               ),
               backgroundColor: Colors.blue,
             ),
-
-            
-         body: SingleChildScrollView(
-  padding: const EdgeInsets.all(16.0),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      FutureBuilder<Vendedor>(
-        future: loadSalesperson(),
-        builder: (context, snapshot) {
-           if (snapshot.connectionState == ConnectionState.waiting) {
-             return SizedBox();
-    
-            }else {
-            
-    Vendedor _selectedSalesperson = snapshot.data!;
-_selectedSalespersonId =_selectedSalesperson.value;
-            return Column(
-              children: [
-                // Aquí puedes mostrar el nombre del vendedor seleccionado o cualquier otro contenido
-                Text(
-                  'Vendedor: ${_selectedSalesperson.nombre}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-        ),
-      )]);
-        }},
-),
-SizedBox(height: 20.0),
+            body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FutureBuilder<Vendedor>(
+                      future: loadSalesperson(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return SizedBox(
+                              height:
+                                  1); // Si hay un error, no se muestra nada.
+                        } else if (snapshot.hasData && snapshot.data != null) {
+                          // Si hay datos y no son nulos, muestra la información del vendedor.
+                          Vendedor _selectedSalesperson = snapshot.data!;
+                          _selectedSalespersonId = _selectedSalesperson.value;
+                          return Column(
+                            children: [
+                              Text(
+                                'Vendedor: ${_selectedSalesperson.nombre}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          );
+                        } else {
+                          // Si los datos están cargando o son nulos, no se muestra nada.
+                          return SizedBox(height: 1); // Espacio mínimo.
+                        }
+                      },
+                    ),
+                    SizedBox(height: 20.0),
                     Column(
                       children: [
                         Row(
@@ -892,142 +881,170 @@ SizedBox(height: 20.0),
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-                   Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: _selectedProducts.map((product) {
-    double unitPrice = _selectedProductPrices[product] ?? product.precioFinal;
-    int quantity = _selectedProductQuantities[product] ?? 1;
-    double discount = _discounts[product] ?? 0;
-    double subtotalBeforeDiscount = unitPrice * quantity;
-    double discountAmount = subtotalBeforeDiscount * (discount / 100);
-    double subtotal = subtotalBeforeDiscount - discountAmount;
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _selectedProducts.map((product) {
+                        double unitPrice = _selectedProductPrices[product] ??
+                            product.precioFinal;
+                        int quantity = _selectedProductQuantities[product] ?? 1;
+                        double discount = _discounts[product] ?? 0;
+                        double subtotalBeforeDiscount = unitPrice * quantity;
+                        double discountAmount =
+                            subtotalBeforeDiscount * (discount / 100);
+                        double subtotal =
+                            subtotalBeforeDiscount - discountAmount;
 
-    List<double> availablePrices = [
-      product.precioFinal,
-      product.precioB,
-      product.precioC,
-      product.precioD,
-    ].where((price) => price > 0).toList();
+                        List<double> availablePrices = [
+                          product.precioFinal,
+                          product.precioB,
+                          product.precioC,
+                          product.precioD,
+                        ].where((price) => price > 0).toList();
 
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8.0),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            title: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    '${product.descripcion}',
-                    overflow: TextOverflow.clip,
-                  ),
-                ),
-                DropdownButton<double>(
-                  value: availablePrices.contains(unitPrice) ? unitPrice : product.precioFinal,
-                  items: availablePrices.toSet().map((price) {
-                    return DropdownMenuItem(
-                      value: price,
-                      child: Text('Q${price.toStringAsFixed(2)}'),
-                    );
-                  }).toList(),
-                  onChanged: (newPrice) {
-                    setState(() {
-                      _selectedProductPrices[product] = newPrice!;
-                      unitPrice = newPrice;
-                      subtotalBeforeDiscount = unitPrice * quantity;
-                      discountAmount = subtotalBeforeDiscount * (discount / 100);
-                      subtotal = subtotalBeforeDiscount - discountAmount;
-                    });
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Icons.close_sharp, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      _selectedProducts.remove(product);
-                      _selectedProductPrices.remove(product);
-                      _selectedProductQuantities.remove(product);
-                      _discounts.remove(product);
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 16.0),
-                  child: TextField(
-                    keyboardType: TextInputType.number,
-                    onChanged: (newValue) {
-                      if (newValue.isNotEmpty) {
-                        setState(() {
-                          int newQuantity = int.tryParse(newValue) ?? 0;
-                          if (newQuantity > 0) {
-                            _selectedProductQuantities[product] = newQuantity;
-                            // _saveSelectedProducts(); // Puedes llamar a _saveSelectedProducts aquí o en otro lugar adecuado
-                          }
-                        });
-                      }
-                    },
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                      hintText: '1',
+                        return Container(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          decoration: BoxDecoration(
+                            border:
+                                Border(bottom: BorderSide(color: Colors.grey)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                title: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${product.descripcion}',
+                                        overflow: TextOverflow.clip,
+                                      ),
+                                    ),
+                                    DropdownButton<double>(
+                                      value: availablePrices.contains(unitPrice)
+                                          ? unitPrice
+                                          : product.precioFinal,
+                                      items:
+                                          availablePrices.toSet().map((price) {
+                                        return DropdownMenuItem(
+                                          value: price,
+                                          child: Text(
+                                              'Q${price.toStringAsFixed(2)}'),
+                                        );
+                                      }).toList(),
+                                      onChanged: (newPrice) {
+                                        setState(() {
+                                          _selectedProductPrices[product] =
+                                              newPrice!;
+                                          unitPrice = newPrice;
+                                          subtotalBeforeDiscount =
+                                              unitPrice * quantity;
+                                          discountAmount =
+                                              subtotalBeforeDiscount *
+                                                  (discount / 100);
+                                          subtotal = subtotalBeforeDiscount -
+                                              discountAmount;
+                                        });
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.close_sharp,
+                                          color: Colors.red),
+                                      onPressed: () {
+                                        setState(() {
+                                          _selectedProducts.remove(product);
+                                          _selectedProductPrices
+                                              .remove(product);
+                                          _selectedProductQuantities
+                                              .remove(product);
+                                          _discounts.remove(product);
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(left: 16.0),
+                                      child: TextField(
+                                        keyboardType: TextInputType.number,
+                                        onChanged: (newValue) {
+                                          if (newValue.isNotEmpty) {
+                                            setState(() {
+                                              int newQuantity =
+                                                  int.tryParse(newValue) ?? 0;
+                                              if (newQuantity > 0) {
+                                                _selectedProductQuantities[
+                                                    product] = newQuantity;
+                                                // _saveSelectedProducts(); // Puedes llamar a _saveSelectedProducts aquí o en otro lugar adecuado
+                                              }
+                                            });
+                                          }
+                                        },
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(
+                                              vertical: 5, horizontal: 10),
+                                          hintText: '1',
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      child: TextField(
+                                        keyboardType: TextInputType.number,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                              RegExp(r'^\d{1,2}$')),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _discounts[product] =
+                                                double.tryParse(value) ?? 0;
+                                            discount = _discounts[product]!;
+                                            subtotalBeforeDiscount =
+                                                unitPrice * quantity;
+                                            discountAmount =
+                                                subtotalBeforeDiscount *
+                                                    (discount / 100);
+                                            subtotal = subtotalBeforeDiscount -
+                                                discountAmount;
+                                          });
+                                        },
+                                        decoration: InputDecoration(
+                                          labelText: '% Desc',
+                                          floatingLabelStyle:
+                                              TextStyle(color: Colors.blue),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          contentPadding: EdgeInsets.symmetric(
+                                              vertical: 5.0, horizontal: 10.0),
+                                          isDense: true,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 16.0),
+                                  Text('Q${subtotal.toStringAsFixed(2)}'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     ),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextField(
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d{1,2}$')),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _discounts[product] = double.tryParse(value) ?? 0;
-                        discount = _discounts[product]!;
-                        subtotalBeforeDiscount = unitPrice * quantity;
-                        discountAmount = subtotalBeforeDiscount * (discount / 100);
-                        subtotal = subtotalBeforeDiscount - discountAmount;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      labelText: '% Desc',
-                      floatingLabelStyle: TextStyle(color: Colors.blue),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 16.0),
-              Text('Q${subtotal.toStringAsFixed(2)}'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }).toList(),
-),
-
-
                     SizedBox(height: 20.0),
                     TextField(
                       onChanged: (value) {
@@ -1041,7 +1058,6 @@ SizedBox(height: 20.0),
                         ),
                       ),
                     ),
-
                     SizedBox(height: 20),
                     Text(
                       'Subtotal: \Q${(_calculateTotal()).toStringAsFixed(2)}',
@@ -1060,121 +1076,125 @@ SizedBox(height: 20.0),
                       style: TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18.0),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        bottom: 10.0,
+                      ),
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          // Validar campos obligatorios
+                          // ignore: unnecessary_null_comparison
+                          if (_selectedClient == null ||
+                              _selectedSalespersonId == null ||
+                              // ignore: unnecessary_null_comparison
+                              _selectedDate == null ||
+                              _selectedProducts.isEmpty) {
+                            // Mostrar mensaje de error si falta algún campo obligatorio
+                            Fluttertoast.showToast(
+                              msg:
+                                  'Por favor complete todos los campos obligatorios.',
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              timeInSecForIosWeb: 1,
+                              backgroundColor: Colors.black,
+                              textColor: Colors.white,
+                              fontSize: 16.0,
+                            );
+                            return; // Detener la ejecución del método
+                          }
 
-                   Padding(
-  padding: const EdgeInsets.only(
-    bottom: 10.0,
-  ),
-  child: ElevatedButton(
-    onPressed: () async {
-      // Validar campos obligatorios
-      // ignore: unnecessary_null_comparison
-      if (_selectedClient == null ||
-          _selectedSalespersonId == null ||
-          // ignore: unnecessary_null_comparison
-          _selectedDate == null || _selectedProducts.isEmpty  ) {
-        // Mostrar mensaje de error si falta algún campo obligatorio
-        Fluttertoast.showToast(
-          msg: 'Por favor complete todos los campos obligatorios.',
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-          timeInSecForIosWeb: 1,
-          backgroundColor: Colors.black,
-          textColor: Colors.white,
-          fontSize: 16.0,
-        );
-        return; // Detener la ejecución del método
-      }
+                          // Mostrar AlertDialog de confirmación antes de agregar el pedido
+                          bool confirm = await showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('¿Está seguro?'),
+                              content: Text('¿Desea agregar el pedido?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(true);
+                                  },
+                                  child: Text('Sí'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false);
+                                  },
+                                  child: Text('No'),
+                                ),
+                              ],
+                            ),
+                          );
 
-      // Mostrar AlertDialog de confirmación antes de agregar el pedido
-      bool confirm = await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('¿Está seguro?'),
-          content: Text('¿Desea agregar el pedido?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-              },
-              child: Text('Sí'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(false);
-              },
-              child: Text('No'),
-            ),
-          ],
-        ),
-      );
+                          if (confirm == true) {
+                            // Proceder con el guardado del pedido
+                            int? idPedido = await saveOrder(
+                              _selectedClient.codCliente,
+                              _observations,
+                              _selectedSalespersonId ?? 0,
+                              _selectedDate,
+                            );
 
-      if (confirm == true) {
-        // Proceder con el guardado del pedido
-        int? idPedido = await saveOrder(
-          _selectedClient.codCliente,
-          _observations,
-          _selectedSalespersonId ?? 0,
-          _selectedDate,
-        );
+                            if (idPedido != null) {
+                              // Guardar detalles del pedido
+                              saveOrderDetail(
+                                idPedido,
+                                _selectedProducts,
+                                _selectedProductQuantities,
+                                _selectedProductPrices,
+                                _discounts,
+                              );
 
-        if (idPedido != null) {
-          // Guardar detalles del pedido
-          saveOrderDetail(
-            
-            idPedido,
-           _selectedProducts, 
-            _selectedProductQuantities,
-            _selectedProductPrices,
-            _discounts,
-          );
+                              // Mostrar mensaje de éxito
+                              Fluttertoast.showToast(
+                                msg: 'Pedido guardado exitosamente.',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                timeInSecForIosWeb: 1,
+                                backgroundColor: Colors.blue,
+                                textColor: Colors.white,
+                                fontSize: 16.0,
+                              );
+                              // await _loadUsaRuta;
+                              bool usaConfigRuta = await dbHelper.getUsaRuta();
+                              if (usaConfigRuta)
+                                miRuta = await dbHelperRuta.getRutaActiva();
+                              if (usaConfigRuta && miRuta != null)
+                                await dbDetalleRuta.DatabaseHelperDetalleRuta()
+                                    .updateIdPedidoDetalleRuta(
+                                        _selectedClient.codCliente,
+                                        idPedido,
+                                        miRuta!.id);
 
-          // Mostrar mensaje de éxito
-          Fluttertoast.showToast(
-            msg: 'Pedido guardado exitosamente.',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.blue,
-            textColor: Colors.white,
-            fontSize: 16.0,
-          );
-          // await _loadUsaRuta;
-          bool usaConfigRuta = await dbHelper.getUsaRuta();
-          if (usaConfigRuta) miRuta= await dbHelperRuta.getRutaActiva();
-          if (usaConfigRuta && miRuta!= null) await dbDetalleRuta.DatabaseHelperDetalleRuta().updateIdPedidoDetalleRuta(_selectedClient.codCliente,idPedido,miRuta!.id);
-
-          // Resetear estado después de guardar
-          _resetState();
-        } else {
-          // Mostrar mensaje de error si falla el guardado del pedido
-          Fluttertoast.showToast(
-            msg: 'Error al guardar el pedido.',
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            timeInSecForIosWeb: 1,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-            fontSize: 16.0,
-          );
-        }
-      }
-
-    },
-    child: Text(
-      'Agregar Pedido',
-      style: TextStyle(color: Colors.white),
-    ),
-    style: ElevatedButton.styleFrom(
-      backgroundColor: _buttonColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      minimumSize: Size(double.infinity, 50),
-    ),
-  ),
-),
-
+                              // Resetear estado después de guardar
+                              _resetState();
+                            } else {
+                              // Mostrar mensaje de error si falla el guardado del pedido
+                              Fluttertoast.showToast(
+                                msg: 'Error al guardar el pedido.',
+                                toastLength: Toast.LENGTH_SHORT,
+                                gravity: ToastGravity.BOTTOM,
+                                timeInSecForIosWeb: 1,
+                                backgroundColor: Colors.red,
+                                textColor: Colors.white,
+                                fontSize: 16.0,
+                              );
+                            }
+                          }
+                        },
+                        child: Text(
+                          'Agregar Pedido',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _buttonColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          minimumSize: Size(double.infinity, 50),
+                        ),
+                      ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.only(
                         top: 10.0, // Agrega espacio entre los botones
@@ -1244,10 +1264,8 @@ SizedBox(height: 20.0),
   }
 
   Future<void> fetchVendedores() async {
-    final response =
-        await http.get(ApiRoutes.buildUri('vendedor'));
+    final response = await http.get(ApiRoutes.buildUri('vendedor'));
     if (response.statusCode == 200) {
-    
       List<dynamic> jsonResponse = json.decode(response.body);
       final vendedores =
           jsonResponse.map((data) => Vendedor.fromJson(data)).toList();
@@ -1325,20 +1343,18 @@ SizedBox(height: 20.0),
             products.add(Product.fromJson(productData));
           }
         } else {
-        
           return;
         }
       }
 
       // Mostrar los productos, ya sean de la base de datos o de la solicitud HTTP
-  
+
       Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => SeleccionarProducto(productos: products),
           )).then((selectedProduct) {
         if (selectedProduct != null) {
-  
           setState(() {
             _selectedProducts.add(selectedProduct);
             if (_selectedProductQuantities.containsKey(selectedProduct)) {
@@ -1388,9 +1404,9 @@ SizedBox(height: 20.0),
         codCliente: 0,
         nombre: 'CONSUMIDOR FINAL ',
         cedula: 'CF',
-        direccion: 'CIUDAD'));    
+        direccion: 'CIUDAD'));
     await prefs.remove('selectedProducts');
     List<String>? selectedProductsJson = [];
     await prefs.setStringList('selectedProducts', selectedProductsJson);
-  } 
+  }
 }

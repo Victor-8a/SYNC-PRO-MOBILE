@@ -1,33 +1,41 @@
 import 'package:sync_pro_mobile/db/bd.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sync_pro_mobile/Models/RangoPrecioProducto.dart'; // Importa tu modelo
 
 class DatabaseHelperRangoPrecioProducto {
-  final dbProvider = DatabaseHelper();  // Asegúrate de que `DatabaseHelper` esté correctamente configurado
+  final dbProvider = DatabaseHelper();
 
-  // Método para insertar datos predeterminados usando raw queries
   Future<void> insertDefaultData() async {
-    final Database db = await dbProvider.database;  // Obtén la instancia de la base de datos
+    final Database db = await dbProvider.database;
 
-    // Ejecuta las consultas SQL para insertar los datos
     await db.rawInsert(
-      'INSERT INTO RangoPrecioProducto (id, codProducto, precioMin, precioMax, descuento, valorAdicional) VALUES (?, ?, ?, ?, ?, ?)',
-      [1, 3839, 6, 12, 25, 0]
+      'INSERT INTO RangoPrecioProducto (CodProducto, CantidadInicio, CantidadFinal, Precio, Inhabilitado) VALUES (?, ?, ?, ?, ?)',
+      [3839, 6, 12, 25, 0],
     );
-    await db.rawInsert(
-      'INSERT INTO RangoPrecioProducto (id, codProducto, precioMin, precioMax, descuento, valorAdicional) VALUES (?, ?, ?, ?, ?, ?)',
-      [2, 3839, 12, 24, 20, 0]
-    );
-    await db.rawInsert(
-      'INSERT INTO RangoPrecioProducto (id, codProducto, precioMin, precioMax, descuento, valorAdicional) VALUES (?, ?, ?, ?, ?, ?)',
-      [3, 3839, 25, 60, 18, 0]
-    );
-    await db.rawInsert(
-      'INSERT INTO RangoPrecioProducto (id, codProducto, precioMin, precioMax, descuento, valorAdicional) VALUES (?, ?, ?, ?, ?, ?)',
-      [4, 3839, 60, 100, 16, 0]
-    );
-    await db.rawInsert(
-      'INSERT INTO RangoPrecioProducto (id, codProducto, precioMin, precioMax, descuento, valorAdicional) VALUES (?, ?, ?, ?, ?, ?)',
-      [5, 3839, 100, 100000, 15, 0]
-    );
+    // Resto de las inserciones...
   }
+
+ Future<List<RangoPrecioProducto>> getRangosByProducto(int codigo) async {
+  final db = await dbProvider.database;
+  final List<Map<String, dynamic>> maps = await db.query(
+    'RangoPrecioProducto',
+    where: 'codProducto = ?',
+    whereArgs: [codigo],
+  );
+
+  if (maps.isEmpty) {
+    return []; // Retorna una lista vacía si no hay resultados
+  }
+
+  // Aquí mapeamos los resultados
+  return List.generate(maps.length, (i) {
+    return RangoPrecioProducto(
+ codProducto: maps[i]['CodProducto'],
+        cantidadInicio: maps[i]['CantidadInicio'],
+        cantidadFinal: maps[i]['CantidadFinal'],
+        precio: maps[i]['Precio'],
+        inhabilitado: maps[i]['Inhabilitado'],
+    );
+  });
+}
 }
