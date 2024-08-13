@@ -19,7 +19,7 @@ class LocalStorage {
   static Future<void> setInt(String name, int value) async {
     await prefs.setInt(name, value);
   }
-
+ 
   static int? getInt(String name) {
     return prefs.getInt(name);
   }
@@ -47,6 +47,4 @@ class LocalStorage {
   static List<String>? getStringList(String name) {
     return prefs.getStringList(name);
   }
-
-  
 }

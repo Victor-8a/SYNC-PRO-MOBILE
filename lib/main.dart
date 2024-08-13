@@ -71,8 +71,8 @@ Future<Vendedor> loadSalesperson() async {
 
   if (idVendedor != null) {
     try {
-      final response = await http
-          .get(ApiRoutes.buildUri('vendedor/id/$idVendedor'));
+      final response =
+          await http.get(ApiRoutes.buildUri('vendedor/id/$idVendedor'));
 
       if (response.statusCode == 200) {
         Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
@@ -172,8 +172,6 @@ class _LoginPageState extends State<LoginPage> {
         } catch (error) {
           print('Error al obtener la empresa: $error');
         }
-
-      
 
         // Descarga y guarda la imagen
         try {

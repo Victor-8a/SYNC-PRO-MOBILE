@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
-import 'package:sync_pro_mobile/Models/RangoPrecioProducto.dart';
+// import 'package:sync_pro_mobile/Models/RangoPrecioProducto.dart';
 import 'package:sync_pro_mobile/Models/Ruta.dart';
 import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart' as dbGuardarPedido;
@@ -918,26 +918,39 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                     overflow: TextOverflow.clip,
                   ),
                 ),
-                DropdownButton<double>(
-                  value: availablePrices.contains(unitPrice)
-                      ? unitPrice
-                      : product.precioFinal,
-                  items: availablePrices.toSet().map((price) {
-                    return DropdownMenuItem(
-                      value: price,
-                      child: Text('Q${price.toStringAsFixed(2)}'),
-                    );
-                  }).toList(),
-                  onChanged: (newPrice) {
-                    setState(() {
-                      _selectedProductPrices[product] = newPrice!;
-                      unitPrice = newPrice;
-                      subtotalBeforeDiscount = unitPrice * quantity;
-                      discountAmount = subtotalBeforeDiscount * (discount / 100);
-                      subtotal = subtotalBeforeDiscount - discountAmount;
-                    });
-                  },
-                ),
+             DropdownButton<double>(
+  value: availablePrices.contains(unitPrice)
+      ? unitPrice
+      : product.precioFinal,
+  items: availablePrices.toSet().map((price) {
+    return DropdownMenuItem(
+      value: price,
+      child: Text('Q${price.toStringAsFixed(2)}'),
+    );
+  }).toList(),
+  onChanged: (newPrice) async {
+    int? cantidad = _selectedProductQuantities[product];
+
+    // Si cantidad es nulo, establece un valor predeterminado o continúa sin hacer la llamada
+    double newUnitPrice = 0;
+    if (cantidad != null) { 
+      newUnitPrice = await getRangosByProducto(product.codigo, cantidad);
+    }
+
+    if (newUnitPrice != 0) {
+      _showConfirmQuantityRangeDialog(context, cantidad!);
+    }
+
+  
+    setState(() {
+      _selectedProductPrices[product] = newPrice!;
+      unitPrice = newPrice;
+      subtotalBeforeDiscount = unitPrice * quantity;
+      discountAmount = subtotalBeforeDiscount * (discount / 100);
+      subtotal = subtotalBeforeDiscount - discountAmount;
+    });
+  },
+),
                 IconButton(
                   icon: Icon(Icons.close_sharp, color: Colors.red),
                   onPressed: () {
@@ -971,8 +984,8 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                           });
 
                           // Obtén el nuevo precio basado en la cantidad
-                          double newUnitPrice = await _getPriceForQuantity(product.codigo, newQuantity);
-
+                          double newUnitPrice = await getRangosByProducto(product.codigo, newQuantity);
+                      if( newUnitPrice!=0)
                           // Actualiza el precio unitario y el subtotal
                           setState(() {
                             _selectedProductPrices[product] = newUnitPrice;
@@ -983,6 +996,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                           });
                         }
                       }
+
                     },
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
@@ -1396,26 +1410,28 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     await prefs.setStringList('selectedProducts', selectedProductsJson);
   }
   
- Future<double> _getPriceForQuantity(int codigo, int quantity) async {
-  List<RangoPrecioProducto> priceRanges = await getRangosByProducto(codigo);
 
-  // Ordenar los rangos por cantidad de inicio (ascendente)
-  priceRanges.sort((a, b) => a.cantidadInicio.compareTo(b.cantidadInicio));
+  
+//  Future<double> _getPriceForQuantity(int codigo, int quantity) async {
+//   List<RangoPrecioProducto> priceRanges = await getRangosByProducto(codigo,quantity);
 
-  // Buscar el rango que incluye la cantidad dada
-  for (var range in priceRanges) {
-    if (quantity >= range.cantidadInicio && quantity <= range.cantidadFinal) {
-      return range.precio;
-    }
-  }
+//   // Ordenar los rangos por cantidad de inicio (ascendente)
+//   priceRanges.sort((a, b) => a.cantidadInicio.compareTo(b.cantidadInicio));
 
-  // Si no hay rango que se ajuste, devuelve el precio final por defecto
-  return _selectedProductPrices.values.first; // Ajusta según cómo se define el precio final
-}
+//   // Buscar el rango que incluye la cantidad dada
+//   for (var range in priceRanges) {
+//     if (quantity >= range.cantidadInicio && quantity <= range.cantidadFinal) {
+//       return range.precio;
+//     }
+//   }
 
-  getRangosByProducto(int codigo) async{
+//   // Si no hay rango que se ajuste, devuelve el precio final por defecto
+//   return 0; // Ajusta según cómo se define el precio final
+// }
+
+ Future<double> getRangosByProducto(int codigo, int quantity) async{
     DatabaseHelperRangoPrecioProducto dbHelper = DatabaseHelperRangoPrecioProducto();
-    final rangoPrecioProducto = await dbHelper.getRangosByProducto(codigo);
+    final rangoPrecioProducto = await dbHelper.getPrecioByProductoYCantidad(codigo,quantity);
 
 return rangoPrecioProducto;
 
@@ -1423,4 +1439,30 @@ return rangoPrecioProducto;
 }
 
 
- 
+ // Método para mostrar el diálogo de confirmación
+Future<void> _showConfirmQuantityRangeDialog(BuildContext context, int quantity) async {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false, // Evita cerrar el diálogo tocando fuera de él
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Confirmar Selección'),
+        content: Text('La cantidad $quantity está dentro del rango específico. ¿Estás seguro de que deseas cambiar el precio?'),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancelar'),
+            onPressed: () {
+              Navigator.of(context).pop(); // Cierra el diálogo sin hacer nada
+            },
+          ),
+          TextButton(
+            child: Text('Confirmar'),
+            onPressed: () {
+              Navigator.of(context).pop(); // Cierra el diálogo y confirma el cambio
+            },
+          ),
+        ],
+      );
+    },
+  );
+}

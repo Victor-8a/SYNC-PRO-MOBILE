@@ -45,6 +45,8 @@ class Product {
     );
   }
 
+
+
   Map<String, dynamic> toJson(int cantidad) {
     return {
       'codigo': codigo,

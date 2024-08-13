@@ -9,9 +9,6 @@ import 'package:sync_pro_mobile/Models/Empresa.dart';
 import 'package:sync_pro_mobile/db/dbEmpresa.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 
-
-
-
 class ImageModel {
   Uint8List imageData;
 
@@ -32,12 +29,13 @@ class ImageModel {
     };
   }
 }
+
 Future<Empresa> fetchEmpresa(int id) async {
   try {
     // Obtener el token del almacenamiento local
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
-    
+
     // Verificar si el token es válido
     if (token == null) {
       throw Exception('Token de autorización no válido');

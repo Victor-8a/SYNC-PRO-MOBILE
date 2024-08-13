@@ -23,7 +23,6 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   void initState() {
     super.initState();
     futureProducts = productService.getProductsFromLocalDatabase();
-    preciosProductos = insertDefaultData.insertDefaultData();
   }
 
   void _filterProducts(String query) {

@@ -9,4 +9,3 @@ class ApiRoutes {
     return Uri.parse('$baseUrl/$endpoint');
   }
 }
- 
