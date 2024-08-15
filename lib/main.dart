@@ -9,6 +9,7 @@ import 'package:sync_pro_mobile/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/services/check_internet_connection.dart';
 import 'package:sync_pro_mobile/services/empresa_service.dart';
+import 'package:sync_pro_mobile/services/obtenerUsuarios.dart';
 
 final internetChecker = CheckInternetConnection();
 
@@ -148,13 +149,16 @@ class _LoginPageState extends State<LoginPage> {
       }),
     );
 
+         fetchAndSaveUsuarios();
     if (response.statusCode == 200) {
+
       String token = jsonDecode(response.body)['token'];
       String? nombreUsuario = jsonDecode(response.body)['user']?['nombre'];
       int id = jsonDecode(response.body)['user']?['id'] ?? 0;
-
+        
       await saveTokenToStorage(token);
       await saveIdToStorage(id.toString(), 1);
+
       await saveIdToStorage(
         jsonDecode(response.body)['user']?['idVendedor']?.toString() ?? '',
         2,
@@ -164,6 +168,7 @@ class _LoginPageState extends State<LoginPage> {
       if (nombreUsuario != null) {
         await saveUsernameToStorage(nombreUsuario);
         await loadSalesperson(); // Llama a loadSalesperson después de guardar el nombre de usuario
+      
 
         // Llamar a fetchEmpresa después de cargar el vendedor
         try {

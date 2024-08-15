@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/Models/Producto.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
+import 'package:sync_pro_mobile/services/ObtenerRangoPrecioProducto.dart';
 
 class ProductService {
   Future<List<Product>> fetchProducts() async {
@@ -33,6 +34,7 @@ class ProductService {
         final List<dynamic> data = jsonDecode(response.body);
         final products = data.map((json) => Product.fromJson(json)).toList();
         await saveProductsToLocalDatabase(products);
+        fetchAndSaveRangoPrecios();
         return products;
       } else {
         throw Exception('Failed to load products');

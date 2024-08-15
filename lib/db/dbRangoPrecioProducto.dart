@@ -24,7 +24,6 @@ class DatabaseHelperRangoPrecioProducto {
         cantidadInicio: maps[i]['CantidadInicio'],
         cantidadFinal: maps[i]['CantidadFinal'],
         precio: maps[i]['Precio'],
-        inhabilitado: maps[i]['Inhabilitado'],
       );
     });
   }
