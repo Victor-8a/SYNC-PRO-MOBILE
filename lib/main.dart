@@ -5,11 +5,12 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Inicio/second_page.dart';
 import 'package:sync_pro_mobile/Models/Empresa.dart';
+import 'package:sync_pro_mobile/Models/Usuario.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
+import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/services/check_internet_connection.dart';
 import 'package:sync_pro_mobile/services/empresa_service.dart';
-import 'package:sync_pro_mobile/services/obtenerUsuarios.dart';
 
 final internetChecker = CheckInternetConnection();
 
@@ -131,67 +132,70 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _contrasenaController = TextEditingController();
   // ignore: unused_field
   bool _mostrarError = false;
+Future<void> _login() async {
+  String usuario = _usuarioController.text;
+  String contrasena = _contrasenaController.text;
 
-  Future<void> _login() async {
-    int id = 0;
-    String usuario = _usuarioController.text;
-    String contrasena = _contrasenaController.text;
+  final response = await http.post(
+    ApiRoutes.buildUri('auth/signInV2'),
+    headers: <String, String>{
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+    body: jsonEncode(<String, String>{
+      'Nombre': usuario,
+      'password': contrasena,
+    }),
+  );
 
-    final response = await http.post(
-      ApiRoutes.buildUri('auth/signIn'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'id': id.toString(),
-        'Nombre': usuario,
-        'password': contrasena,
-      }),
-    );
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
 
-         fetchAndSaveUsuarios();
-    if (response.statusCode == 200) {
+    // Obtén el token y los detalles del usuario
+    String token = jsonResponse['token'];
+    Map<String, dynamic> userJson = jsonResponse['user'];
+    String? nombreUsuario = userJson['nombre'];
+    int id = userJson['id'] ?? 0;
 
-      String token = jsonDecode(response.body)['token'];
-      String? nombreUsuario = jsonDecode(response.body)['user']?['nombre'];
-      int id = jsonDecode(response.body)['user']?['id'] ?? 0;
-        
-      await saveTokenToStorage(token);
-      await saveIdToStorage(id.toString(), 1);
+    // Guarda los datos en el almacenamiento
+    await saveTokenToStorage(token);
+    await saveIdToStorage(id.toString(), 1);
+    await saveIdToStorage(userJson['idVendedor']?.toString() ?? '', 2);
+    await savePasswordToStorage(contrasena);
 
-      await saveIdToStorage(
-        jsonDecode(response.body)['user']?['idVendedor']?.toString() ?? '',
-        2,
-      );
-      await savePasswordToStorage(contrasena); // Guarda la contraseña aquí
+    if (nombreUsuario != null) {
+      await saveUsernameToStorage(nombreUsuario);
+      await loadSalesperson();
 
-      if (nombreUsuario != null) {
-        await saveUsernameToStorage(nombreUsuario);
-        await loadSalesperson(); // Llama a loadSalesperson después de guardar el nombre de usuario
-      
-
-        // Llamar a fetchEmpresa después de cargar el vendedor
-        try {
-          Empresa empresa = await fetchEmpresa(id);
-          print('Empresa cargada exitosamente: ${empresa.empresa}');
-        } catch (error) {
-          print('Error al obtener la empresa: $error');
-        }
-
-        // Descarga y guarda la imagen
-        try {
-          await fetchImage().then((imageModel) async {
-            await saveImageToFile(imageModel);
-            print('Imagen guardada correctamente en el dispositivo.');
-          }).catchError((error) {
-            print('Error al obtener la imagen: $error');
-          });
-        } catch (error) {
-          print('Error en la descarga y guardado de imagen: $error');
-        }
-      } else {
-        print('No se pudo encontrar el nombre de usuario en la respuesta.');
+      // Llamar a fetchEmpresa después de cargar el vendedor
+      try {
+        Empresa empresa = await fetchEmpresa(id);
+        print('Empresa cargada exitosamente: ${empresa.empresa}');
+      } catch (error) {
+        print('Error al obtener la empresa: $error');
       }
+
+      // Descarga y guarda la imagen
+      try {
+        await fetchImage().then((imageModel) async {
+          await saveImageToFile(imageModel);
+          print('Imagen guardada correctamente en el dispositivo.');
+        }).catchError((error) {
+          print('Error al obtener la imagen: $error');
+        });
+      } catch (error) {
+        print('Error en la descarga y guardado de imagen: $error');
+      }
+
+      // Inserta el usuario en la base de datos
+    // Inserta el usuario en la base de datos
+try {
+  Usuario usuario = Usuario.fromJson(userJson);
+  await insertUsuario(usuario);
+  print('Usuario guardado en la base de datos.');
+} catch (error) {
+  print('Error al guardar el usuario en la base de datos: $error');
+}
+
 
       Navigator.pushAndRemoveUntil(
         context,
@@ -199,18 +203,22 @@ class _LoginPageState extends State<LoginPage> {
         (Route<dynamic> route) => false,
       );
     } else {
-      setState(() {
-        _mostrarError = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Datos inválidos'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      print('No se pudo encontrar el nombre de usuario en la respuesta.');
     }
+  } else {
+    setState(() {
+      _mostrarError = true;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Datos inválidos'),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -313,4 +321,11 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+  
+Future<void> insertUsuario(Usuario usuario) async {
+    DatabaseHelperUsuario dbHelper = DatabaseHelperUsuario();
+    await dbHelper.insertUsuario(usuario);
+    
+ }
+  
 }

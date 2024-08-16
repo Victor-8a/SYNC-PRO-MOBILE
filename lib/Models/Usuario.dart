@@ -17,8 +17,8 @@ class Usuario {
   bool esAdmin;
   int diasFacturacion;
   bool esEncargado;
-  int? idEncargado;
-  String? passUser;
+  int idEncargado;
+  String passUser;
 
   Usuario({
     this.id,
@@ -39,38 +39,37 @@ class Usuario {
     required this.esAdmin,
     required this.diasFacturacion,
     required this.esEncargado,
-    this.idEncargado,
-    this.passUser,
+    required this.idEncargado,
+    required this.passUser,
   });
-
-  // Convertir de JSON a objeto
-  factory Usuario.fromJson(Map<String, dynamic> json) {
+factory Usuario.fromJson(Map<String, dynamic> json) {
     return Usuario(
-      id: json['id'],
-      nombre: json['Nombre'],
-      claveEntrada: json['ClaveEntrada'],
-      claveInterna: json['ClaveInterna'],
-      cambiarPrecio: json['CambiarPrecio'] == 1,
-      porcPrecio: json['PorcPrecio'],
-      aplicarDesc: json['AplicarDesc'] == 1,
-      porcDesc: json['PorcDesc'],
-      existNegativa: json['ExistNegativa'] == 1,
-      anulado: json['Anulado'] == 1,
-      tema: json['Tema'],
-      idVendedor: json['IdVendedor'],
-      verTodo: json['VerTodo'] == 1,
-      permitirAbrirVentanas: json['PermitirAbrirVentanas'] == 1,
-      ventasFechaAnterior: json['VentasFechaAnterior'] == 1,
-      esAdmin: json['EsAdmin'] == 1,
-      diasFacturacion: json['DiasFacturacion'],
-      esEncargado: json['EsEncargado'] == 1,
-      idEncargado: json['IdEncargado'],
-      passUser: json['pass_user'],
+      id: json['id'] ?? 0,
+      nombre: json['nombre'] ?? '',
+      claveEntrada: json['claveEntrada'] ?? '',
+      claveInterna: json['claveInterna'] ?? '',
+      cambiarPrecio: json['cambiarPrecio'] ?? false,
+      porcPrecio: (json['porcPrecio'] is int) ? (json['porcPrecio'] as int).toDouble() : json['porcPrecio']?.toDouble() ?? 0.0,
+      aplicarDesc: json['aplicarDesc'] ?? false,
+      porcDesc: (json['porcDesc'] is int) ? (json['porcDesc'] as int).toDouble() : json['porcDesc']?.toDouble() ?? 0.0,
+      existNegativa: json['existNegativa'] ?? false,
+      anulado: json['anulado'] ?? false,
+      tema: json['tema'] ?? '',
+      idVendedor: json['idVendedor'] ?? 0,
+      verTodo: json['verTodo'] ?? false,
+      permitirAbrirVentanas: json['permitirAbrirVentanas'] ?? false,
+      ventasFechaAnterior: json['ventasFechaAnterior'] ?? false,
+      esAdmin: json['esAdmin'] ?? false,
+      diasFacturacion: json['diasFacturacion'] ?? 0,
+      esEncargado: json['esEncargado'] ?? false,
+      idEncargado: json['idEncargado'] ?? 0,
+      passUser: json['pass_user'] ?? '',
     );
   }
 
   // Convertir de objeto a JSON
   Map<String, dynamic> toJson() {
+    
     return {
       'id': id,
       'Nombre': nombre,
