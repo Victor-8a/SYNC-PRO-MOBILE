@@ -8,13 +8,23 @@ import 'package:sync_pro_mobile/db/dbRuta.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 
 Future<void> syncRutas() async {
-  
-  
   List<Map<String, dynamic>> unsyncedRutas = await DatabaseHelperRuta().getUnsyncedRutas();
   String? token = await login();
 
   for (var ruta in unsyncedRutas) {
     try {
+      // Verificar si el campo 'fechaFin' está vacío o nulo antes de intentar sincronizar
+      if (ruta['fechaFin'] == null || ruta['fechaFin'].isEmpty) {
+        Fluttertoast.showToast(
+          msg: 'No se puede sincronizar la ruta sin fecha de finalización.',
+          textColor: Colors.red,
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
+        print('Ruta sin fecha de finalización. No se puede sincronizar.');
+        continue; // Saltar esta ruta y pasar a la siguiente
+      }
+
       var rutaCopy = Map<String, dynamic>.from(ruta);
       rutaCopy.remove('sincronizado');
       rutaCopy.remove('id');
@@ -58,8 +68,6 @@ Future<void> syncRutas() async {
       var response = await http.post(url, headers: headers, body: body);
 
       if (response.statusCode == 401) {
-        // Reintentar con un nuevo token
-        token = await login();
         headers['Authorization'] = 'Bearer $token';
         response = await http.post(url, headers: headers, body: body);
       }

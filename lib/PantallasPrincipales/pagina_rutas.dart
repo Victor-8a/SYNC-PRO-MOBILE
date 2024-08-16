@@ -58,8 +58,6 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
 
   @override
   void initState() {
-
-  
     super.initState();
 
     loadRutaActiva().then((ruta) {
@@ -133,7 +131,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                     Map<String, dynamic> ruta = {
                       "idVendedor": vendedor.value,
                       "idLocalidad": rutaSeleccionada?.id ?? 0,
-                      "fechaInicio":DateTime.now().toIso8601String(),
+                      "fechaInicio": DateTime.now().toIso8601String(),
                       "fechaFin": '',
                       "anulado": 0,
                     };
@@ -378,94 +376,98 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
         },
       );
     }
-void _mostrarDialogoFinalizarVisita() {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('¿Está seguro de finalizar la visita?'),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Cancelar'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: Text('Aceptar'),
-            onPressed: () async {
-              // Verificar si la visita está iniciada
-              if (esIniciarVisita) {
-                // Asegúrate de que el cliente seleccionado no sea nulo
-                if (clienteSeleccionado != null) {
-                  // Consultar el campo 'fin' de la visita actual en la base de datos
-                final String? fin = await DatabaseHelperDetalleRuta().obtenerFinDetalleRuta(detalle.id ?? 0);
 
-                  // Verificar si el campo 'fin' ya está establecido
-                
-                  // ignore: unnecessary_null_comparison
-                  if (fin != null) {
-                    // Mostrar mensaje de error si la visita ya ha sido finalizada
+    void _mostrarDialogoFinalizarVisita() {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('¿Está seguro de finalizar la visita?'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Cancelar'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Aceptar'),
+                onPressed: () async {
+                  // Verificar si la visita está iniciada
+                  if (esIniciarVisita) {
+                    // Asegúrate de que el cliente seleccionado no sea nulo
+                    if (clienteSeleccionado != null) {
+                      // Consultar el campo 'fin' de la visita actual en la base de datos
+                      final String? fin = await DatabaseHelperDetalleRuta()
+                          .obtenerFinDetalleRuta(detalle.id ?? 0);
+
+                      // Verificar si el campo 'fin' ya está establecido
+
+                      // ignore: unnecessary_null_comparison
+                      if (fin != null) {
+                        // Mostrar mensaje de error si la visita ya ha sido finalizada
+                        Fluttertoast.showToast(
+                          msg: "La visita ya ha sido finalizada",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.red,
+                          textColor: Colors.white,
+                        );
+                        Navigator.of(context).pop();
+                      } else {
+                        // Obtener la hora actual para el campo 'fin'
+                        String fin = DateTime.now().toIso8601String();
+
+                        // Actualizar el campo 'fin' en la base de datos
+                        await updateFinDetalleRuta(
+                            clienteSeleccionado!.id, fin);
+                        cargarDetallesRuta();
+                        setState(() {
+                          esIniciarVisita =
+                              false; // Indicar que la visita ha finalizado
+                          rutaIniciada =
+                              true; // Bloquear clientes al finalizar la visita
+                        });
+
+                        // Mostrar mensaje de éxito
+                        Fluttertoast.showToast(
+                          msg: "La visita ha sido finalizada",
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          backgroundColor: Colors.black,
+                          textColor: Colors.white,
+                        );
+                        // Cerrar el diálogo
+                        Navigator.of(context).pop();
+                      }
+                    } else {
+                      // Mostrar mensaje de error si no hay cliente seleccionado
+                      Fluttertoast.showToast(
+                        msg: "No se ha seleccionado ningún cliente",
+                        toastLength: Toast.LENGTH_SHORT,
+                        gravity: ToastGravity.BOTTOM,
+                        backgroundColor: Colors.red,
+                        textColor: Colors.white,
+                      );
+                    }
+                  } else {
+                    // Mostrar mensaje de error si la visita no ha sido iniciada
                     Fluttertoast.showToast(
-                      msg: "La visita ya ha sido finalizada",
+                      msg: "La visita no ha sido iniciada",
                       toastLength: Toast.LENGTH_SHORT,
                       gravity: ToastGravity.BOTTOM,
                       backgroundColor: Colors.red,
                       textColor: Colors.white,
                     );
                     Navigator.of(context).pop();
-                  } else {
-                    // Obtener la hora actual para el campo 'fin'
-                    String fin = DateTime.now().toIso8601String();
-
-                    // Actualizar el campo 'fin' en la base de datos
-                    await updateFinDetalleRuta(clienteSeleccionado!.id, fin);
-                    cargarDetallesRuta();
-                    setState(() {
-                      esIniciarVisita = false; // Indicar que la visita ha finalizado
-                      rutaIniciada = true; // Bloquear clientes al finalizar la visita
-                    });
-
-                    // Mostrar mensaje de éxito
-                    Fluttertoast.showToast(
-                      msg: "La visita ha sido finalizada",
-                      toastLength: Toast.LENGTH_SHORT,
-                      gravity: ToastGravity.BOTTOM,
-                      backgroundColor: Colors.black,
-                      textColor: Colors.white,
-                    );
-                    // Cerrar el diálogo
-                    Navigator.of(context).pop();
                   }
-                } else {
-                  // Mostrar mensaje de error si no hay cliente seleccionado
-                  Fluttertoast.showToast(
-                    msg: "No se ha seleccionado ningún cliente",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                  );
-                }
-              } else {
-                // Mostrar mensaje de error si la visita no ha sido iniciada
-                Fluttertoast.showToast(
-                  msg: "La visita no ha sido iniciada",
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                  backgroundColor: Colors.red,
-                  textColor: Colors.white,
-                );
-                Navigator.of(context).pop();
-              }
-            },
-          ),
-        ],
+                },
+              ),
+            ],
+          );
+        },
       );
-    },
-  );
-}
-
+    }
 
     void mostrarDialogoGuardarCambios() {
       showDialog(
@@ -522,161 +524,161 @@ void _mostrarDialogoFinalizarVisita() {
       );
     }
 
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            bool puedeRealizarPedido = true;
 
+            Future<void> verificarEstadoPedido() async {
+              List<Map<String, dynamic>> resultado =
+                  await getDetalleRealizado(detalle.id ?? 0);
+              setState(() {
+                puedeRealizarPedido = resultado.isNotEmpty &&
+                    resultado.first['realizaPedido'] == 1;
+              });
+            }
 
-   
-
-showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return StatefulBuilder(
-      builder: (BuildContext context, StateSetter setState) {
-        bool puedeRealizarPedido = true;
-
-        Future<void> verificarEstadoPedido() async {
-          List<Map<String, dynamic>> resultado = await getDetalleRealizado(detalle.id ?? 0);
-          setState(() {
-            puedeRealizarPedido = resultado.isNotEmpty && resultado.first['realizaPedido'] == 1;
-          });
-        }
-
-        return AlertDialog(
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+            return AlertDialog(
+              content: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: Text(
-                        detalle.nombreCliente ?? '',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: () {
-                        Navigator.of(context).pop();                          
-
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-             esIniciarVisita
-  ? Text(
-      // ignore: unnecessary_null_comparison
-      (detalle.inicio != null && detalle.inicio.length >= 16)
-          ? 'Inicio: ${detalle.inicio.substring(11, 16) + ' ' + detalle.inicio.substring(0, 10)}'
-          : 'Inicio: ${detalle.inicio}',
-      style: const TextStyle(fontSize: 14),
-    )
-  : SizedBox(width: 0),
-const SizedBox(height: 10),
-                Row(
-                  children: [
-                    detalle.estado == 'No Visitado'
-                        ? DropdownButton<String>(
-                            value: estadoSeleccionado,
-                            onChanged: (String? newValue) {
-                              setState(() {
-                                estadoSeleccionado = newValue!;
-                              });
-                            },
-                            items: estados.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value, style: const TextStyle(fontSize: 14)),
-                              );
-                            }).toList(),
-                          )
-                        : Text(
-                            estadoSeleccionado,
-                            style: const TextStyle(fontSize: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            detalle.nombreCliente ?? '',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                    SizedBox(width: 20),
-                    !esIniciarVisita
-                        ? IconButton(
-                            onPressed: () {
-                              _mostrarDialogoIniciarVisita();
-                            },
-                            icon: Icon(Icons.play_arrow, color: Colors.blue),
-                            tooltip: 'Iniciar Visita',
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    esIniciarVisita
+                        ? Text(
+                            // ignore: unnecessary_null_comparison
+                            (detalle.inicio != null &&
+                                    detalle.inicio.length >= 16)
+                                ? 'Inicio: ${detalle.inicio.substring(11, 16) + ' ' + detalle.inicio.substring(0, 10)}'
+                                : 'Inicio: ${detalle.inicio}',
+                            style: const TextStyle(fontSize: 14),
                           )
                         : SizedBox(width: 0),
-                    SizedBox(width: 10),
-                    IconButton(
-                      onPressed: () {
-                        _mostrarDialogoFinalizarVisita();
-                      },
-                      icon: Icon(Icons.stop, color: Colors.blue),
-                      tooltip: 'Finalizar Visita',
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        detalle.estado == 'No Visitado'
+                            ? DropdownButton<String>(
+                                value: estadoSeleccionado,
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    estadoSeleccionado = newValue!;
+                                  });
+                                },
+                                items: estados.map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value,
+                                        style: const TextStyle(fontSize: 14)),
+                                  );
+                                }).toList(),
+                              )
+                            : Text(
+                                estadoSeleccionado,
+                                style: const TextStyle(fontSize: 14),
+                              ),
+                        SizedBox(width: 20),
+                        !esIniciarVisita
+                            ? IconButton(
+                                onPressed: () {
+                                  _mostrarDialogoIniciarVisita();
+                                },
+                                icon:
+                                    Icon(Icons.play_arrow, color: Colors.blue),
+                                tooltip: 'Iniciar Visita',
+                              )
+                            : SizedBox(width: 0),
+                        SizedBox(width: 10),
+                        IconButton(
+                          onPressed: () {
+                            _mostrarDialogoFinalizarVisita();
+                          },
+                          icon: Icon(Icons.stop, color: Colors.blue),
+                          tooltip: 'Finalizar Visita',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: observacionesController,
+                      decoration: const InputDecoration(
+                        labelText: 'Observaciones',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 2,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor:
+                                puedeRealizarPedido ? Colors.blue : Colors.grey,
+                          ),
+                          onPressed: () async {
+                            await verificarEstadoPedido();
+                            if (puedeRealizarPedido) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      PaginaPedidos(cliente: clienteRuta),
+                                ),
+                              ).then((_) {
+                                Navigator.of(context).pop();
+                                cargarDetallesRuta();
+                              });
+                            }
+                          },
+                          child: const Icon(Icons.add, color: Colors.white),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.blue,
+                          ),
+                          onPressed: () {
+                            mostrarDialogoGuardarCambios();
+                          },
+                          child: const Text('✓'),
+                        ),
+                        const SizedBox(width: 12),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: observacionesController,
-                  decoration: const InputDecoration(
-                    labelText: 'Observaciones',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 2,
-                  style: const TextStyle(fontSize: 12),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: puedeRealizarPedido ? Colors.blue : Colors.grey,
-                      ),
-                      onPressed: () async {
-                        await verificarEstadoPedido();
-                        if (puedeRealizarPedido) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PaginaPedidos(cliente: clienteRuta),
-                            ),
-                          ).then((_) {
-                            Navigator.of(context).pop();
-                            cargarDetallesRuta();
-                          });
-                        }
-                        
-                      },
-                      child: const Icon(Icons.add, color: Colors.white),                
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.blue,
-                      ),
-                      onPressed: () {
-                        mostrarDialogoGuardarCambios();
-                      },
-                      child: const Text('✓'),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
-  },
-);
-
   }
 
   void _guardarCliente() async {
@@ -716,146 +718,199 @@ const SizedBox(height: 10),
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0), // Ajustar el padding
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.spaceEvenly, // Alinea los botones
-                  children: [
-                    ElevatedButton(
-                      onPressed: _seleccionarRuta,
-                      child: const Text('Ruta'),
-                    ),
-                    ElevatedButton(
-                      onPressed: _iniciarRuta,
-                      child: const Text('Iniciar'),
-                    ),
-                    ElevatedButton(
-                      onPressed: _finalizarRuta,
-                      child: const Text('Finalizar'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10), // Reducir el espacio vertical
-                Text(
-                  'Ruta de hoy:',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight:
-                          FontWeight.bold), // Reducir el tamaño del texto
-                ),
-                Text(
-                  '${rutaSeleccionada?.nombre ?? "No se ha seleccionado ninguna ruta"}',
-                  style: TextStyle(fontSize: 14),
-                ),
-                const SizedBox(height: 10), // Reducir el espacio vertical
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _detallesRuta.length,
-                    itemBuilder: (context, index) {
-                      final detalle = _detallesRuta[index];
-                      return Card(
-                          child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: _getColorByEstado(
-                                detalle.estado), // Color del borde
-                            width: 1.50, // Ancho del borde
-                          ),
-                          borderRadius:
-                              BorderRadius.circular(4.0), // Radio del borde
-                        ),
-                        child: ListTile(
-                          title: Text(
-                            detalle.nombreCliente ?? '',
-                            style: TextStyle(
-                              fontSize: 14, // Reducir el tamaño del texto
-                            ),
-                          ),
-                          onTap: () async {
-                            DatabaseHelperCliente dbHelper =
-                                DatabaseHelperCliente();
-                            Cliente cliente = await dbHelper
-                                .getClientesById(detalle.codCliente);
-                            setState(() {
-                              clienteSeleccionado = detalle;
-                            });
-                            _mostrarDetallesCliente(detalle, cliente);
-                          },
-                        ),
-                      ));
-                    },
+        body: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0), // Ajustar el padding
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceEvenly, // Alinea los botones
+                    children: [
+                      ElevatedButton(
+                        onPressed: _seleccionarRuta,
+                        child: const Text('Ruta'),
+                      ),
+                      ElevatedButton(
+                        onPressed: _iniciarRuta,
+                        child: const Text('Iniciar'),
+                      ),
+                      ElevatedButton(
+                        onPressed: _finalizarRuta,
+                        child: const Text('Finalizar'),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 10), // Reducir el espacio vertical
+                  Text(
+                    'Ruta de hoy:',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight:
+                            FontWeight.bold), // Reducir el tamaño del texto
+                  ),
+                  Text(
+                    '${rutaSeleccionada?.nombre ?? "No se ha seleccionado ninguna ruta"}',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 10), // Reducir el espacio vertical
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _detallesRuta.length,
+                      itemBuilder: (context, index) {
+                        final detalle = _detallesRuta[index];
+                        return Card(
+                            child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: _getColorByEstado(
+                                  detalle.estado), // Color del borde
+                              width: 1.50, // Ancho del borde
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(4.0), // Radio del borde
+                          ),
+                          child: ListTile(
+                            title: Text(
+                              detalle.nombreCliente ?? '',
+                              style: TextStyle(
+                                fontSize: 14, // Reducir el tamaño del texto
+                              ),
+                            ),
+                            onTap: () async {
+                              DatabaseHelperCliente dbHelper =
+                                  DatabaseHelperCliente();
+                              Cliente cliente = await dbHelper
+                                  .getClientesById(detalle.codCliente);
+                              setState(() {
+                                clienteSeleccionado = detalle;
+                              });
+                              _mostrarDetallesCliente(detalle, cliente);
+                            },
+                          ),
+                        ));
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) =>
+                      ListarRuta()), // Redirige a la página ListarRuta
+            );
+          },
+          child: Icon(Icons.local_shipping), // Icono de camión
+        ));
+  }
 
-       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ListarRuta()), // Redirige a la página ListarRuta
+// Método para finalizar la ruta
+  void _finalizarRuta() async {
+    if (!rutaIniciada) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content:
+                Text('No se puede finalizar la ruta porque no está iniciada')),
+      );
+      return;
+    }
+
+    // Verificar sincronización de la ruta
+    int pedidosNoSincronizados = await verificarSincronizacionRuta(miRuta!.id);
+
+    if (pedidosNoSincronizados > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text(
+                'No se puede finalizar la ruta. Hay $pedidosNoSincronizados pedidos no sincronizados.')),
+      );
+      return;
+    }
+
+    // Ejecutar la consulta para verificar las condiciones
+    int count =
+        await DatabaseHelperDetalleRuta().getDetalleRutaCount(miRuta!.id);
+
+    if (count > 0) {
+      // Obtener detalles sin finalizar
+      List<Map<String, dynamic>> detallesNoFinalizados =
+          await DatabaseHelperDetalleRuta()
+              .getDetallesNoFinalizados(miRuta!.id);
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Detalles sin finalizar'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: detallesNoFinalizados.map((detalle) {
+                return ListTile(
+                  title: Text(
+                      'Cliente: ${detalle['nombreCliente'] ?? ''}'), // Mostrar el nombre del cliente
+                  subtitle: Text(
+                      'Estado: ${detalle['estado']}, Observaciones: ${detalle['observaciones']}'),
+                );
+              }).toList(),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Cancelar'),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              ),
+              TextButton(
+                child: Text('Finalizar ruta de todos modos'),
+                onPressed: () async {
+                  // Obtener la fecha actual
+                  String fechaFin = DateTime.now().toIso8601String();
+
+                  // Actualizar la fecha de finalización en la base de datos
+                  await DatabaseHelperRuta().updateFechaFinRuta(
+                    miRuta!.id, // Id de la ruta que se está finalizando
+                    fechaFin, // Fecha actual de finalización
+                  );
+
+                  await DatabaseHelperDetalleRuta()
+                      .getDetalleRutaCountAndUpdate(miRuta!.id);
+
+                  // Actualizar el estado de la ruta
+                  setState(() {
+                    rutaIniciada = false;
+                  });
+
+                  Navigator.of(context)
+                      .pop(); // Cerrar el diálogo de confirmación
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text(
+                            'Ruta finalizada: ${rutaSeleccionada!.nombre}')),
+                  );
+                },
+              ),
+            ],
           );
         },
-        child: Icon(Icons.local_shipping), // Icono de camión
-    )
-    );
-  }
-// Método para finalizar la ruta
-void _finalizarRuta() async {
-  if (!rutaIniciada) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content:
-              Text('No se puede finalizar la ruta porque no está iniciada')),
-    );
-    return;
-  }
+      );
+      return;
+    }
 
-  // Verificar sincronización de la ruta
-  int pedidosNoSincronizados = await verificarSincronizacionRuta(miRuta!.id);
-
-  if (pedidosNoSincronizados > 0) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(
-              'No se puede finalizar la ruta. Hay $pedidosNoSincronizados pedidos no sincronizados.')),
-    );
-    return;
-  }
-
-  // Ejecutar la consulta para verificar las condiciones
-  int count =
-      await DatabaseHelperDetalleRuta().getDetalleRutaCount(miRuta!.id);
-
-  if (count > 0) {
-    // Obtener detalles sin finalizar
-    List<Map<String, dynamic>> detallesNoFinalizados =
-        await DatabaseHelperDetalleRuta().getDetallesNoFinalizados(miRuta!.id);
-
+    // Si no hay detalles sin finalizar, proceder a finalizar la ruta directamente
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Detalles sin finalizar'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: detallesNoFinalizados.map((detalle) {
-              return ListTile(
-                title: Text('Cliente: ${detalle['nombreCliente'] ?? ''}'),
-                subtitle: Text(
-                    'Estado: ${detalle['estado']}, Observaciones: ${detalle['observaciones']}'),
-              );
-            }).toList(),
-          ),
+          title: Text('¿Está seguro de finalizar la ruta?'),
           actions: <Widget>[
             TextButton(
               child: Text('Cancelar'),
@@ -864,8 +919,9 @@ void _finalizarRuta() async {
               },
             ),
             TextButton(
-              child: Text('Finalizar ruta de todos modos'),
+              child: Text('Aceptar'),
               onPressed: () async {
+              
                 // Obtener la fecha actual
                 String fechaFin = DateTime.now().toIso8601String();
 
@@ -874,9 +930,6 @@ void _finalizarRuta() async {
                   miRuta!.id, // Id de la ruta que se está finalizando
                   fechaFin, // Fecha actual de finalización
                 );
-
-                await DatabaseHelperDetalleRuta()
-                    .getDetalleRutaCountAndUpdate(miRuta!.id);
 
                 // Actualizar el estado de la ruta
                 setState(() {
@@ -891,64 +944,14 @@ void _finalizarRuta() async {
                       content:
                           Text('Ruta finalizada: ${rutaSeleccionada!.nombre}')),
                 );
+                  syncRutas();
               },
             ),
           ],
         );
       },
     );
-    return;
   }
-
-  // Si no hay detalles sin finalizar, proceder a finalizar la ruta directamente
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('¿Está seguro de finalizar la ruta?'),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Cancelar'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-          TextButton(
-            child: Text('Aceptar'),
-            onPressed: () async {
-
-              syncRutas();
-              // Obtener la fecha actual
-              String fechaFin = DateTime.now().toIso8601String();
-
-              // Actualizar la fecha de finalización en la base de datos
-              await DatabaseHelperRuta().updateFechaFinRuta(
-                miRuta!.id, // Id de la ruta que se está finalizando
-                fechaFin, // Fecha actual de finalización
-              );
-
-              // Actualizar el estado de la ruta
-              setState(() {
-                rutaIniciada = false;
-              });
-
-              Navigator.of(context)
-                  .pop(); // Cerrar el diálogo de confirmación
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content:
-                        Text('Ruta finalizada: ${rutaSeleccionada!.nombre}')),
-              );
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
-
 
   Future<Ruta> loadRutaActiva() async {
     DatabaseHelperRuta dbHelper = DatabaseHelperRuta();
@@ -984,15 +987,11 @@ void _finalizarRuta() async {
     final detalleRuta = await dbHelper.getDetalleRealizado(idRuta);
     return detalleRuta;
   }
-  
+
   verificarSincronizacionRuta(int id) async {
     DatabaseHelperDetalleRuta dbHelper = DatabaseHelperDetalleRuta();
     final detalleRuta = await dbHelper.verificarSincronizacionRuta(id);
 
     return detalleRuta;
-
   }
-  
-
 }
-
