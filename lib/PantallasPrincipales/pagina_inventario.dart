@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Models/Producto.dart';
 import 'package:sync_pro_mobile/db/dbRangoPrecioProducto.dart';
+import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ProductoService.dart';
+
 
 class PaginaInventario extends StatefulWidget {
   const PaginaInventario({Key? key}) : super(key: key);
@@ -18,11 +20,22 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   final ProductService productService = ProductService();
   final DatabaseHelperRangoPrecioProducto insertDefaultData =
       DatabaseHelperRangoPrecioProducto();
+  bool isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     futureProducts = productService.getProductsFromLocalDatabase();
+    _checkUserRole();  // Verifica el rol del usuario
+  }
+
+  void _checkUserRole() async {
+    final dbHelperUsuario = DatabaseHelperUsuario();
+    bool isAdmin = await dbHelperUsuario.isUserAdmin();
+// Obtén el usuario actual
+    setState(() {
+   this.isAdmin = isAdmin; // Asume que 1 es para admin y 0 para no admin
+    });
   }
 
   void _filterProducts(String query) {
@@ -42,73 +55,71 @@ class _PaginaInventarioState extends State<PaginaInventario> {
       futureProducts = productService.fetchProducts();
     });
   }
-void _showPriceRanges(int codigo) async {
-  final priceRanges = await DatabaseHelperRangoPrecioProducto().getRangosByProducto(codigo);
 
-  // ignore: unnecessary_null_comparison
-  if (priceRanges == null || priceRanges.isEmpty) {
-    print('No se encontraron rangos de precios.');
-    return;
-  }
+  void _showPriceRanges(int codigo) async {
+    final priceRanges = await DatabaseHelperRangoPrecioProducto().getRangosByProducto(codigo);
 
-  // Filtra los rangos duplicados
-  final seenRanges = <String>{};
-  final uniqueRanges = priceRanges.where((range) {
-    final rangeString = '${range.cantidadInicio}-${range.cantidadFinal}-${range.precio}';
-    if (seenRanges.contains(rangeString)) {
-      return false;
-    } else {
-      seenRanges.add(rangeString);
-      return true;
+    // ignore: unnecessary_null_comparison
+    if (priceRanges == null || priceRanges.isEmpty) {
+      print('No se encontraron rangos de precios.');
+      return;
     }
-  }).toList();
 
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Rangos de Precios'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: uniqueRanges.asMap().entries.map((entry) {
-              final index = entry.key;
-              final range = entry.value;
+    final seenRanges = <String>{};
+    final uniqueRanges = priceRanges.where((range) {
+      final rangeString = '${range.cantidadInicio}-${range.cantidadFinal}-${range.precio}';
+      if (seenRanges.contains(rangeString)) {
+        return false;
+      } else {
+        seenRanges.add(rangeString);
+        return true;
+      }
+    }).toList();
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Text(
-                      'Cantidad: ${range.cantidadInicio} - ${range.cantidadFinal}, \nPrecio: ${range.precio}',
-                      style: TextStyle(fontSize: 16),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Rangos de Precios'),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: uniqueRanges.asMap().entries.map((entry) {
+                final index = entry.key;
+                final range = entry.value;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        'Cantidad: ${range.cantidadInicio} - ${range.cantidadFinal}, \nPrecio: ${range.precio}',
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ),
-                  ),
-                  // Agrega un separador, excepto después del último rango
-                  if (index < uniqueRanges.length - 1)
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 1,
-                    ),
-                ],
-              );
-            }).toList(),
+                    if (index < uniqueRanges.length - 1)
+                      Divider(
+                        color: Colors.grey,
+                        thickness: 1,
+                      ),
+                  ],
+                );
+              }).toList(),
+            ),
           ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: Text('Cerrar'),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-          ),
-        ],
-      );
-    },
-  );
-}
-
+          actions: <Widget>[
+            TextButton(
+              child: Text('Cerrar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -166,13 +177,15 @@ void _showPriceRanges(int codigo) async {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Existencia: ${product.existencia}'),
+                              if (isAdmin) ...[
+                                Text(
+                                    'Costo: Q${product.costo.toStringAsFixed(2)}'),
+                              ],
                               Text(
-                                  'Costo: ${product.costo.toStringAsFixed(2)}'),
-                              Text(
-                                  'Precios: A) ${product.precioFinal.toStringAsFixed(2)}, ' +
-                                      'B) ${product.precioB.toStringAsFixed(2)}, ' +
-                                      'C) ${product.precioC.toStringAsFixed(2)}, ' +
-                                      'D) ${product.precioD.toStringAsFixed(2)}'),
+                                  'Precios: A) Q${product.precioFinal.toStringAsFixed(2)}, ' +
+                                      'B) Q${product.precioB.toStringAsFixed(2)}, ' +
+                                      'C) Q${product.precioC.toStringAsFixed(2)}, ' +
+                                      'D) Q${product.precioD.toStringAsFixed(2)}'),
                               Text('Marca: ${product.marcas}'),
                               Text(
                                   'Categoría: ${product.categoriaSubCategoria}'),
@@ -193,5 +206,3 @@ void _showPriceRanges(int codigo) async {
     );
   }
 }
-
-

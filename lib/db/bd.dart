@@ -262,7 +262,7 @@ class DatabaseHelper {
   Future<void> _createUsuarioTable(Database db) async {
     await db.execute('''
       CREATE TABLE Usuario (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY,
         Nombre TEXT,
         ClaveEntrada TEXT,
         ClaveInterna TEXT,

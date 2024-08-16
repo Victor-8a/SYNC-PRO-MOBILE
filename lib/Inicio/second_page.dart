@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Producto.dart';
 import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/Configuraciones.dart';
 import 'package:sync_pro_mobile/services/sincronizarRuta.dart';
 import 'package:sync_pro_mobile/services/warning_widget_cubit.dart';
@@ -72,17 +73,25 @@ Future<void> _loadUserName() async {
 
 
   Future<void> _logout() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-    await prefs.remove('userId');
-    await prefs.remove('idVendedor');
-    await prefs.remove('username');
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
-      (Route<dynamic> route) => false,
-    );
-  }
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  
+  // Elimina los datos del usuario almacenados en SharedPreferences
+  await prefs.remove('token');
+  await prefs.remove('userId');
+  await prefs.remove('idVendedor');
+  await prefs.remove('username');
+
+  // Llama a la función para eliminar el usuario de la base de datos
+  await deleteUsuario();
+
+  // Navega a la pantalla de inicio de sesión y elimina las pantallas anteriores de la pila de navegación
+  Navigator.pushAndRemoveUntil(
+    context,
+    MaterialPageRoute(builder: (context) => const LoginPage()),
+    (Route<dynamic> route) => false,
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -172,6 +181,13 @@ Future<void> _loadUserName() async {
       ),
 
     );
+
+  }
+  
+  deleteUsuario() async{
+    DatabaseHelperUsuario dbHelper =DatabaseHelperUsuario();
+ final eliminar = await dbHelper.deleteUsuario();
+ return eliminar;
 
   }
 }
