@@ -32,13 +32,10 @@ class CheckInternetConnection {
    
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
         _controller.sink.add(ConnectionStatus.online);
-        print('si hay conexion');
       } else {
         _controller.sink.add(ConnectionStatus.offline);
-        print('no hay conexion');
+
       }
-         print('VERIFICAR SI ESTA PASANDO ALGO');
-      print(InternetAddress.lookup);
       
     } on SocketException catch (_) {
       _controller.sink.add(ConnectionStatus.offline);

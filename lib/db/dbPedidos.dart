@@ -1,4 +1,6 @@
 
+import 'package:sync_pro_mobile/Models/Pedido.dart';
+
 import 'bd.dart';
 class DatabaseHelperPedidos {
 
@@ -19,6 +21,21 @@ order['NumPedido'] = 0;
   );
   return id;
 }
+
+
+Future<int> insertPedido(Pedido pedido) async {
+    final db = await dbProvider.database;
+
+    // Convertir a un mapa los datos del Pedido
+    Map<String, dynamic> pedidoMap = pedido.toMap();
+
+    // Insertar el pedido en la base de datos
+    int id = await db.insert(
+      'Orders',
+      pedidoMap,
+    );
+    return id;
+  }
 
 
   Future<List<Map<String, dynamic>>> getOrdersWithClientAndSeller() async {

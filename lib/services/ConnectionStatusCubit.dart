@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:sync_pro_mobile/main.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:sync_pro_mobile/services/check_internet_connection.dart';
+import 'package:sync_pro_mobile/services/CheckInternetConnection.dart';
 
 class ConnectionStatusCubit extends Cubit<ConnectionStatus> {
   late StreamSubscription _connectionSubscripcion;

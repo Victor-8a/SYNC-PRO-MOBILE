@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:http/http.dart' as http;
-import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 
 import 'package:sync_pro_mobile/db/dbPedidos.dart' as dbGuardarPedido;
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
@@ -62,10 +62,6 @@ Future<void> syncOrders() async {
           return;
         }
       }
-      print('++++Respuesta del Servidor+++++');
-      print(response.statusCode);
-      print('++++respuesta del login+++++');
-      print(login());
 
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);

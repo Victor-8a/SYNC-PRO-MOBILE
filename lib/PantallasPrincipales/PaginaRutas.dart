@@ -5,13 +5,13 @@ import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Models/DetalleRuta.dart';
 import 'package:sync_pro_mobile/Models/Localidad.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
-import 'package:sync_pro_mobile/PantallasSecundarias/listar_ruta.dart';
-import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/ListarRuta.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
 import 'package:sync_pro_mobile/db/dbLocalidad.dart';
 import 'package:sync_pro_mobile/Models/Ruta.dart';
 import 'package:sync_pro_mobile/db/dbRuta.dart';
-import 'package:sync_pro_mobile/services/sincronizarRuta.dart';
+import 'package:sync_pro_mobile/services/SincronizarRuta.dart';
 import '../db/dbDetalleRuta.dart'; // Asegúrate de importar el modelo Ruta si no lo has hecho aún
 
 Future<Vendedor> loadSalesperson() async {

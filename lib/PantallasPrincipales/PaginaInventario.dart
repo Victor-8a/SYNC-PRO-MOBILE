@@ -94,7 +94,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Text(
-                        'Cantidad: ${range.cantidadInicio} - ${range.cantidadFinal}, \nPrecio: ${range.precio}',
+                        'Cantidad: ${range.cantidadInicio} - ${range.cantidadFinal}, \nPrecio: Q${range.precio}',
                         style: TextStyle(fontSize: 16),
                       ),
                     ),
@@ -121,7 +121,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     );
   }
 
-  @override
+  @override 
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(

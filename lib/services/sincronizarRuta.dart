@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
-import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbDetalleRuta.dart';
 import 'package:sync_pro_mobile/db/dbRuta.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';

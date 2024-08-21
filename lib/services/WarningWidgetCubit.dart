@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sync_pro_mobile/services/connection_status_cubit.dart';
-import 'package:sync_pro_mobile/services/check_internet_connection.dart';
+import 'package:sync_pro_mobile/services/ConnectionStatusCubit.dart';
+import 'package:sync_pro_mobile/services/CheckInternetConnection.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class WarningWidgetCubit extends StatelessWidget {

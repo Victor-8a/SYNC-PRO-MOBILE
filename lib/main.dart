@@ -3,14 +3,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sync_pro_mobile/Inicio/second_page.dart';
+import 'package:sync_pro_mobile/Inicio/SecondPage.dart';
 import 'package:sync_pro_mobile/Models/Empresa.dart';
 import 'package:sync_pro_mobile/Models/Usuario.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
-import 'package:sync_pro_mobile/services/check_internet_connection.dart';
-import 'package:sync_pro_mobile/services/empresa_service.dart';
+import 'package:sync_pro_mobile/services/CheckInternetConnection.dart';
+import 'package:sync_pro_mobile/services/EmpresaService.dart';
 
 final internetChecker = CheckInternetConnection();
 

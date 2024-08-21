@@ -4,12 +4,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
-import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
 import 'package:sync_pro_mobile/db/dbEmpresa.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart';
-import 'package:sync_pro_mobile/services/PDF_service.dart'; // Asegúrate de que esta importación esté correcta
+import 'package:sync_pro_mobile/services/ObtenerPedido.dart';
+import 'package:sync_pro_mobile/services/PdfService.dart'; // Asegúrate de que esta importación esté correcta
 // import 'package:google_fonts/google_fonts.dart'; // Importa Google Fonts
 
 class PaginaListarPedidos extends StatefulWidget {
@@ -331,6 +332,8 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                   icon: Icon(Icons.refresh),
                   onPressed: () {
                     _loadOrders(); // Llama a la función para recargar los pedidos
+                     fetchPedido();
+                    //aqui va el metodo de inssertar los pedidos
                   },
                 ),
               ],

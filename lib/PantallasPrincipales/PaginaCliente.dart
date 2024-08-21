@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:sync_pro_mobile/PantallasSecundarias/crear_cliente.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/CrearCliente.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
-import 'package:sync_pro_mobile/services/localidad_service.dart';
+import 'package:sync_pro_mobile/services/LocalidadService.dart';
 
 class PaginaCliente extends StatefulWidget {
   const PaginaCliente({Key? key}) : super(key: key);

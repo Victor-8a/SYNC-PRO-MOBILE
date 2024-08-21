@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Producto.dart';
-import 'package:sync_pro_mobile/PantallasSecundarias/pagina_pedidos.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/Configuraciones.dart';
-import 'package:sync_pro_mobile/services/sincronizarRuta.dart';
-import 'package:sync_pro_mobile/services/warning_widget_cubit.dart';
+import 'package:sync_pro_mobile/services/SincronizarRuta.dart';
+import 'package:sync_pro_mobile/services/WarningWidgetCubit.dart';
 import '../main.dart';
-import '../PantallasPrincipales/pagina_inventario.dart';
-import '../PantallasPrincipales/pagina_cliente.dart';
-import '../PantallasPrincipales/pagina_listar_pedido.dart';
-import '../PantallasPrincipales/pagina_rutas.dart';
+import '../PantallasPrincipales/PaginaInventario.dart';
+import '../PantallasPrincipales/PaginaCliente.dart';
+import '../PantallasPrincipales/PaginaListarPedido.dart';
+import '../PantallasPrincipales/PaginaRutas.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:sync_pro_mobile/services/ProductoService.dart';
 void main() {
