@@ -1,29 +1,27 @@
-
+import 'package:sqflite/sqflite.dart';
 import 'package:sync_pro_mobile/Models/Pedido.dart';
 
 import 'bd.dart';
+
 class DatabaseHelperPedidos {
+  final dbProvider = DatabaseHelper();
 
-final dbProvider = DatabaseHelper();
+  Future<int> insertOrder(Map<String, dynamic> order) async {
+    final db = await dbProvider.database;
 
-  
-Future<int> insertOrder(Map<String, dynamic> order) async {
-  final db = await dbProvider.database;
+    // Convertir valores booleanos a enteros
+    order['Anulado'] = order['Anulado'] ? 1 : 0;
 
-  // Convertir valores booleanos a enteros
-  order['Anulado'] = order['Anulado'] ? 1 : 0;
+    order['synced'] = 0; // Marcar pedido como no sincronizado
+    order['NumPedido'] = 0;
+    int id = await db.insert(
+      'Orders',
+      order,
+    );
+    return id;
+  }
 
-  order['synced'] = 0; // Marcar pedido como no sincronizado
-order['NumPedido'] = 0;
-  int id = await db.insert(
-    'Orders',
-    order,
-  );
-  return id;
-}
-
-
-Future<int> insertPedido(Pedido pedido) async {
+  Future<int> insertPedido(Pedido pedido) async {
     final db = await dbProvider.database;
 
     // Convertir a un mapa los datos del Pedido
@@ -33,10 +31,10 @@ Future<int> insertPedido(Pedido pedido) async {
     int id = await db.insert(
       'Orders',
       pedidoMap,
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
     return id;
   }
-
 
   Future<List<Map<String, dynamic>>> getOrdersWithClientAndSeller() async {
     final db = await dbProvider.database;
@@ -60,6 +58,7 @@ Future<int> insertPedido(Pedido pedido) async {
 
     return result;
   }
+
   Future<Map<String, dynamic>?> getOrderById(int id) async {
     final db = await dbProvider.database;
     List<Map<String, dynamic>> result = await db.rawQuery('''
@@ -81,40 +80,38 @@ Future<int> insertPedido(Pedido pedido) async {
       AND Orders.id = $id
     ''');
     if (result.isNotEmpty) {
-    return result.first; // Devuelve el primer elemento de la lista, que es un mapa
-  } else {
-    return null; // Devuelve null si no se encontró ningún resultado
+      return result
+          .first; // Devuelve el primer elemento de la lista, que es un mapa
+    } else {
+      return null; // Devuelve null si no se encontró ningún resultado
+    }
   }
-}
 
+  Future<List<Map<String, dynamic>>> getUnsyncedOrders() async {
+    final db = await dbProvider.database;
+    return await db.query('Orders', where: 'synced =?', whereArgs: [0]);
+  }
 
-Future<List<Map<String, dynamic>>> getUnsyncedOrders() async {
-  final db = await dbProvider.database;
-  return await db.query('Orders', where: 'synced =?', whereArgs: [0]);
-}
-
-Future<void> markOrderAsSynced(int id, int numPedido) async {
-  final db = await dbProvider.database;
-  await db.update(
-    'Orders',
-    {'synced': 1,
-     'NumPedido':numPedido},
-    where: 'id = ?',
-    whereArgs: [id],
-  );
-}
-
+  Future<void> markOrderAsSynced(int id, int numPedido) async {
+    final db = await dbProvider.database;
+    await db.update(
+      'Orders',
+      {'synced': 1, 'NumPedido': numPedido},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
 
   Future<List<Map<String, dynamic>>> getAllOrders() async {
-  final db = await dbProvider.database;
-  var result = await db.query('Orders');
-  if (result.isNotEmpty) {
-    print('Todos los pedidos encontrados en la base de datos: $result');
-  } else {
-    print('No se encontraron pedidos en la base de datos.');
+    final db = await dbProvider.database;
+    var result = await db.query('Orders');
+    if (result.isNotEmpty) {
+      print('Todos los pedidos encontrados en la base de datos: $result');
+    } else {
+      print('No se encontraron pedidos en la base de datos.');
+    }
+    return result;
   }
-  return result;
-}
 
   Future<void> updateOrder(Map<String, dynamic> order) async {
     final db = await dbProvider.database;

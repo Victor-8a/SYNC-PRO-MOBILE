@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/PantallasSecundarias/CrearCliente.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
+import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/services/LocalidadService.dart';
 
@@ -42,6 +43,14 @@ class _PaginaClienteState extends State<PaginaCliente> {
 
   Future<void> fetchClientes() async {
     try {
+
+       DatabaseHelperUsuario dbHelperUsuario = DatabaseHelperUsuario();
+    int? idVendedor = await dbHelperUsuario.getIdVendedor();
+    
+    if (idVendedor == null) {
+      throw Exception('No se pudo obtener el id del vendedor');
+    }
+
       var connectivityResult = await Connectivity()
           .checkConnectivity()
           .timeout(Duration(seconds: 5));
@@ -58,7 +67,7 @@ class _PaginaClienteState extends State<PaginaCliente> {
       }
 
       final response = await http.get(
-       ApiRoutes.buildUri('cliente'),
+       ApiRoutes.buildUri('cliente/id-vendedor/$idVendedor'),
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(Duration(seconds: 5));
 

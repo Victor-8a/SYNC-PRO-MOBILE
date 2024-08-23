@@ -27,6 +27,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     super.initState();
     futureProducts = productService.getProductsFromLocalDatabase();
     _checkUserRole();  // Verifica el rol del usuario
+
   }
 
   void _checkUserRole() async {

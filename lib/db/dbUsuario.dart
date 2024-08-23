@@ -8,12 +8,26 @@ class DatabaseHelperUsuario {
   // Nombre de la tabla
   static const String tableUsuario = 'Usuario';
 
-  // Método para obtener el usuario actual
+  // Método para obtener el idVendedor del usuario actual
+  Future<int?> getIdVendedor() async {
+    final db = await dbProvider.database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      tableUsuario,
+      columns: ['IdVendedor'], // Asegúrate de que esta columna exista en tu tabla
+    );
 
+    if (maps.isNotEmpty) {
+      return maps.first['IdVendedor'];
+    } else {
+      return null;
+    }
+  }
+
+  // Método para verificar si el usuario es admin
   Future<bool> isUserAdmin() async {
     final db = await dbProvider.database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'Usuario', // Nombre de la tabla
+      tableUsuario, // Nombre de la tabla
       columns: ['EsAdmin'],
     );
 
@@ -22,8 +36,7 @@ class DatabaseHelperUsuario {
     } else {
       return false;
     }
-}
-
+  }
 
   // Método para insertar un usuario
   Future<int> insertUsuario(Usuario usuario) async {

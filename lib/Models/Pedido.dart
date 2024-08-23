@@ -6,9 +6,10 @@ class Pedido {
   String? observaciones;
   int? idUsuario;
   String? fechaEntrega;
+
   int? codMoneda;
   int? tipoCambio;
-  int? anulado;
+  bool? anulado;
   int? idVendedor;
   int? synced;
 
@@ -22,15 +23,19 @@ class Pedido {
     this.fechaEntrega,
     this.codMoneda,
     this.tipoCambio,
-    this.anulado,
+    this.anulado = false,
     this.idVendedor,
-    this.synced,
-  });
+    this.synced = 1,
+  }) {
+    numPedido = id;
+    synced = 1; // Asegurarse de que siempre se establezca a 1
+  }
 
+  // Método para crear una instancia de Pedido desde JSON
   factory Pedido.fromJson(Map<String, dynamic> json) {
     return Pedido(
       id: json['id'],
-      numPedido: json['NumPedido'],
+      numPedido: json['id'],
       codCliente: json['CodCliente'],
       fecha: json['Fecha'],
       observaciones: json['Observaciones'],
@@ -40,14 +45,15 @@ class Pedido {
       tipoCambio: json['TipoCambio'],
       anulado: json['Anulado'],
       idVendedor: json['idVendedor'],
-      synced: json['synced'],
+      synced: 1, // Asegurar que synced sea 1 cuando se crea desde JSON
     );
   }
 
-Map<String, dynamic> toJson() {
+  // Método para convertir una instancia de Pedido a un mapa
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'NumPedido': numPedido,
+      'numPedido': id,
       'CodCliente': codCliente,
       'Fecha': fecha,
       'Observaciones': observaciones,
@@ -57,29 +63,33 @@ Map<String, dynamic> toJson() {
       'TipoCambio': tipoCambio,
       'Anulado': anulado,
       'idVendedor': idVendedor,
-      'synced': synced,
+      'synced': synced, // Asegurar que synced se incluya en el JSON
     };
   }
 
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'NumPedido': numPedido,
-    'CodCliente': codCliente,
-    'Fecha': fecha,
-    'Observaciones': observaciones,
-    'IdUsuario': idUsuario,
-    'FechaEntrega': fechaEntrega,
-    'CodMoneda': codMoneda,
-    'TipoCambio': tipoCambio,
-    'Anulado': anulado,
-    'idVendedor': idVendedor,
-    'synced': synced,
-  };
+  // Método para convertir una instancia de Pedido a un mapa
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'numPedido': id,
+      'CodCliente': codCliente,
+      'Fecha': fecha,
+      'Observaciones': observaciones,
+      'IdUsuario': idUsuario,
+      'FechaEntrega': fechaEntrega,
+      'CodMoneda': codMoneda,
+      'TipoCambio': tipoCambio,
+      'Anulado': anulado,
+      'idVendedor': idVendedor,
+      'synced': synced, // Asegurar que synced se incluya en el mapa
+    };
+  }
 
-  static Pedido fromMap(Map<String, dynamic> map) {
+  // Método para crear una instancia de Pedido desde un mapa
+  factory Pedido.fromMap(Map<String, dynamic> map) {
     return Pedido(
       id: map['id'],
-      numPedido: map['NumPedido'],
+      numPedido: map['id'],
       codCliente: map['CodCliente'],
       fecha: map['Fecha'],
       observaciones: map['Observaciones'],
@@ -89,8 +99,7 @@ Map<String, dynamic> toJson() {
       tipoCambio: map['TipoCambio'],
       anulado: map['Anulado'],
       idVendedor: map['idVendedor'],
-      synced: map['synced'],
+      synced: 1, // Asegurar que synced sea 1 cuando se crea desde un mapa
     );
-
-}
+  }
 }

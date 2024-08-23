@@ -9,6 +9,8 @@ import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
 import 'package:sync_pro_mobile/db/dbEmpresa.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart';
+import 'package:sync_pro_mobile/db/dbVendedores.dart';
+import 'package:sync_pro_mobile/services/ClienteService.dart';
 import 'package:sync_pro_mobile/services/ObtenerPedido.dart';
 import 'package:sync_pro_mobile/services/PdfService.dart'; // Asegúrate de que esta importación esté correcta
 // import 'package:google_fonts/google_fonts.dart'; // Importa Google Fonts
@@ -33,15 +35,19 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
   @override
   void initState() {
     super.initState();
+    _tryFetchAndStoreVendedores();
+    insertarCliente();
     _loadOrders();
     _initializeConfiguration();
+
   }
 
   void _loadOrders() async {
     _orders = await DatabaseHelperPedidos().getOrdersWithClientAndSeller();
     _filteredOrders = List.from(_orders); // Copia de la lista original
+_tryFetchAndStoreVendedores() ;
+      insertarCliente();
     setState(() {});
-
   }
   
   Future<void> _initializeConfiguration() async {
@@ -72,7 +78,7 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
           future:
               DatabaseHelperDetallePedidos().getUnsyncedOrderDetails(orderId),
           builder: (BuildContext context,
-              AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {
+              AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {     
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
@@ -442,5 +448,20 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
     )
     
     );
+  }
+  
+  void insertarCliente() async {
+    ClienteService clienteService = ClienteService();
+clienteService.insertarCliente(); // Asegúrate de usar el nombre correcto
+
+  }
+  
+  Future<bool> _tryFetchAndStoreVendedores() async {
+    try {
+      return await DatabaseHelperVendedor().fetchAndStoreVendedores();
+    } catch (e) {
+      print('Error fetching and storing vendedores: $e');
+      return false;
+    }
   }
 }
