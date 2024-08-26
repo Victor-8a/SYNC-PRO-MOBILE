@@ -10,6 +10,25 @@ class DatabaseHelperDetallePedidos {
     return await db.query('order_details', where: 'idPedido = ?', whereArgs: [idPedido]);
   }
 
+  Future<List<Map<String, dynamic>>> getOrderDetailsWithProductos(idPedido) async {
+  final db = await dbProvider.database;
+
+
+  final result = await db.rawQuery('''
+    SELECT order_details.*, productos.barras
+    FROM order_details
+    INNER JOIN productos ON order_details.CodArticulo = productos.codigo
+    WHERE order_details.idPedido = ?
+
+    	
+
+  ''', [idPedido]);
+
+  return result;
+}
+
+
+
   Future<void> insertOrderDetail(Map<String, dynamic> orderDetail) async {
     final db = await dbProvider.database;
     await db.insert(

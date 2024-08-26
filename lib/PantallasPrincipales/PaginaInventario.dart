@@ -5,7 +5,6 @@ import 'package:sync_pro_mobile/db/dbRangoPrecioProducto.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ProductoService.dart';
 
-
 class PaginaInventario extends StatefulWidget {
   const PaginaInventario({Key? key}) : super(key: key);
 
@@ -26,8 +25,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   void initState() {
     super.initState();
     futureProducts = productService.getProductsFromLocalDatabase();
-    _checkUserRole();  // Verifica el rol del usuario
-
+    _checkUserRole(); // Verifica el rol del usuario
   }
 
   void _checkUserRole() async {
@@ -35,7 +33,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     bool isAdmin = await dbHelperUsuario.isUserAdmin();
 // Obtén el usuario actual
     setState(() {
-   this.isAdmin = isAdmin; // Asume que 1 es para admin y 0 para no admin
+      this.isAdmin = isAdmin; // Asume que 1 es para admin y 0 para no admin
     });
   }
 
@@ -43,9 +41,8 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     futureProducts.then((products) {
       setState(() {
         displayedProducts = products
-            .where((product) => product.descripcion
-                .toLowerCase()
-                .contains(query.toLowerCase()))
+            .where((product) =>
+                product.descripcion.toLowerCase().contains(query.toLowerCase()))
             .toList();
       });
     });
@@ -58,7 +55,8 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   }
 
   void _showPriceRanges(int codigo) async {
-    final priceRanges = await DatabaseHelperRangoPrecioProducto().getRangosByProducto(codigo);
+    final priceRanges =
+        await DatabaseHelperRangoPrecioProducto().getRangosByProducto(codigo);
 
     // ignore: unnecessary_null_comparison
     if (priceRanges == null || priceRanges.isEmpty) {
@@ -68,7 +66,8 @@ class _PaginaInventarioState extends State<PaginaInventario> {
 
     final seenRanges = <String>{};
     final uniqueRanges = priceRanges.where((range) {
-      final rangeString = '${range.cantidadInicio}-${range.cantidadFinal}-${range.precio}';
+      final rangeString =
+          '${range.cantidadInicio}-${range.cantidadFinal}-${range.precio}';
       if (seenRanges.contains(rangeString)) {
         return false;
       } else {
@@ -122,7 +121,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     );
   }
 
-  @override 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
@@ -182,11 +181,10 @@ class _PaginaInventarioState extends State<PaginaInventario> {
                                 Text(
                                     'Costo: Q${product.costo.toStringAsFixed(2)}'),
                               ],
-                              Text(
-                                  'Precios: A) Q${product.precioFinal.toStringAsFixed(2)}, ' +
-                                      'B) Q${product.precioB.toStringAsFixed(2)}, ' +
-                                      'C) Q${product.precioC.toStringAsFixed(2)}, ' +
-                                      'D) Q${product.precioD.toStringAsFixed(2)}'),
+                              Text('Precios: A) Q${product.precioFinal.toStringAsFixed(2)}, ' +
+                                  'B) Q${product.precioB.toStringAsFixed(2)}, ' +
+                                  'C) Q${product.precioC.toStringAsFixed(2)}, ' +
+                                  'D) Q${product.precioD.toStringAsFixed(2)}'),
                               Text('Marca: ${product.marcas}'),
                               Text(
                                   'Categoría: ${product.categoriaSubCategoria}'),

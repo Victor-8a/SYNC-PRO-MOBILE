@@ -16,6 +16,17 @@ final db = await dbProvider.database;
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+  
+
+  Future <List<Map<String, dynamic>>> getExisteProducto() async {
+  final db = await dbProvider.database;
+  final result = await db.rawQuery('''select count(*) from productos
+''');
+
+return result;
+}
+
+
 
   Future<List<Product>> getProducts() async {
 final db = await dbProvider.database;

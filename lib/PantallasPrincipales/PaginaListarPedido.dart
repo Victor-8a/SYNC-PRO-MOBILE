@@ -1,14 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:sqflite/sqflite.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
 import 'package:sync_pro_mobile/db/dbEmpresa.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart';
+import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbVendedores.dart';
 import 'package:sync_pro_mobile/services/ClienteService.dart';
 import 'package:sync_pro_mobile/services/ObtenerPedido.dart';
@@ -35,20 +38,39 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
   @override
   void initState() {
     super.initState();
-    _tryFetchAndStoreVendedores();
-    insertarCliente();
     _loadOrders();
     _initializeConfiguration();
 
   }
 
-  void _loadOrders() async {
+
+void _loadOrders() async {
+  final dbHelperProductos = DatabaseHelperProducto(); // Asume que tienes un DatabaseHelperProductos para manejar productos
+
+  // Verificar si existen productos en la base de datos
+  final result = await dbHelperProductos.getExisteProducto();
+  int count = Sqflite.firstIntValue(result) ?? 0;
+
+  if (count == 0) {
+    // Mostrar una notificación si no hay productos
+    Fluttertoast.showToast(
+      msg: "No hay productos en la base de datos. Cargue sus productos primero.",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.CENTER,
+    );
+  } else {
+    // Proceder con la carga de órdenes
+    await _tryFetchAndStoreVendedores();
+    insertarCliente();
+
     _orders = await DatabaseHelperPedidos().getOrdersWithClientAndSeller();
-    _filteredOrders = List.from(_orders); // Copia de la lista original
-_tryFetchAndStoreVendedores() ;
-      insertarCliente();
-    setState(() {});
+
+    setState(() {
+      _filteredOrders = List.from(_orders); // Copia de la lista original
+    });
   }
+}
+
   
   Future<void> _initializeConfiguration() async {
   await _loadConfiguracion();
@@ -76,7 +98,7 @@ _tryFetchAndStoreVendedores() ;
         title: Text('Detalle del Pedido $numPedido'),
         content: FutureBuilder<List<Map<String, dynamic>>>(
           future:
-              DatabaseHelperDetallePedidos().getUnsyncedOrderDetails(orderId),
+              DatabaseHelperDetallePedidos().getOrderDetailsWithProductos(orderId),
           builder: (BuildContext context,
               AsyncSnapshot<List<Map<String, dynamic>>> snapshot) {     
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -114,7 +136,7 @@ _tryFetchAndStoreVendedores() ;
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Producto: ${detail['CodArticulo']}',
+                                    'Producto: ${detail['barras']}',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16.0,
@@ -336,10 +358,25 @@ _tryFetchAndStoreVendedores() ;
                 ),
                 IconButton(
                   icon: Icon(Icons.refresh),
-                  onPressed: () {
-                    _loadOrders(); // Llama a la función para recargar los pedidos
-                     fetchPedido();
-                    //aqui va el metodo de inssertar los pedidos
+                  onPressed: () async{
+                 
+                      
+                        _loadOrders(); // Llama a la función para recargar los pedidos
+
+
+                        _showLoadingDialog(context);
+                     try {
+      await fetchPedido(); // Aquí llamas a la función que inserta los pedidos
+      setState(() {
+        _filteredOrders = List.from(_orders); // Copia de la lista original
+      });
+    } catch (error) {
+      // Manejar errores si es necesario
+      print("Error al cargar pedidos: $error");
+    } finally {
+      // Cerrar el diálogo de carga
+      Navigator.of(context).pop();
+    }
                   },
                 ),
               ],
@@ -452,7 +489,7 @@ _tryFetchAndStoreVendedores() ;
   
   void insertarCliente() async {
     ClienteService clienteService = ClienteService();
-clienteService.insertarCliente(); // Asegúrate de usar el nombre correcto
+    clienteService.insertarCliente(); // Asegúrate de usar el nombre correcto
 
   }
   
@@ -464,4 +501,32 @@ clienteService.insertarCliente(); // Asegúrate de usar el nombre correcto
       return false;
     }
   }
+
+
+  void _showLoadingDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: false, // Evita que se cierre al tocar fuera del diálogo
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        child: Container(
+          padding: EdgeInsets.all(20),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 20),
+             
+              
+            ],
+             crossAxisAlignment: CrossAxisAlignment.center
+
+          ),
+        ),
+      );
+    },
+  );
+}
+
 }
