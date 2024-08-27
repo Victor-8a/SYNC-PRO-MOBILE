@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/PantallasSecundarias/CrearCliente.dart';
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/services/LocalidadService.dart';
@@ -39,59 +40,71 @@ class _PaginaClienteState extends State<PaginaCliente> {
     _isMounted = false;
     super.dispose();
   }
-
-
-  Future<void> fetchClientes() async {
-    try {
-
-       DatabaseHelperUsuario dbHelperUsuario = DatabaseHelperUsuario();
+Future<void> fetchClientes() async {
+  try {
+    DatabaseHelperUsuario dbHelperUsuario = DatabaseHelperUsuario();
     int? idVendedor = await dbHelperUsuario.getIdVendedor();
     
     if (idVendedor == null) {
       throw Exception('No se pudo obtener el id del vendedor');
     }
 
-      var connectivityResult = await Connectivity()
-          .checkConnectivity()
-          .timeout(Duration(seconds: 5));
-      if (connectivityResult == ConnectivityResult.none) {
-        print('No hay conexión a Internet, recuperando clientes de la base de datos local');
-        return await retrieveClientesFromLocalDatabase();
-      }
-      await fetchRuta();
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
+    // Obtener la configuración de clientes filtrados
+    bool clientesFiltrados = await DatabaseHelperConfiguraciones().getClientesFiltrados();
 
-      if (token == null) {
-        throw Exception('No se encontró el token');
-      }
+    // Seleccionar la URL basada en la configuración
+    Uri url;
+    if (clientesFiltrados) {
+      url = ApiRoutes.buildUri('cliente/id-vendedor/$idVendedor');
+    } else {
+      url = ApiRoutes.buildUri('cliente');  // URL cuando no se filtra por idVendedor
+    }
 
-      final response = await http.get(
-       ApiRoutes.buildUri('cliente/id-vendedor/$idVendedor'),
-        headers: {'Authorization': 'Bearer $token'},
-      ).timeout(Duration(seconds: 5));
+    var connectivityResult = await Connectivity()
+        .checkConnectivity()
+        .timeout(Duration(seconds: 5));
 
-      if (response.statusCode == 200) {
-        final List<dynamic> jsonResponse = json.decode(response.body);
-        final clientes = jsonResponse.map((json) => Cliente.fromJson(json)).toList();
-        if (_isMounted) {
-          setState(() {
-            _clientes = clientes;
-            _filteredClientes = clientes;
-            saveClientesToLocalDatabase(clientes);
-            _isLoading = false;
-          });
-        }
-      } else {
-        throw Exception('Fallo al cargar clientes');
-      }
-    } catch (error) {
-      print('Error al obtener clientes: $error');
+    if (connectivityResult == ConnectivityResult.none) {
+      print('No hay conexión a Internet, recuperando clientes de la base de datos local');
+      return await retrieveClientesFromLocalDatabase();
+    }
+
+    await fetchRuta();
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('token');
+
+    if (token == null) {
+      throw Exception('No se encontró el token');
+    }
+
+    final response = await http.get(
+      url,
+      headers: {'Authorization': 'Bearer $token'},
+    ).timeout(Duration(seconds: 5));
+
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonResponse = json.decode(response.body);
+      final clientes = jsonResponse.map((json) => Cliente.fromJson(json)).toList();
       if (_isMounted) {
-        await retrieveClientesFromLocalDatabase();
+        setState(() {
+          _clientes = clientes;
+          _filteredClientes = clientes;
+          saveClientesToLocalDatabase(clientes);
+          _isLoading = false;
+        });
       }
+    } else {
+      throw Exception('Fallo al cargar clientes');
+    }
+  } catch (error) {
+    print('Error al obtener clientes: $error');
+    if (_isMounted) {
+      await retrieveClientesFromLocalDatabase();
     }
   }
+}
+
 
   Future<void> saveClientesToLocalDatabase(List<Cliente> clientes) async {
     try {

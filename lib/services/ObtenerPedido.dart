@@ -1,25 +1,44 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'; // Asegúrate de importar este paquete para utilizar Colors.
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Pedido.dart';
 import 'package:sync_pro_mobile/Models/DetallePedido.dart'; 
 import 'package:sync_pro_mobile/db/dbPedidos.dart';
-import 'package:sync_pro_mobile/db/dbDetallePedidos.dart'; 
+import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
+import 'package:sync_pro_mobile/db/dbProducto.dart'; 
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/services/LocalidadService.dart';
+import 'package:sqflite/sqflite.dart'; // Asegúrate de importar este paquete para utilizar Sqflite.
 
 Future<List<Pedido>> fetchPedido() async {
   try {
+    final dbHelperProductos = DatabaseHelperProducto(); 
+
+    // Verificar si existen productos en la base de datos
+    final result = await dbHelperProductos.getExisteProducto();
+    int count = Sqflite.firstIntValue(result) ?? 0;
+
+    if (count == 0) {
+      // Mostrar una notificación si no hay productos
+      Fluttertoast.showToast(
+        msg: "No hay productos en la base de datos. Cargue su inventario primero.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+      );
+      return []; // Detener la función si no hay productos
+    }
+
     // Mostrar toast de inicio de descarga
     Fluttertoast.showToast(
-      msg: "Descargando pedidos...",
+      msg: "Descargando productos...",
       toastLength: Toast.LENGTH_LONG,
       gravity: ToastGravity.BOTTOM,
       timeInSecForIosWeb: 5,
-      backgroundColor: Colors.blue,
     );
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -76,11 +95,10 @@ Future<List<Pedido>> fetchPedido() async {
 
       // Mostrar toast de éxito
       Fluttertoast.showToast(
-        msg: "Pedidos descargados correctamente",
+        msg: "Productos descargados correctamente",
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
         timeInSecForIosWeb: 5,
-        backgroundColor: Colors.green,
       );
 
       print('Pedidos y detalles cargados exitosamente: ${pedidos.length}');
@@ -90,6 +108,14 @@ Future<List<Pedido>> fetchPedido() async {
       throw Exception('Failed to load pedidos');
     }
   } catch (error) {
+    // Mostrar toast de error
+    Fluttertoast.showToast(
+      msg: "Error al descargar los productos: $error",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 5,
+    );
+
     print('Error al obtener los pedidos: $error');
     throw error;
   }

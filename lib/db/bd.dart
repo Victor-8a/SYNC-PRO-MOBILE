@@ -221,10 +221,13 @@ class DatabaseHelper {
     await db.execute('''
     CREATE TABLE Configuraciones(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      usaRuta INTEGER DEFAULT 0
+      usaRuta INTEGER DEFAULT 0,
+      clientesFiltrados INTEGER DEFAULT 0
     )
     ''');
   }
+
+  
 
   // Future<void> deleteAllTables() async {
   //   final db = await database;

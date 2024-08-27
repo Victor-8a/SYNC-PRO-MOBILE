@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 
@@ -15,6 +16,18 @@ class ClienteService {
 
       if (idVendedor == null) {
         throw Exception('No se pudo obtener el id del vendedor');
+      }
+      
+
+      // Verificar si se deben usar los clientes filtrados
+      bool clientesFiltrados = await DatabaseHelperConfiguraciones().getClientesFiltrados();
+
+      // Construir la URL en función de la configuración
+      Uri url;
+      if (clientesFiltrados) {
+        url = ApiRoutes.buildUri('cliente/id-vendedor/$idVendedor');
+      } else {
+        url = ApiRoutes.buildUri('cliente');  // Suponiendo que esta es la URL cuando no se usa idVendedor
       }
 
       var connectivityResult = await Connectivity()
@@ -33,7 +46,7 @@ class ClienteService {
       }
 
       final response = await http.get(
-        ApiRoutes.buildUri('cliente/id-vendedor/$idVendedor'),
+        url,
         headers: {'Authorization': 'Bearer $token'},
       ).timeout(Duration(seconds: 5));
 
@@ -50,6 +63,7 @@ class ClienteService {
       return await _retrieveClientesFromLocalDatabase();
     }
   }
+
 
   Future<void> _saveClientesToLocalDatabase(List<Cliente> clientes) async {
     try {

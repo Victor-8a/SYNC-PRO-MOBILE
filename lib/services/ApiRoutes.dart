@@ -1,7 +1,7 @@
 // lib/utils/api_routes.dart
 
 class ApiRoutes {
-  // static const String baseUrl = 'http://85.10.196.212:4000';
+  // static const String baseUrl = 'http://85.10.196.212:4001';
 static const String baseUrl = 'http://192.168.1.212:4000';
   // Método para obtener la URL completa concatenando la base con la ruta específica
   static Uri buildUri(String endpoint) {

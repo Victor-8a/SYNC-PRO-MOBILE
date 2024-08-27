@@ -7,31 +7,48 @@ class ConfiguracionesPage extends StatefulWidget {
 }
 
 class _ConfiguracionesPageState extends State<ConfiguracionesPage> {
-  final DatabaseHelperConfiguraciones dbHelper = DatabaseHelperConfiguraciones();
+  final DatabaseHelperConfiguraciones dbHelper =
+      DatabaseHelperConfiguraciones();
   bool usarRuta = false;
+  bool clientesFiltrados = false;
 
   @override
   void initState() {
-     _loadUsaRuta();
+    _loadUsaRuta();
+    _loadClientesFiltrados();
     super.initState();
-   
   }
 
   Future<void> _loadUsaRuta() async {
     bool value = await dbHelper.getUsaRuta();
     setState(() {
       usarRuta = value;
+      clientesFiltrados = value;
+    });
+  }
+
+  Future<void> _loadClientesFiltrados() async {
+    bool value = await dbHelper.getClientesFiltrados();
+    setState(() {
+
+      clientesFiltrados = value;
     });
   }
 
   void _toggleUsaRuta(bool value) {
     setState(() {
       usarRuta = value;
+   
+    });
+  }
+    void _toggleClientesFiltrados(bool value) {
+    setState(() {
+      clientesFiltrados = value;
     });
   }
 
-  Future<void> _saveUsaRuta() async {
-    await dbHelper.setUsaRuta(usarRuta);
+  Future<void> saveconfiguraciones() async {
+    await dbHelper.setConfiguracion(usarRuta, clientesFiltrados);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Configuración guardada')),
     );
@@ -62,8 +79,21 @@ class _ConfiguracionesPageState extends State<ConfiguracionesPage> {
               ],
             ),
             SizedBox(height: 20),
+            Row(
+              children: [
+                Checkbox(
+                  value: clientesFiltrados,
+                  onChanged: (bool? value) {
+                    if (value != null) {
+                      _toggleClientesFiltrados(value);
+                    }
+                  },
+                ),
+                Text('Clientes Filtrados'),
+              ],
+            ),
             ElevatedButton(
-              onPressed: _saveUsaRuta,
+              onPressed: saveconfiguraciones,
               child: Text('Guardar'),
             ),
           ],
