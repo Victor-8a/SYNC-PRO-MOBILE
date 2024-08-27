@@ -12,8 +12,9 @@ class _ConfiguracionesPageState extends State<ConfiguracionesPage> {
 
   @override
   void initState() {
+     _loadUsaRuta();
     super.initState();
-    _loadUsaRuta();
+   
   }
 
   Future<void> _loadUsaRuta() async {

@@ -709,32 +709,32 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     Vendedor? _selectedSalesperson;
 
     return WillPopScope(
-        onWillPop: () async {
-          // Mostrar diálogo de confirmación antes de retroceder
-          bool confirm = await showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('¿Está seguro?'),
-              content:
-                  Text('Puede perder los datos de su pedido si retrocede.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(true); // Close the dialog
-                  },
-                  child: Text('Sí'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text('No'),
-                ),
-              ],
-            ),
-          );
+     onWillPop: () async {
+  bool confirm = await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('¿Está seguro?'),
+      content: Text('Puede perder los datos de su pedido si retrocede.'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop(true); // Envía true si confirma
+          },
+          child: Text('Sí'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text('No'),
+        ),
+      ],
+    ),
+  );
 
-          // Devolver true si el usuario confirma, false si cancela
-          return confirm;
-        },
+  return confirm;
+},
+
+
+
         child: Scaffold(
             appBar: AppBar(
               title: Text(
@@ -884,166 +884,205 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                       ),
                     ),
                     Column(
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: _selectedProducts.map((product) {
-    double unitPrice = _selectedProductPrices[product] ?? product.precioFinal;
-    int quantity = _selectedProductQuantities[product] ?? 1;
-    double discount = _discounts[product] ?? 0;
-    double subtotalBeforeDiscount = unitPrice * quantity;
-    double discountAmount = subtotalBeforeDiscount * (discount / 100);
-    double subtotal = subtotalBeforeDiscount - discountAmount;
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: _selectedProducts.map((product) {
+                        double unitPrice = _selectedProductPrices[product] ??
+                            product.precioFinal;
+                        int quantity = _selectedProductQuantities[product] ?? 1;
+                        double discount = _discounts[product] ?? 0;
+                        double subtotalBeforeDiscount = unitPrice * quantity;
+                        double discountAmount =
+                            subtotalBeforeDiscount * (discount / 100);
+                        double subtotal =
+                            subtotalBeforeDiscount - discountAmount;
 
-    List<double> availablePrices = [
-      product.precioFinal,
-      product.precioB,
-      product.precioC,
-      product.precioD,
-    ].where((price) => price > 0).toList();
+                        List<double> availablePrices = [
+                          product.precioFinal,
+                          product.precioB,
+                          product.precioC,
+                          product.precioD,
+                        ].where((price) => price > 0).toList();
 
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8.0),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            title: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    '${product.descripcion}',
-                    overflow: TextOverflow.clip,
-                  ),
-                ),
-             DropdownButton<double>(
-  value: availablePrices.contains(unitPrice)
-      ? unitPrice
-      : product.precioFinal,
-  items: availablePrices.toSet().map((price) {
-    return DropdownMenuItem(
-      value: price,
-      child: Text('Q${price.toStringAsFixed(2)}'),
-    );
-  }).toList(),
-  onChanged: (newPrice) async {
-    int? cantidad = _selectedProductQuantities[product];
+                        return Container(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          decoration: BoxDecoration(
+                            border:
+                                Border(bottom: BorderSide(color: Colors.grey)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ListTile(
+                                title: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        '${product.descripcion}',
+                                        overflow: TextOverflow.clip,
+                                      ),
+                                    ),
+                                    DropdownButton<double>(
+                                      value: availablePrices.contains(unitPrice)
+                                          ? unitPrice
+                                          : product.precioFinal,
+                                      items:
+                                          availablePrices.toSet().map((price) {
+                                        return DropdownMenuItem(
+                                          value: price,
+                                          child: Text(
+                                              'Q${price.toStringAsFixed(2)}'),
+                                        );
+                                      }).toList(),
+                                      onChanged: (newPrice) async {
+                                        int? cantidad =
+                                            _selectedProductQuantities[product];
 
-    // Si cantidad es nulo, establece un valor predeterminado o continúa sin hacer la llamada
-    double newUnitPrice = 0;
-    if (cantidad != null) { 
-      newUnitPrice = await getRangosByProducto(product.codigo, cantidad);
-    }
+                                        // Si cantidad es nulo, establece un valor predeterminado o continúa sin hacer la llamada
+                                        double newUnitPrice = 0;
+                                        if (cantidad != null) {
+                                          newUnitPrice =
+                                              await getRangosByProducto(
+                                                  product.codigo, cantidad);
+                                        }
 
-    if (newUnitPrice != 0) {
-      _showConfirmQuantityRangeDialog(context, cantidad!);
-    }
+                                        if (newUnitPrice != 0) {
+                                          _showConfirmQuantityRangeDialog(
+                                              context, cantidad!);
+                                        }
 
-  
-    setState(() {
-      _selectedProductPrices[product] = newPrice!;
-      unitPrice = newPrice;
-      subtotalBeforeDiscount = unitPrice * quantity;
-      discountAmount = subtotalBeforeDiscount * (discount / 100);
-      subtotal = subtotalBeforeDiscount - discountAmount;
-    });
-  },
-),
-                IconButton(
-                  icon: Icon(Icons.close_sharp, color: Colors.red),
-                  onPressed: () {
-                    setState(() {
-                      _selectedProducts.remove(product);
-                      _selectedProductPrices.remove(product);
-                      _selectedProductQuantities.remove(product);
-                      _discounts.remove(product);
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Padding(
-                  padding: EdgeInsets.only(left: 16.0),
-                  child: TextField(
-                    keyboardType: TextInputType.number,
-                    onChanged: (newValue) async {
-                      if (newValue.isNotEmpty) {
-                        int newQuantity = int.tryParse(newValue) ?? 0;
-                        if (newQuantity > 0) {
-                          // Actualiza la cantidad seleccionada y el precio
-                          setState(() {
-                            _selectedProductQuantities[product] = newQuantity;
-                          });
+                                        setState(() {
+                                          _selectedProductPrices[product] =
+                                              newPrice!;
+                                          unitPrice = newPrice;
+                                          subtotalBeforeDiscount =
+                                              unitPrice * quantity;
+                                          discountAmount =
+                                              subtotalBeforeDiscount *
+                                                  (discount / 100);
+                                          subtotal = subtotalBeforeDiscount -
+                                              discountAmount;
+                                        });
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: Icon(Icons.close_sharp,
+                                          color: Colors.red),
+                                      onPressed: () {
+                                        setState(() {
+                                          _selectedProducts.remove(product);
+                                          _selectedProductPrices
+                                              .remove(product);
+                                          _selectedProductQuantities
+                                              .remove(product);
+                                          _discounts.remove(product);
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(left: 16.0),
+                                      child: TextField(
+                                        keyboardType: TextInputType.number,
+                                        onChanged: (newValue) async {
+                                          if (newValue.isNotEmpty) {
+                                            int newQuantity =
+                                                int.tryParse(newValue) ?? 0;
+                                            if (newQuantity > 0) {
+                                              // Actualiza la cantidad seleccionada y el precio
+                                              setState(() {
+                                                _selectedProductQuantities[
+                                                    product] = newQuantity;
+                                              });
 
-                          // Obtén el nuevo precio basado en la cantidad
-                          double newUnitPrice = await getRangosByProducto(product.codigo, newQuantity);
-                      if( newUnitPrice!=0)
-                          // Actualiza el precio unitario y el subtotal
-                          setState(() {
-                            _selectedProductPrices[product] = newUnitPrice;
-                            unitPrice = newUnitPrice;
-                            subtotalBeforeDiscount = unitPrice * newQuantity;
-                            discountAmount = subtotalBeforeDiscount * (discount / 100);
-                            subtotal = subtotalBeforeDiscount - discountAmount;
-                          });
-                        }
-                      }
-
-                    },
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                      hintText: '1',
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextField(
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d{1,2}$')),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _discounts[product] = double.tryParse(value) ?? 0;
-                        discount = _discounts[product]!;
-                        subtotalBeforeDiscount = unitPrice * quantity;
-                        discountAmount = subtotalBeforeDiscount * (discount / 100);
-                        subtotal = subtotalBeforeDiscount - discountAmount;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      labelText: '% Desc',
-                      floatingLabelStyle: TextStyle(color: Colors.blue),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      contentPadding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                      isDense: true,
-                    ),
-                  ),
-                ),
-              ),
-              SizedBox(width: 16.0),
-              Text('Q${subtotal.toStringAsFixed(2)}'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }).toList(),
+                                              // Obtén el nuevo precio basado en la cantidad
+                                              double newUnitPrice =
+                                                  await getRangosByProducto(
+                                                      product.codigo,
+                                                      newQuantity);
+                                              if (newUnitPrice != 0)
+                                                // Actualiza el precio unitario y el subtotal
+                                                setState(() {
+                                                  _selectedProductPrices[
+                                                      product] = newUnitPrice;
+                                                  unitPrice = newUnitPrice;
+                                                  subtotalBeforeDiscount =
+                                                      unitPrice * newQuantity;
+                                                  discountAmount =
+                                                      subtotalBeforeDiscount *
+                                                          (discount / 100);
+                                                  subtotal =
+                                                      subtotalBeforeDiscount -
+                                                          discountAmount;
+                                                });
+                                            }
+                                          }
+                                        },
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(
+                                              vertical: 5, horizontal: 10),
+                                          hintText: '1',
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      child: TextField(
+                                        keyboardType: TextInputType.number,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                              RegExp(r'^\d{1,2}$')),
+                                        ],
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _discounts[product] =
+                                                double.tryParse(value) ?? 0;
+                                            discount = _discounts[product]!;
+                                            subtotalBeforeDiscount =
+                                                unitPrice * quantity;
+                                            discountAmount =
+                                                subtotalBeforeDiscount *
+                                                    (discount / 100);
+                                            subtotal = subtotalBeforeDiscount -
+                                                discountAmount;
+                                          });
+                                        },
+                                        decoration: InputDecoration(
+                                          labelText: '% Desc',
+                                          floatingLabelStyle:
+                                              TextStyle(color: Colors.blue),
+                                          border: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(10),
+                                          ),
+                                          contentPadding: EdgeInsets.symmetric(
+                                              vertical: 5.0, horizontal: 10.0),
+                                          isDense: true,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 16.0),
+                                  Text('Q${subtotal.toStringAsFixed(2)}'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     ),
                     SizedBox(height: 20.0),
                     TextField(
@@ -1409,9 +1448,7 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     List<String>? selectedProductsJson = [];
     await prefs.setStringList('selectedProducts', selectedProductsJson);
   }
-  
 
-  
 //  Future<double> _getPriceForQuantity(int codigo, int quantity) async {
 //   List<RangoPrecioProducto> priceRanges = await getRangosByProducto(codigo,quantity);
 
@@ -1429,25 +1466,27 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 //   return 0; // Ajusta según cómo se define el precio final
 // }
 
- Future<double> getRangosByProducto(int codigo, int quantity) async{
-    DatabaseHelperRangoPrecioProducto dbHelper = DatabaseHelperRangoPrecioProducto();
-    final rangoPrecioProducto = await dbHelper.getPrecioByProductoYCantidad(codigo,quantity);
+  Future<double> getRangosByProducto(int codigo, int quantity) async {
+    DatabaseHelperRangoPrecioProducto dbHelper =
+        DatabaseHelperRangoPrecioProducto();
+    final rangoPrecioProducto =
+        await dbHelper.getPrecioByProductoYCantidad(codigo, quantity);
 
-return rangoPrecioProducto;
-
+    return rangoPrecioProducto;
   }
 }
 
-
- // Método para mostrar el diálogo de confirmación
-Future<void> _showConfirmQuantityRangeDialog(BuildContext context, int quantity) async {
+// Método para mostrar el diálogo de confirmación
+Future<void> _showConfirmQuantityRangeDialog(
+    BuildContext context, int quantity) async {
   return showDialog<void>(
     context: context,
     barrierDismissible: false, // Evita cerrar el diálogo tocando fuera de él
     builder: (BuildContext context) {
       return AlertDialog(
         title: Text('Confirmar Selección'),
-        content: Text('La cantidad $quantity está dentro del rango específico. ¿Estás seguro de que deseas cambiar el precio?'),
+        content: Text(
+            'La cantidad $quantity está dentro del rango específico. ¿Estás seguro de que deseas cambiar el precio?'),
         actions: <Widget>[
           TextButton(
             child: Text('Cancelar'),
@@ -1458,7 +1497,8 @@ Future<void> _showConfirmQuantityRangeDialog(BuildContext context, int quantity)
           TextButton(
             child: Text('Confirmar'),
             onPressed: () {
-              Navigator.of(context).pop(); // Cierra el diálogo y confirma el cambio
+              Navigator.of(context)
+                  .pop(); // Cierra el diálogo y confirma el cambio
             },
           ),
         ],

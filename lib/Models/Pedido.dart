@@ -6,7 +6,6 @@ class Pedido {
   String? observaciones;
   int? idUsuario;
   String? fechaEntrega;
-
   int? codMoneda;
   int? tipoCambio;
   bool? anulado;
@@ -43,7 +42,7 @@ class Pedido {
       fechaEntrega: json['FechaEntrega'],
       codMoneda: json['CodMoneda'],
       tipoCambio: json['TipoCambio'],
-      anulado: json['Anulado'],
+      anulado: json['Anulado'] == 1, // Convertir 1 a true y 0 a false
       idVendedor: json['idVendedor'],
       synced: 1, // Asegurar que synced sea 1 cuando se crea desde JSON
     );
@@ -61,7 +60,7 @@ class Pedido {
       'FechaEntrega': fechaEntrega,
       'CodMoneda': codMoneda,
       'TipoCambio': tipoCambio,
-      'Anulado': anulado,
+      'Anulado': anulado == true ? 1 : 0, // Convertir true/false a 1/0
       'idVendedor': idVendedor,
       'synced': synced, // Asegurar que synced se incluya en el JSON
     };
@@ -79,7 +78,7 @@ class Pedido {
       'FechaEntrega': fechaEntrega,
       'CodMoneda': codMoneda,
       'TipoCambio': tipoCambio,
-      'Anulado': anulado,
+      'Anulado': anulado == true ? 1 : 0, // Convertir true/false a 1/0
       'idVendedor': idVendedor,
       'synced': synced, // Asegurar que synced se incluya en el mapa
     };
@@ -97,7 +96,7 @@ class Pedido {
       fechaEntrega: map['FechaEntrega'],
       codMoneda: map['CodMoneda'],
       tipoCambio: map['TipoCambio'],
-      anulado: map['Anulado'],
+      anulado: map['Anulado'] == 1, // Convertir 1 a true y 0 a false
       idVendedor: map['idVendedor'],
       synced: 1, // Asegurar que synced sea 1 cuando se crea desde un mapa
     );

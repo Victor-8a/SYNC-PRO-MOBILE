@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Pedido.dart';
@@ -9,9 +11,17 @@ import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/services/LocalidadService.dart';
 
-
 Future<List<Pedido>> fetchPedido() async {
   try {
+    // Mostrar toast de inicio de descarga
+    Fluttertoast.showToast(
+      msg: "Descargando pedidos...",
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 5,
+      backgroundColor: Colors.blue,
+    );
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? token = prefs.getString('token');
     
@@ -35,7 +45,7 @@ Future<List<Pedido>> fetchPedido() async {
     final response = await http.get(url, headers: headers);
 
     if (response.statusCode == 200) {
-            await fetchRuta();
+      await fetchRuta();
       final List<dynamic> jsonResponse = json.decode(response.body);
       print('Pedidos obtenidos exitosamente: ${jsonResponse}');
       List<Pedido> pedidos = jsonResponse.map((data) => Pedido.fromJson(data)).toList();
@@ -64,6 +74,15 @@ Future<List<Pedido>> fetchPedido() async {
         }
       }
 
+      // Mostrar toast de éxito
+      Fluttertoast.showToast(
+        msg: "Pedidos descargados correctamente",
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 5,
+        backgroundColor: Colors.green,
+      );
+
       print('Pedidos y detalles cargados exitosamente: ${pedidos.length}');
 
       return pedidos;
@@ -85,7 +104,6 @@ Future<List<DetallePedido>> fetchDetallePedido(int pedidoId, String token) async
     };
 
     final response = await http.get(url, headers: headers);
-
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonResponse = json.decode(response.body);

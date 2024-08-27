@@ -4,6 +4,7 @@ import 'package:sync_pro_mobile/Models/Producto.dart';
 import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/Configuraciones.dart';
+import 'package:sync_pro_mobile/services/ObtenerPedido.dart';
 import 'package:sync_pro_mobile/services/SincronizarRuta.dart';
 import 'package:sync_pro_mobile/services/WarningWidgetCubit.dart';
 import '../main.dart';
@@ -133,6 +134,13 @@ Future<void> _loadUserName() async {
               title: const Text('Sincronizar Ruta'),
               onTap: syncRutas,
             ),
+
+
+                ListTile(
+              leading: const Icon(Icons.download),
+              title: const Text('Descargar Pedidos'),
+              onTap: fetchPedido,
+            ),
             ListTile(
               leading: const Icon(Icons.settings), // Icono para configuraciones
               title: const Text('Configuraciones'),
@@ -190,7 +198,11 @@ Future<void> _loadUserName() async {
  return eliminar;
 
   }
+
+  
 }
+
+
 
 // La clase LoginPage debe estar definida aquí o importada desde otro archivo
 @override
@@ -211,5 +223,10 @@ Widget build(BuildContext context) {
         child: const Text('Login'),
       ),
     ),
+
+    
   );
+
+
+  
 }

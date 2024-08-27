@@ -126,6 +126,7 @@ Future<void> syncRutas() async {
 
                 print('Enviando detalle de la ruta: $detailBody');
                 var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
+         
 
                 if (detailResponse.statusCode == 200) {
                   syncedDetailsCount++;
@@ -194,3 +195,32 @@ Future<void> syncRutas() async {
     }
   }
 }
+  // Future<void> _showLoadingDialog(BuildContext context) async {
+  //   showDialog(
+  //     context: context,
+  //     barrierDismissible:
+  //         false, // Evita que se cierre al tocar fuera del diálogo
+  //     builder: (BuildContext context) {
+  //       return Dialog(
+  //         backgroundColor: Colors.white,
+  //         child: Container(
+  //           padding: EdgeInsets.all(20),
+  //           child: Row(
+  //               mainAxisSize: MainAxisSize.max,
+  //               children: [
+  //                 CircularProgressIndicator(
+  //                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+  //                 ),
+  //                 SizedBox(width: 20),
+  //                 Text(
+  //                   'Cargando ...',
+  //                   style: TextStyle(color: Colors.blue),
+  //                 ),
+  //                 SizedBox(width: 20),
+  //               ],
+  //               crossAxisAlignment: CrossAxisAlignment.center),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
