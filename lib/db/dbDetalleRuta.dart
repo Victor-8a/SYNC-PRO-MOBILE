@@ -70,19 +70,18 @@ class DatabaseHelperDetalleRuta {
       whereArgs: [id],
     );
   }
-  Future<void> updateIdPedidoDetalleRuta(int codCliente, int idPedido, int idRuta) async {
+
+  Future<void> updateIdPedidoDetalleRuta(
+      int codCliente, int idPedido, int idRuta) async {
     final db = await dbProvider.database;
     print('cliente ${codCliente} , pedido: ${idPedido}  idruta ${idRuta}');
     await db.update(
       'DetalleRuta',
-      {'idPedido': idPedido, 'estado':'O'},
+      {'idPedido': idPedido, 'estado': 'O'},
       where: 'idRuta = ? AND CodCliente = ?',
       whereArgs: [idRuta, codCliente],
     );
   }
-
-
-  
 
   Future<void> updateFinDetalleRuta(int id, String fin) async {
     final db = await dbProvider.database;
@@ -114,34 +113,33 @@ class DatabaseHelperDetalleRuta {
     });
   }
 
-
 // Método para verificar la sincronización de la ruta
-Future<int> verificarSincronizacionRuta(int idRuta) async {
-  final db = await DatabaseHelper().database;
-  final List<Map<String, dynamic>> result = await db.rawQuery('''
+  Future<int> verificarSincronizacionRuta(int idRuta) async {
+    final db = await DatabaseHelper().database;
+    final List<Map<String, dynamic>> result = await db.rawQuery('''
     SELECT COUNT(*) as count FROM Orders WHERE id IN 
     (
       SELECT idPedido FROM DetalleRuta WHERE idRuta=? AND idPedido<>0
     ) AND synced=0
   ''', [idRuta]);
 
-  if (result.isNotEmpty) {
-    return result.first['count'] as int;
-  } else {
-    return 0;
+    if (result.isNotEmpty) {
+      return result.first['count'] as int;
+    } else {
+      return 0;
+    }
   }
-}
-Future<List<Map<String, dynamic>>> getNumeroPedidoReal(int idRuta) async {
-  final db = await dbProvider.database;
-  return await db.rawQuery('''
+
+  Future<List<Map<String, dynamic>>> getNumeroPedidoReal(int idRuta) async {
+    final db = await dbProvider.database;
+    return await db.rawQuery('''
     SELECT D.id, D.idRuta, D.codCliente, D.estado, D.observaciones, O.NumPedido AS idPedido,
     D.inicio, D.fin
     FROM DetalleRuta D 
     LEFT JOIN ORDERS O ON D.idPedido = O.id
     WHERE D.idRuta = ?
   ''', [idRuta]);
-}
-
+  }
 
   Future<void> updateDetallesRuta(DetalleRuta detalleRutaActualizado) async {
     try {
@@ -172,81 +170,82 @@ Future<List<Map<String, dynamic>>> getNumeroPedidoReal(int idRuta) async {
     }
   }
 
-Future<int> getDetalleRutaCount(int idRuta) async {
-  final db = await dbProvider.database;
-  var result = await db.rawQuery(
-    'SELECT COUNT(*) FROM DETALLERUTA WHERE FIN = \'\' AND inicio <> \'\' AND idRuta = ?',
-    [idRuta]
-  );
-  int count = Sqflite.firstIntValue(result) ?? 0;
-  return count;
-}
-Future<int> getDetalleRutaCountAndUpdate(int idRuta) async {
-  final db = await dbProvider.database;
-  int count = 0;
-
-  await db.transaction((txn) async {
-    // Contar las filas
-    var result = await txn.rawQuery(
-      'SELECT COUNT(*) FROM DETALLERUTA WHERE FIN = \'\' AND INICIO <> \'\' AND idRuta = ?',
-      [idRuta]
-    );
-    count = Sqflite.firstIntValue(result) ?? 0;
-
-    // Si hay filas que cumplen la condición, actualizar el campo `FIN`
-    if (count > 0) {
-      await txn.update(
-        'DETALLERUTA',
-        {'FIN': DateTime.now().toIso8601String()}, // Aquí puedes usar el valor que desees para el campo `FIN`
-        where: 'FIN = \'\' AND INICIO <> \'\' AND idRuta = ?',
-        whereArgs: [idRuta]
-      );
-    }
-  });
-
-  return count;
-}
-
-
-Future<List<Map<String, dynamic>>> getDetallesNoFinalizados(int idRuta) async {
-  final db = await dbProvider.database;
-  var result = await db.rawQuery(
-    'SELECT * FROM DETALLERUTA WHERE FIN = \'\' AND inicio <> \'\' AND idRuta = ?',
-    [idRuta]
-  );
-  return result;
-}
-
-Future<List<Map<String, dynamic>>> getDetalleRealizado(int idRuta) async {
-  final db = await dbProvider.database;
-  var result = await db.rawQuery(
-    '''SELECT CASE WHEN (inicio <> '' AND fin = '') THEN 1 ELSE 0 END AS realizaPedido  FROM DetalleRuta WHERE id = ?''',
-    [idRuta]
-  );
-  return result;
-}
-// Método para obtener el campo 'fin' de la visita actual
-Future<String?> obtenerFinDetalleRuta(int id) async {
-  final db = await  dbProvider.database;
-  var result = await db.query(
-    'DetalleRuta',
-    columns: ['fin'],
-    where: 'id = ?',
-    whereArgs: [id],
-  );
-
-   if (result.isNotEmpty) {
-    String? fin = result.first['fin'] as String?;
-    return (fin != null && fin.isNotEmpty) ? fin : null;
-  } else {
-    return null;
+  Future<int> getDetalleRutaCount(int idRuta) async {
+    final db = await dbProvider.database;
+    var result = await db.rawQuery(
+        'SELECT COUNT(*) FROM DETALLERUTA WHERE FIN = \'\' AND inicio <> \'\' AND idRuta = ?',
+        [idRuta]);
+    int count = Sqflite.firstIntValue(result) ?? 0;
+    return count;
   }
-}
 
-Future<List<Map<String, dynamic>>> getUnsyncedDetalleRuta(int idRuta) async {
-  final db = await dbProvider.database;
-  return await db.query('DetalleRuta', where: 'idRuta = ?', whereArgs: [idRuta]);
-}
+  Future<int> getDetalleRutaCountAndUpdate(int idRuta) async {
+    final db = await dbProvider.database;
+    int count = 0;
+
+    await db.transaction((txn) async {
+      // Contar las filas
+      var result = await txn.rawQuery(
+          'SELECT COUNT(*) FROM DETALLERUTA WHERE FIN = \'\' AND INICIO <> \'\' AND idRuta = ?',
+          [idRuta]);
+      count = Sqflite.firstIntValue(result) ?? 0;
+
+      // Si hay filas que cumplen la condición, actualizar el campo `FIN`
+      if (count > 0) {
+        await txn.update(
+            'DETALLERUTA',
+            {
+              'FIN': DateTime.now().toIso8601String()
+            }, // Aquí puedes usar el valor que desees para el campo `FIN`
+            where: 'FIN = \'\' AND INICIO <> \'\' AND idRuta = ?',
+            whereArgs: [idRuta]);
+      }
+    });
+
+    return count;
+  }
+
+  Future<List<Map<String, dynamic>>> getDetallesNoFinalizados(
+      int idRuta) async {
+    final db = await dbProvider.database;
+    var result = await db.rawQuery('''SELECT DR.*, C.nombre 
+FROM DETALLERUTA DR
+JOIN CLIENTES C ON DR.CodCliente = C.codCliente
+WHERE DR.FIN =\'\' AND DR.INICIO <> \'\' AND DR.idRuta =  ?''', [idRuta]);
+    return result;
+  }
+
+  Future<List<Map<String, dynamic>>> getDetalleRealizado(int idRuta) async {
+    final db = await dbProvider.database;
+    var result = await db.rawQuery(
+        '''SELECT CASE WHEN (inicio <> '' AND fin = '') THEN 1 ELSE 0 END AS realizaPedido  FROM DetalleRuta WHERE id = ?''',
+        [idRuta]);
+    return result;
+  }
+
+// Método para obtener el campo 'fin' de la visita actual
+  Future<String?> obtenerFinDetalleRuta(int id) async {
+    final db = await dbProvider.database;
+    var result = await db.query(
+      'DetalleRuta',
+      columns: ['fin'],
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+
+    if (result.isNotEmpty) {
+      String? fin = result.first['fin'] as String?;
+      return (fin != null && fin.isNotEmpty) ? fin : null;
+    } else {
+      return null;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getUnsyncedDetalleRuta(int idRuta) async {
+    final db = await dbProvider.database;
+    return await db
+        .query('DetalleRuta', where: 'idRuta = ?', whereArgs: [idRuta]);
+  }
 
   Future<void> deleteAllDetallesRuta() async {
     final db = await dbProvider.database;

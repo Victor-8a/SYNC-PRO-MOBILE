@@ -198,7 +198,12 @@ void _showPrecioRangos(BuildContext context, int codigo) async {
                       ],
                     ),
                     trailing: IconButton(
-                      icon: Icon(Icons.info),
+                      icon: Icon(Icons.info_outline,
+                          color: _productSelected[index] ? Colors.blue : null),
+                      tooltip: 'Información',
+                      color: Colors.blue,
+                      iconSize: 30,
+                      
                       onPressed: () {
                         _showPrecioRangos(context, product.codigo);
                       },

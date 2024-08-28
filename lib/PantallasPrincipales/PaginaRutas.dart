@@ -855,7 +855,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
               children: detallesNoFinalizados.map((detalle) {
                 return ListTile(
                   title: Text(
-                      'Cliente: ${detalle['nombreCliente'] ?? ''}'), // Mostrar el nombre del cliente
+                      'Cliente: ${detalle['nombre'] ?? ''}'), // Mostrar el nombre del cliente
                   subtitle: Text(
                       'Estado: ${detalle['estado']}, Observaciones: ${detalle['observaciones']}'),
                 );
