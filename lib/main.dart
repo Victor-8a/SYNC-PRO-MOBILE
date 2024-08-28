@@ -1,12 +1,14 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Inicio/SecondPage.dart';
 import 'package:sync_pro_mobile/Models/Empresa.dart';
 import 'package:sync_pro_mobile/Models/Usuario.dart';
 import 'package:sync_pro_mobile/Models/Vendedor.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/services/CheckInternetConnection.dart';
@@ -133,6 +135,7 @@ class _LoginPageState extends State<LoginPage> {
   // ignore: unused_field
   bool _mostrarError = false;
 Future<void> _login() async {
+
   String usuario = _usuarioController.text;
   String contrasena = _contrasenaController.text;
 
@@ -148,15 +151,23 @@ Future<void> _login() async {
   );
 
   if (response.statusCode == 200) {
+    
+  Fluttertoast.showToast(
+    msg: "Iniciando sesión",
+    toastLength: Toast.LENGTH_SHORT,
+    gravity: ToastGravity.BOTTOM,
+    timeInSecForIosWeb: 3,
+    backgroundColor: Colors.blue,
+    textColor: Colors.white,
+    fontSize: 16.0
+  );
     final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
 
-    // Obtén el token y los detalles del usuario
     String token = jsonResponse['token'];
     Map<String, dynamic> userJson = jsonResponse['user'];
     String? nombreUsuario = userJson['nombre'];
     int id = userJson['id'] ?? 0;
 
-    // Guarda los datos en el almacenamiento
     await saveTokenToStorage(token);
     await saveIdToStorage(id.toString(), 1);
     await saveIdToStorage(userJson['idVendedor']?.toString() ?? '', 2);
@@ -166,7 +177,6 @@ Future<void> _login() async {
       await saveUsernameToStorage(nombreUsuario);
       await loadSalesperson();
 
-      // Llamar a fetchEmpresa después de cargar el vendedor
       try {
         Empresa empresa = await fetchEmpresa(id);
         print('Empresa cargada exitosamente: ${empresa.empresa}');
@@ -174,7 +184,6 @@ Future<void> _login() async {
         print('Error al obtener la empresa: $error');
       }
 
-      // Descarga y guarda la imagen
       try {
         await fetchImage().then((imageModel) async {
           await saveImageToFile(imageModel);
@@ -187,15 +196,21 @@ Future<void> _login() async {
       }
 
       // Inserta el usuario en la base de datos
-    // Inserta el usuario en la base de datos
-try {
-  Usuario usuario = Usuario.fromJson(userJson);
-  await insertUsuario(usuario);
-  print('Usuario guardado en la base de datos.');
-} catch (error) {
-  print('Error al guardar el usuario en la base de datos: $error');
-}
+      try {
+        Usuario usuario = Usuario.fromJson(userJson);
+        await insertUsuario(usuario);
+        print('Usuario guardado en la base de datos.');
+      } catch (error) {
+        print('Error al guardar el usuario en la base de datos: $error');
+      }
 
+      // Verifica si la tabla Configuraciones está vacía e inserta si es necesario
+      try {
+        await DatabaseHelperConfiguraciones().insertConfiguracionSiEstaVacia();
+        print('Configuración insertada si estaba vacía.');
+      } catch (error) {
+        print('Error al verificar o insertar configuración: $error');
+      }
 
       Navigator.pushAndRemoveUntil(
         context,

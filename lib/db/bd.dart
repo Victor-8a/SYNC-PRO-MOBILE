@@ -14,31 +14,39 @@ class DatabaseHelper {
     _database = await _initDatabase();
     return _database!;
   }
+Future<Database> _initDatabase() async {
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, 'sync_pro_mobile.db');
 
-  Future<Database> _initDatabase() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'sync_pro_mobile.db');
-
-    return await openDatabase(
-      path,
-      version: 2,
-      onCreate: (db, version) async {
-        await _createVendedoresTable(db);
-        await _createLocalidadTable(db);
-        await _createClientesTable(db);
-        await _createProductosTable(db);
-        await _createOrdersTable(db);
-        await _createOrderDetailsTable(db);
-        await _createEmpresaTable(db);
-        await _createRutaTable(db);
-        await _createDetalleRutaTable(db);
-        await _createConfiguracionTable(db);
-        await _createRangoPrecioProductoTable(db);
-        await _createUsuarioTable(db);
-        print('Database created and tables initialized');
-      },
-    );
-  }
+  return await openDatabase(
+    path,
+    version: 4, // Incrementa la versión de la base de datos
+    onCreate: (db, version) async {
+      await _createVendedoresTable(db);
+      await _createLocalidadTable(db);
+      await _createClientesTable(db);
+      await _createProductosTable(db);
+      await _createOrdersTable(db);
+      await _createOrderDetailsTable(db);
+      await _createEmpresaTable(db);
+      await _createRutaTable(db);
+      await _createDetalleRutaTable(db);
+      await _createConfiguracionTable(db);
+      await _createRangoPrecioProductoTable(db);
+      await _createUsuarioTable(db);
+      print('Database created and tables initialized');
+    },
+    onUpgrade: (db, oldVersion, newVersion) async {
+      if (oldVersion < 4) {
+        // Si la versión anterior es menor a 3, agrega el nuevo campo a la tabla Configuraciones
+        await db.execute('''
+          ALTER TABLE Configuraciones ADD COLUMN clientesFiltrados INTEGER DEFAULT 0
+        ''');
+        print('Database upgraded to version 3: "clientesFiltrados" column added to Configuraciones');
+      }
+    },
+  );
+}
 
   Future<void> _createClientesTable(Database db) async {
     await db.execute('''

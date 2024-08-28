@@ -40,4 +40,43 @@ Future<void> setConfiguracion(bool usaRuta, bool clientesFiltrados) async {
   );
 }
 
+Future<void> insertConfiguracion() async {
+  final db = await dbProvider.database;
+  await db.insert(
+    'Configuraciones',
+    {
+      'id': 1,
+      'usaRuta': 0,
+      'clientesFiltrados': 0,
+    },
+    conflictAlgorithm: ConflictAlgorithm.replace,
+  );
+
+}
+
+
+Future<void> insertConfiguracionSiEstaVacia() async {
+  final db = await dbProvider.database;
+
+  // Consulta para verificar si la tabla Configuraciones está vacía
+  final List<Map<String, dynamic>> configuraciones = await db.query('Configuraciones');
+
+  if (configuraciones.isEmpty) {
+    // Si la tabla está vacía, realiza la inserción
+    await db.insert(
+      'Configuraciones',
+      {
+        'id': 1,
+        'usaRuta': 0,
+        'clientesFiltrados': 0,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+    print('Configuración insertada.');
+  } else {
+    print('La tabla Configuraciones ya tiene datos. No se realizó ninguna inserción.');
+  }
+}
+
+
 }
