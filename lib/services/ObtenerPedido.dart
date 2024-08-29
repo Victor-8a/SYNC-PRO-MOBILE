@@ -16,12 +16,29 @@ import 'package:sqflite/sqflite.dart'; // Asegúrate de importar este paquete pa
 Future<List<Pedido>> fetchPedido() async {
   try {
     final dbHelperProductos = DatabaseHelperProducto(); 
+    final dbHelperPedidos = DatabaseHelperPedidos(); 
+    final dbHelperDetallePedidos = DatabaseHelperDetallePedidos(); // Instancia para la tabla de detalles
+
+    // Verificar si hay pedidos no sincronizados
+    List<Map<String, dynamic>> unsyncedOrders = await dbHelperPedidos.getUnsyncedOrders();
+
+    if (unsyncedOrders.isNotEmpty) {
+      // Mostrar una notificación si hay pedidos no sincronizados
+      Fluttertoast.showToast(
+        msg: "Tiene pedidos sin sincronizar. Por favor, sincronice primero.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.orange,
+        textColor: Colors.white,
+      );
+      return []; // Detener la función si hay pedidos no sincronizados
+    }
 
     // Verificar si existen productos en la base de datos
     final result = await dbHelperProductos.getExisteProducto();
-    int count = Sqflite.firstIntValue(result) ?? 0;
+    int countProductos = Sqflite.firstIntValue(result) ?? 0;
 
-    if (count == 0) {
+    if (countProductos == 0) {
       // Mostrar una notificación si no hay productos
       Fluttertoast.showToast(
         msg: "No hay productos en la base de datos. Cargue su inventario primero.",
@@ -33,6 +50,18 @@ Future<List<Pedido>> fetchPedido() async {
       return []; // Detener la función si no hay productos
     }
 
+    // Verificar si existen pedidos en la base de datos antes de intentar limpiar las tablas
+    final countPedidos = await dbHelperPedidos.getOrderCount();
+    final countDetallePedidos = await dbHelperDetallePedidos.getOrderDetailCount();
+
+    if (countPedidos > 0) {
+      await dbHelperPedidos.deleteAllOrders();
+    }
+
+    if (countDetallePedidos > 0) {
+      await dbHelperDetallePedidos.deleteAllOrderDetails();
+    }
+
     // Mostrar toast de inicio de descarga
     Fluttertoast.showToast(
       msg: "Descargando pedidos...",
@@ -42,7 +71,6 @@ Future<List<Pedido>> fetchPedido() async {
       backgroundColor: Colors.blue,
       textColor: Colors.white,
       fontSize: 16.0,
-
     );
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -73,27 +101,16 @@ Future<List<Pedido>> fetchPedido() async {
       print('Pedidos obtenidos exitosamente: ${jsonResponse}');
       List<Pedido> pedidos = jsonResponse.map((data) => Pedido.fromJson(data)).toList();
 
-      DatabaseHelperPedidos databaseHelperPedidos = DatabaseHelperPedidos();
-      DatabaseHelperDetallePedidos databaseHelperDetallePedidos = DatabaseHelperDetallePedidos();
-
       for (var pedido in pedidos) {
-        // Verificar si el pedido ya existe
-        Map<String, dynamic>? existingPedido = await databaseHelperPedidos.getOrderById(pedido.id!);
-
-        if (existingPedido != null) {
-          // Si existe, reemplazar (actualizar)
-          await databaseHelperPedidos.getOrderById(pedido.id!);
-        } else {
-          // Si no existe, insertar nuevo
-          await databaseHelperPedidos.insertPedido(pedido);
-        }
+        // Insertar nuevo pedido
+        await dbHelperPedidos.insertPedido(pedido);
 
         // Obtener el detalle del pedido
         List<DetallePedido> detalles = await fetchDetallePedido(pedido.id!, token);
         
         // Insertar los nuevos detalles
         for (var detalle in detalles) {
-          await databaseHelperDetallePedidos.insertOrderDetail(detalle.toJson());
+          await dbHelperDetallePedidos.insertOrderDetail(detalle.toJson());
         }
       }
 
@@ -117,7 +134,7 @@ Future<List<Pedido>> fetchPedido() async {
   } catch (error) {
     // Mostrar toast de error
     Fluttertoast.showToast(
-      msg: "Error al descargar los productos: $error",
+      msg: "Error al descargar los pedidos: $error",
       toastLength: Toast.LENGTH_LONG,
       gravity: ToastGravity.BOTTOM,
       timeInSecForIosWeb: 5,

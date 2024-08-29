@@ -57,4 +57,20 @@ class DatabaseHelperDetallePedidos {
       whereArgs: [orderId],
     );
   }
+
+
+Future<int> deleteAllOrderDetails() async {
+  final db = await dbProvider.database;
+  return await db.delete('order_details');
+}
+  
+
+  // En DatabaseHelperDetallePedidos
+Future<int> getOrderDetailCount() async {
+  final db = await dbProvider.database;
+  return Sqflite.firstIntValue(await db.rawQuery('''
+SELECT COUNT(*) FROM order_details''')) ?? 0;
+}
+
+
 }

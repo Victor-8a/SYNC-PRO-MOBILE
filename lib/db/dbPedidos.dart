@@ -6,6 +6,14 @@ import 'bd.dart';
 class DatabaseHelperPedidos {
   final dbProvider = DatabaseHelper();
 
+
+
+Future<int> getOrderCount() async {
+  final db = await dbProvider.database;
+  return Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM Orders')) ?? 0;
+}
+
+
   Future<int> insertOrder(Map<String, dynamic> order) async {
     final db = await dbProvider.database;
 
@@ -125,4 +133,12 @@ class DatabaseHelperPedidos {
   }
   
   insertOrderDetail(Map<String, Object> orderDetailData) {}
+
+
+
+  Future<int> deleteAllOrders() async {
+  final db = await dbProvider.database;
+  return await db.delete('Orders');
+}
+
 }

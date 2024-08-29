@@ -28,27 +28,30 @@ class DatabaseHelperRangoPrecioProducto {
     });
   }
 
-  // Nuevo método para obtener el precio basado en la cantidad
-  Future<double> getPrecioByProductoYCantidad(int codigoProducto, int cantidad) async {
-    final db = await dbProvider.database;
+Future<double> getPrecioByProductoYCantidad(int codigoProducto, int cantidad, double precioFinal) async {
+  final db = await dbProvider.database;
 
-    final List<Map<String, dynamic>> result = await db.rawQuery('''
-       SELECT IFNULL(
-        (SELECT Precio 
-         FROM RangoPrecioProducto 
-         WHERE CodProducto = ? 
-           AND ? BETWEEN CantidadInicio AND CantidadFinal 
-         ORDER BY CantidadFinal DESC 
-         LIMIT 1), 
-        0
-      ) AS Precio
-    ''', [codigoProducto, cantidad]);
-double precioRango = 0.0;
-if (result.isNotEmpty) precioRango = result.first['Precio'].toDouble() ;
-    // Devuelve el precio encontrado o 0.0 si no se encuentra un rango
-    return precioRango;
+  final List<Map<String, dynamic>> result = await db.rawQuery('''
+    SELECT IFNULL(
+     (SELECT Precio 
+      FROM RangoPrecioProducto 
+      WHERE CodProducto = ? 
+        AND ? BETWEEN CantidadInicio AND CantidadFinal 
+      ORDER BY CantidadFinal DESC 
+      LIMIT 1), 
+     0
+   ) AS Precio
+ ''', [codigoProducto, cantidad]);
+
+  double precioRango = 0.0;
+  if (result.isNotEmpty) {
+    precioRango = result.first['Precio'].toDouble();
   }
-  
+
+  // Si no se encuentra un rango, devolver el precioFinal (precio A)
+  return precioRango != 0 ? precioRango : precioFinal;
+}
+
 Future<int> insertRangoPrecioProducto(RangoPrecioProducto rangoPrecioProducto) async {
   final db = await dbProvider.database; // Asume que tienes una referencia a la base de datos
   return await db.insert(
