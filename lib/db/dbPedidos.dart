@@ -123,6 +123,6 @@ class DatabaseHelperPedidos {
     );
     print('Pedido actualizado en la base de datos: $order');
   }
-
+  
   insertOrderDetail(Map<String, Object> orderDetailData) {}
 }

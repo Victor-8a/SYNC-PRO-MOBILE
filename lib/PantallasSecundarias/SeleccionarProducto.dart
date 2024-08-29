@@ -92,7 +92,7 @@ void _showPrecioRangos(BuildContext context, int codigo) async {
           children: [
             Expanded(
               child: Text(
-                'Cantidad: ${range.cantidadInicio}-${range.cantidadFinal}, \nPrecio: ${range.precio}',
+                'Cantidad: ${range.cantidadInicio} - ${range.cantidadFinal}, \nPrecio: Q${range.precio}',
                 style: TextStyle(fontSize: 16.0), // Ajuste del tamaño de fuente
               ),
             ),

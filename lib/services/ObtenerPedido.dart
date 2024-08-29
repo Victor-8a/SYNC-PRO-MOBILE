@@ -27,7 +27,7 @@ Future<List<Pedido>> fetchPedido() async {
         msg: "No hay productos en la base de datos. Cargue su inventario primero.",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.red,
         textColor: Colors.white,
       );
       return []; // Detener la función si no hay productos
@@ -35,10 +35,14 @@ Future<List<Pedido>> fetchPedido() async {
 
     // Mostrar toast de inicio de descarga
     Fluttertoast.showToast(
-      msg: "Descargando productos...",
+      msg: "Descargando pedidos...",
       toastLength: Toast.LENGTH_LONG,
       gravity: ToastGravity.BOTTOM,
       timeInSecForIosWeb: 5,
+      backgroundColor: Colors.blue,
+      textColor: Colors.white,
+      fontSize: 16.0,
+
     );
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -95,10 +99,13 @@ Future<List<Pedido>> fetchPedido() async {
 
       // Mostrar toast de éxito
       Fluttertoast.showToast(
-        msg: "Productos descargados correctamente",
+        msg: "Pedidos descargados correctamente",
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
         timeInSecForIosWeb: 5,
+        backgroundColor: Colors.green,
+        textColor: Colors.white,
+        fontSize: 16.0,
       );
 
       print('Pedidos y detalles cargados exitosamente: ${pedidos.length}');
@@ -114,6 +121,9 @@ Future<List<Pedido>> fetchPedido() async {
       toastLength: Toast.LENGTH_LONG,
       gravity: ToastGravity.BOTTOM,
       timeInSecForIosWeb: 5,
+      backgroundColor: Colors.red,
+      textColor: Colors.white,
+      fontSize: 16.0,
     );
 
     print('Error al obtener los pedidos: $error');
