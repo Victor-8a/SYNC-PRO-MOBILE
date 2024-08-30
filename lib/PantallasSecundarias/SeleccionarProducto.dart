@@ -53,14 +53,14 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
     String searchTerm = _searchController.text.toLowerCase();
     setState(() {
       _filteredProducts = widget.productos.where((product) {
-        return product.descripcion.toLowerCase().contains(searchTerm);
+        return product.descripcion.toLowerCase().contains(searchTerm) || product.barras.toLowerCase().contains(searchTerm);
       }).toList();
     });
   }
 
 void _showPrecioRangos(BuildContext context, int codigo) async {
   // Obtiene los rangos de precio para el producto con el código dado
-  final priceRanges = await DatabaseHelperRangoPrecioProducto().getRangosByProducto(codigo);
+  final priceRanges = await DatabaseHelperRangoPrecioProducto().getRangosByProductoBarras(codigo);
 
   // Verifica si se encontraron rangos de precios
   // ignore: unnecessary_null_comparison
@@ -91,7 +91,11 @@ void _showPrecioRangos(BuildContext context, int codigo) async {
         child: Row(
           children: [
             Expanded(
-              child: Text(
+              child:
+              
+               Text(
+              
+                
                 'Cantidad: ${range.cantidadInicio} - ${range.cantidadFinal}, \nPrecio: Q${range.precio}',
                 style: TextStyle(fontSize: 16.0), // Ajuste del tamaño de fuente
               ),
@@ -110,7 +114,7 @@ void _showPrecioRangos(BuildContext context, int codigo) async {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text('Rangos de Precio'),
+        title: Text('Rangos de Precio para ${uniqueRanges[0].descripcion}  \n ${uniqueRanges[0].barras}', ),
         content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,67 +164,70 @@ void _showPrecioRangos(BuildContext context, int codigo) async {
             ),
           ),
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(20),
-                  topRight: Radius.circular(20),
-                ),
-                color: Colors.blue.withOpacity(0),
-              ),
-              child: ListView.builder(
-                itemCount: _filteredProducts.length,
-                itemBuilder: (context, index) {
-                  final product = _filteredProducts[index];
-                  return ListTile(
-                    title: Text(
-                      product.descripcion,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Precio: Q${product.precioFinal.toStringAsFixed(2)}',
-                        ),
-                        Text(
-                          'Existencia: ${product.existencia}',
-                        ),
-                        Text(
-                          'Precio B: Q${product.precioB.toStringAsFixed(2)}',
-                        ),
-                        Text(
-                          'Precio C: Q${product.precioC.toStringAsFixed(2)}',
-                        ),
-                        Text(
-                          'Precio D: Q${product.precioD.toStringAsFixed(2)}',
-                        ),
-                      ],
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(Icons.info_outline,
-                          color: _productSelected[index] ? Colors.blue : null),
-                      tooltip: 'Información',
-                      color: Colors.blue,
-                      iconSize: 30,
-                      
-                      onPressed: () {
-                        _showPrecioRangos(context, product.codigo);
-                      },
-                    ),
-                    onTap: _productSelected[index]
-                        ? null
-                        : () {
-                            Navigator.pop(context, product);
-                            setState(() {
-                              _productSelected[index] = true;
-                            });
-                          },
-                  );
-                },
-              ),
-            ),
+  child: Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(20),
+        topRight: Radius.circular(20),
+      ),
+      color: Colors.blue.withOpacity(0),
+    ),
+    child: ListView.builder(
+      itemCount: _filteredProducts.length,
+      itemBuilder: (context, index) {
+        final product = _filteredProducts[index];
+        return ListTile(
+          title: Text(
+            product.descripcion,
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Barras: ${product.barras}', // Muestra el código de barras
+              ),
+              Text(
+                'Precio: Q${product.precioFinal.toStringAsFixed(2)}',
+              ),
+              Text(
+                'Existencia: ${product.existencia}',
+              ),
+              Text(
+                'Precio B: Q${product.precioB.toStringAsFixed(2)}',
+              ),
+              Text(
+                'Precio C: Q${product.precioC.toStringAsFixed(2)}',
+              ),
+              Text(
+                'Precio D: Q${product.precioD.toStringAsFixed(2)}',
+              ),
+            ],
+          ),
+          trailing: IconButton(
+            icon: Icon(Icons.info_outline,
+                color: _productSelected[index] ? Colors.blue : null),
+            tooltip: 'Información',
+            color: Colors.blue,
+            iconSize: 30,
+            onPressed: () {
+              _showPrecioRangos(context, product.codigo);
+            },
+          ),
+          onTap: _productSelected[index]
+              ? null
+              : () {
+                  Navigator.pop(context, product);
+                  setState(() {
+                    _productSelected[index] = true;
+                  });
+                },
+        );
+      },
+    ),
+  ),
+),
+
         ],
       ),
     );

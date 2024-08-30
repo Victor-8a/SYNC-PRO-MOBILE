@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -323,8 +324,8 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        body: Column(children: [
+  return Scaffold(
+    body: Column(children: [
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -333,7 +334,7 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  labelText: 'Buscar por cliente',
+                  labelText: 'Buscar',
                   prefixIcon: Icon(Icons.search),
                   prefixIconColor: Colors.blue,
                   border: OutlineInputBorder(),
@@ -345,8 +346,6 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
               icon: Icon(Icons.refresh),
               onPressed: () async {
                 _loadOrders(); // Llama a la función para recargar los pedidos
-
-               
               },
             ),
           ],
@@ -375,12 +374,24 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              'Pedido: ${order['id']}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16.0,
-                              ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Pedido: ${order['id']}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16.0,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    confirmDeleteOrder(context, order['id']);
+                              
+                                  },
+                                ),
+                              ],
                             ),
                             Text(
                               'Cliente: ${order['nombreCliente']}',
@@ -408,6 +419,8 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                 },
               ),
       ),
+
+
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -468,8 +481,50 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
       return false;
     }
   }
+  
 
-  // Future<void> _showLoadingDialog(BuildContext context) async {
+// Función para mostrar el cuadro de diálogo de confirmación
+void confirmDeleteOrder(BuildContext context, int orderId) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Confirmar Eliminación'),
+        content: Text('¿Estás seguro de que deseas eliminar este pedido?'),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.of(context).pop(); // Cierra el diálogo
+              await DatabaseHelperPedidos().deleteOrder(orderId); // Elimina el pedido y sus detalles
+              _loadOrders(); // Recarga la lista de pedidos después de la eliminación
+ Fluttertoast.showToast(
+                msg: "Pedido eliminado correctamente",
+                toastLength: Toast.LENGTH_SHORT,
+                gravity: ToastGravity.BOTTOM,
+                timeInSecForIosWeb: 1,
+                backgroundColor: Colors.green,
+                textColor: Colors.white,
+                fontSize: 16.0
+              );
+            },
+            child: Text('Eliminar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Solo cierra el diálogo
+            },
+            child: Text('Cancelar'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
+
+
+  // Future<void> showLoadingDialog(BuildContext context) async {
   //   showDialog(
   //     context: context,
   //     barrierDismissible:

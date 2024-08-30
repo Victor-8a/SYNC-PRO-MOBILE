@@ -73,4 +73,14 @@ SELECT COUNT(*) FROM order_details''')) ?? 0;
 }
 
 
+Future<void> deleteOrderDetails(int orderId) async {
+  final db = await dbProvider.database;
+  await db.delete(
+    'order_details', // Cambia esto por el nombre real de tu tabla de detalles de pedido
+    where: 'idPedido = ?',
+    whereArgs: [orderId],
+  );
+}
+
+
 }

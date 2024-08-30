@@ -4,6 +4,8 @@ class RangoPrecioProducto {
   double cantidadInicio;
   double cantidadFinal;
   double precio;
+  String? barras;
+  String? descripcion;
 
   RangoPrecioProducto({
     this.id,
@@ -11,6 +13,8 @@ class RangoPrecioProducto {
     required this.cantidadInicio,
     required this.cantidadFinal,
     required this.precio,
+    this.barras,
+    this.descripcion,
   });
 
   // Método para convertir el objeto a un Map (para SQLite)
@@ -21,6 +25,8 @@ class RangoPrecioProducto {
       'CantidadInicio': cantidadInicio,
       'CantidadFinal': cantidadFinal,
       'Precio': precio,
+      'barras': barras,
+      'descripcion': descripcion,
     };
   }
 
@@ -36,6 +42,8 @@ class RangoPrecioProducto {
           ? (map['CantidadFinal'] as int).toDouble()
           : map['CantidadFinal'] as double,
       precio: (map['Precio'] is int) ? (map['Precio'] as int).toDouble() : map['Precio'] as double,
+      barras: map['barras'], // Asigna 'barras' si está presente
+      descripcion: map['descripcion'], // Asigna 'descripcion' si está presente
     );
   }
 
@@ -51,6 +59,8 @@ class RangoPrecioProducto {
           ? (json['CantidadFinal'] as int).toDouble()
           : json['CantidadFinal'] as double,
       precio: (json['Precio'] is int) ? (json['Precio'] as int).toDouble() : json['Precio'] as double,
+      barras: json['barras'], // Asigna 'barras' si está presente
+      descripcion: json['descripcion'], // Asigna 'descripcion' si está presente
     );
   }
 
@@ -62,6 +72,9 @@ class RangoPrecioProducto {
       'CantidadInicio': cantidadInicio,
       'CantidadFinal': cantidadFinal,
       'Precio': precio,
+      'barras': barras,
+      'descripcion': descripcion,
     };
   }
 }
+

@@ -1,18 +1,18 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:sync_pro_mobile/Models/Pedido.dart';
+import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
 
 import 'bd.dart';
 
 class DatabaseHelperPedidos {
   final dbProvider = DatabaseHelper();
 
-
-
-Future<int> getOrderCount() async {
-  final db = await dbProvider.database;
-  return Sqflite.firstIntValue(await db.rawQuery('SELECT COUNT(*) FROM Orders')) ?? 0;
-}
-
+  Future<int> getOrderCount() async {
+    final db = await dbProvider.database;
+    return Sqflite.firstIntValue(
+            await db.rawQuery('SELECT COUNT(*) FROM Orders')) ??
+        0;
+  }
 
   Future<int> insertOrder(Map<String, dynamic> order) async {
     final db = await dbProvider.database;
@@ -110,6 +110,26 @@ Future<int> getOrderCount() async {
     );
   }
 
+  Future<void> deleteOrderById(int orderId) async {
+    final db =
+        await dbProvider.database; // Accede a la instancia de la base de datos
+    await db.delete(
+      'Orders',
+      where: 'id = ?',
+      whereArgs: [orderId],
+    );
+  }
+
+  Future<void> deleteOrder(int orderId) async {
+    final db = await dbProvider.database;
+    await db.delete(
+      'Orders',
+      where: 'id = ?',
+      whereArgs: [orderId],
+    );
+    await DatabaseHelperDetallePedidos().deleteOrderDetails(orderId);
+  }
+
   Future<List<Map<String, dynamic>>> getAllOrders() async {
     final db = await dbProvider.database;
     var result = await db.query('Orders');
@@ -131,14 +151,11 @@ Future<int> getOrderCount() async {
     );
     print('Pedido actualizado en la base de datos: $order');
   }
-  
+
   insertOrderDetail(Map<String, Object> orderDetailData) {}
 
-
-
   Future<int> deleteAllOrders() async {
-  final db = await dbProvider.database;
-  return await db.delete('Orders');
-}
-
+    final db = await dbProvider.database;
+    return await db.delete('Orders');
+  }
 }
