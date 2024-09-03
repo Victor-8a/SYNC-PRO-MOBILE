@@ -41,12 +41,11 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
   }
 
   void _loadOrders() async {
-   // Proceder con la carga de órdenes
-      _orders = await DatabaseHelperPedidos().getOrdersWithClientAndSeller();
-      setState(() {
-        _filteredOrders = List.from(_orders); // Copia de la lista original
-      });
-    
+    // Proceder con la carga de órdenes
+    _orders = await DatabaseHelperPedidos().getOrdersWithClientAndSeller();
+    setState(() {
+      _filteredOrders = List.from(_orders); // Copia de la lista original
+    });
   }
 
   Future<void> _initializeConfiguration() async {
@@ -65,8 +64,6 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
       }));
     }
     setState(() {});
-
-   
   }
 
 // Dentro de la página anterior donde se recibe el valor de retorno:
@@ -324,8 +321,8 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
 
   @override
   Widget build(BuildContext context) {
-  return Scaffold(
-    body: Column(children: [
+    return Scaffold(
+        body: Column(children: [
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -388,7 +385,6 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                                   icon: Icon(Icons.delete, color: Colors.red),
                                   onPressed: () {
                                     confirmDeleteOrder(context, order['id']);
-                              
                                   },
                                 ),
                               ],
@@ -419,8 +415,6 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                 },
               ),
       ),
-
-
       Padding(
         padding: const EdgeInsets.all(8.0),
         child: Row(
@@ -481,48 +475,45 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
       return false;
     }
   }
-  
 
 // Función para mostrar el cuadro de diálogo de confirmación
-void confirmDeleteOrder(BuildContext context, int orderId) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Confirmar Eliminación'),
-        content: Text('¿Estás seguro de que deseas eliminar este pedido?'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop(); // Cierra el diálogo
-              await DatabaseHelperPedidos().deleteOrder(orderId); // Elimina el pedido y sus detalles
-              _loadOrders(); // Recarga la lista de pedidos después de la eliminación
- Fluttertoast.showToast(
-                msg: "Pedido eliminado correctamente",
-                toastLength: Toast.LENGTH_SHORT,
-                gravity: ToastGravity.BOTTOM,
-                timeInSecForIosWeb: 1,
-                backgroundColor: Colors.green,
-                textColor: Colors.white,
-                fontSize: 16.0
-              );
-            },
-            child: Text('Eliminar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(); // Solo cierra el diálogo
-            },
-            child: Text('Cancelar'),
-          ),
-        ],
-      );
-    },
-  );
-}
-
-
-
+  void confirmDeleteOrder(BuildContext context, int orderId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmar Eliminación'),
+          content: Text(
+              '¿Estás seguro de que deseas eliminar este pedido? \n Si el pedido no esta sincroninzado no se podra recuperar'),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Cierra el diálogo
+                await DatabaseHelperPedidos()
+                    .deleteOrder(orderId); // Elimina el pedido y sus detalles
+                _loadOrders(); // Recarga la lista de pedidos después de la eliminación
+                Fluttertoast.showToast(
+                    msg: "Pedido eliminado correctamente",
+                    toastLength: Toast.LENGTH_SHORT,
+                    gravity: ToastGravity.BOTTOM,
+                    timeInSecForIosWeb: 1,
+                    backgroundColor: Colors.green,
+                    textColor: Colors.white,
+                    fontSize: 16.0);
+              },
+              child: Text('Eliminar'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Solo cierra el diálogo
+              },
+              child: Text('Cancelar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   // Future<void> showLoadingDialog(BuildContext context) async {
   //   showDialog(

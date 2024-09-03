@@ -51,6 +51,7 @@ class ClienteService {
       ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
+          DatabaseHelperCliente().deleteAllClientes();
         final List<dynamic> jsonResponse = json.decode(response.body);
         final clientes = jsonResponse.map((json) => Cliente.fromJson(json)).toList();
         await _saveClientesToLocalDatabase(clientes);

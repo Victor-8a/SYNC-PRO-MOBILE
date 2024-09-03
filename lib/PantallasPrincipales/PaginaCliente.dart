@@ -22,7 +22,7 @@ class _PaginaClienteState extends State<PaginaCliente> {
   List<Cliente> _clientes = [];
   List<Cliente> _filteredClientes = [];
   TextEditingController _searchController = TextEditingController();
-  bool _isLoading = true;
+  bool _isLoading = false;
   bool _isMounted = false;
   // ignore: unused_field
   bool _localidadCargada = false; // Variable para verificar si la localidad está cargada
@@ -32,7 +32,7 @@ class _PaginaClienteState extends State<PaginaCliente> {
     super.initState();
     _isMounted = true;
     _searchController.addListener(_onSearchChanged);
-    fetchClientes(); // Llama a un método que obtenga primero la localidad y luego los clientes
+retrieveClientesFromLocalDatabase();
   }
 
   @override
@@ -41,6 +41,10 @@ class _PaginaClienteState extends State<PaginaCliente> {
     super.dispose();
   }
 Future<void> fetchClientes() async {
+   setState(() {
+    _isLoading = true; // Mostrar el indicador de carga
+  });
+
   try {
     DatabaseHelperUsuario dbHelperUsuario = DatabaseHelperUsuario();
     int? idVendedor = await dbHelperUsuario.getIdVendedor();
@@ -84,6 +88,10 @@ Future<void> fetchClientes() async {
     ).timeout(Duration(seconds: 5));
 
     if (response.statusCode == 200) {
+        
+    DatabaseHelperCliente().deleteAllClientes();
+    print( DatabaseHelperCliente().deleteAllClientes());
+    print('Se elimino correctamente');
       final List<dynamic> jsonResponse = json.decode(response.body);
       final clientes = jsonResponse.map((json) => Cliente.fromJson(json)).toList();
       if (_isMounted) {
@@ -120,6 +128,9 @@ Future<void> fetchClientes() async {
   }
 
   Future<void> retrieveClientesFromLocalDatabase() async {
+    setState((){
+      _isLoading = true;
+    });
     try {
       DatabaseHelperCliente databaseHelper = DatabaseHelperCliente();
       List<Cliente> clientes = await databaseHelper.getClientes();
@@ -233,4 +244,7 @@ Widget build(BuildContext context) {
       ),
     );
   }
+
+
+  
 }

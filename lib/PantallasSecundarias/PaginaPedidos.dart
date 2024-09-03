@@ -1147,67 +1147,57 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         selectedClientJson); // Guardar el nombre del cliente en SharedPreferences
   }
 
-  void _navigateToSeleccionarProducto(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
+void _navigateToSeleccionarProducto(BuildContext context) async {
+  try {
+    // Crear una lista para almacenar los productos
+    List<Product> products = [];
 
-    if (token == null) {
+    // Obtener los productos de la base de datos local
+    DatabaseHelperProducto dbHelper = DatabaseHelperProducto();
+    List<Product> productsFromDB = await dbHelper.getProducts();
+
+    // Usar los productos obtenidos de la base de datos local
+    if (productsFromDB.isNotEmpty) {
+      products = productsFromDB;
+    } else {
+       Fluttertoast.showToast(
+      msg: 'No se encontraron productos, cargue su inventarioio primero.',
+      toastLength: Toast.LENGTH_LONG,
+      gravity: ToastGravity.BOTTOM,
+      backgroundColor: Colors.yellow,
+      textColor: Colors.black,
+      fontSize: 16.0
+    );
+
       return;
     }
 
-    try {
-      List<Product> products = [];
-
-      // Si hay token, intenta obtener los productos de la base de datos local
-      DatabaseHelperProducto dbHelper = DatabaseHelperProducto();
-      List<Product> productsFromDB = await dbHelper.getProducts();
-
-      // Si hay productos en la base de datos local, usarlos
-      if (productsFromDB.isNotEmpty) {
-        products = productsFromDB;
-      } else {
-        // Si no hay productos en la base de datos, hacer la llamada HTTP para obtenerlos
-        final response = await http.get(
-          ApiRoutes.buildUri('dashboard/personalizado'),
-          headers: {'Authorization': 'Bearer $token'},
-        );
-
-        if (response.statusCode == 200) {
-          List<dynamic> jsonResponse = json.decode(response.body);
-
-          for (var productData in jsonResponse) {
-            products.add(Product.fromJson(productData));
+    // Navegar a la pantalla de selección de producto con los productos locales
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SeleccionarProducto(productos: products),
+      ),
+    ).then((selectedProduct) {
+      if (selectedProduct != null) {
+        setState(() {
+          _selectedProducts.add(selectedProduct);
+          if (_selectedProductQuantities.containsKey(selectedProduct)) {
+            // Si el producto ya está en la lista, aumentar la cantidad
+            _selectedProductQuantities[selectedProduct] =
+                _selectedProductQuantities[selectedProduct]! + 1;
+          } else {
+            // Si es un nuevo producto, establecer la cantidad en 1
+            _selectedProductQuantities[selectedProduct] = 1;
           }
-        } else {
-          return;
-        }
+        });
       }
-
-      // Mostrar los productos, ya sean de la base de datos o de la solicitud HTTP
-
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => SeleccionarProducto(productos: products),
-          )).then((selectedProduct) {
-        if (selectedProduct != null) {
-          setState(() {
-            _selectedProducts.add(selectedProduct);
-            if (_selectedProductQuantities.containsKey(selectedProduct)) {
-              // Si el producto ya está en la lista, aumentar la cantidad
-              _selectedProductQuantities[selectedProduct] =
-                  _selectedProductQuantities[selectedProduct]! + 1;
-            } else {
-              // Si es un nuevo producto, establecer la cantidad en 1
-              _selectedProductQuantities[selectedProduct] = 1;
-            }
-          });
-        }
-      });
-    } catch (error) {
-      print('Error loading products: $error');
-    }
+    });
+  } catch (error) {
+    print('Error al cargar los productos: $error');
   }
+}
+
 
   double _calculateTotalPrice() {
     double total = 0;

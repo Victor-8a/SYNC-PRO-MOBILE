@@ -25,8 +25,8 @@ class RangoPrecioProducto {
       'CantidadInicio': cantidadInicio,
       'CantidadFinal': cantidadFinal,
       'Precio': precio,
-      'barras': barras,
-      'descripcion': descripcion,
+      // 'barras': barras,
+      // 'descripcion': descripcion,
     };
   }
 
