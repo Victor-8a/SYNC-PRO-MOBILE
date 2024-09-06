@@ -447,7 +447,9 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                                 direccion: ''),
                           ),
                         ),
-                      );
+                      ).then((_) {
+                     _loadOrders();
+                  });
                     },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -482,9 +484,9 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Confirmar Eliminación'),
+          title: Text('¿Estás seguro de que deseas eliminar este pedido?'),
           content: Text(
-              '¿Estás seguro de que deseas eliminar este pedido? \n Si el pedido no esta sincroninzado no se podra recuperar'),
+              'Los pedidos que no estan sincronizados se perderan permanentemente'),
           actions: [
             TextButton(
               onPressed: () async {

@@ -8,7 +8,7 @@ class DatabaseHelperRangoPrecioProducto {
   Future<List<RangoPrecioProducto>> getRangosByProducto(int codigo) async {
     final db = await dbProvider.database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'RangoPrecioProduct,', 
+      'RangoPrecioProducto', 
       where: 'CodProducto = ?',
       whereArgs: [codigo],
     );

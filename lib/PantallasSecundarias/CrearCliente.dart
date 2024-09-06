@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 
 // import 'pagina_pedidos.dart';
@@ -11,11 +11,6 @@ void main() {
   runApp(const MaterialApp(
     home: CrearCliente(),
   ));
-}
-
-Future<String?> _getToken() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString('token');
 }
 
 
@@ -85,7 +80,7 @@ class _CrearClienteState extends State<CrearCliente> {
   );
 
   if (shouldCreate) {
-    String? token = await _getToken();
+    String? token = await login();
 
     if (token == null) {
       print('Token no encontrado');

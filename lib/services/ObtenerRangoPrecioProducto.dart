@@ -1,18 +1,15 @@
 import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/RangoPrecioProducto.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbRangoPrecioProducto.dart';
 import 'package:sync_pro_mobile/services/ApiRoutes.dart';
 import 'package:http/http.dart' as http;
 
 
-Future<String?> _getToken() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  return prefs.getString('token');
-}
+
 
 Future<void> fetchAndSaveRangoPrecios() async {
-  final String? token = await _getToken();
+  final String? token =  await login();
 
   if (token == null) {
     print('Token no encontrado');

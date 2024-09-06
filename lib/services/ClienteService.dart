@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Models/Cliente.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbCliente.dart';
 import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
@@ -38,9 +38,8 @@ class ClienteService {
         return await _retrieveClientesFromLocalDatabase();
       }
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('token');
-
+  
+      String? token =  await login();
       if (token == null) {
         throw Exception('No se encontró el token');
       }

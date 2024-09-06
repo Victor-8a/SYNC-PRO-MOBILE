@@ -2,9 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart'; // Asegúrate de importar este paquete para utilizar Colors.
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Models/Pedido.dart';
-import 'package:sync_pro_mobile/Models/DetallePedido.dart'; 
+import 'package:sync_pro_mobile/Models/DetallePedido.dart';
+import 'package:sync_pro_mobile/PantallasSecundarias/PaginaPedidos.dart'; 
 import 'package:sync_pro_mobile/db/dbPedidos.dart';
 import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
 import 'package:sync_pro_mobile/db/dbProducto.dart'; 
@@ -73,8 +73,8 @@ Future<List<Pedido>> fetchPedido() async {
       fontSize: 16.0,
     );
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
+    
+    String? token =  await login();
     
     if (token == null) {
       throw Exception('Token de autorización no válido');
