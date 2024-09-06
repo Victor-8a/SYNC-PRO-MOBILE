@@ -4,15 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sync_pro_mobile/Inicio/SecondPage.dart';
-import 'package:sync_pro_mobile/Models/Empresa.dart';
-import 'package:sync_pro_mobile/Models/Usuario.dart';
-import 'package:sync_pro_mobile/Models/Vendedor.dart';
-import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
-import 'package:sync_pro_mobile/db/dbUsuario.dart';
-import 'package:sync_pro_mobile/services/ApiRoutes.dart';
-import 'package:sync_pro_mobile/services/CheckInternetConnection.dart';
-import 'package:sync_pro_mobile/services/EmpresaService.dart';
+import 'package:sync_pro_mobile/Menu.dart';
+import 'package:sync_pro_mobile/Pedidos/Models/Empresa.dart';
+import 'package:sync_pro_mobile/Pedidos/Models/Usuario.dart';
+import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
+import 'package:sync_pro_mobile/Pedidos/db/dbConfiguraciones.dart';
+import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
+import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
+import 'package:sync_pro_mobile/Pedidos/services/CheckInternetConnection.dart';
+import 'package:sync_pro_mobile/Pedidos/services/EmpresaService.dart';
 
 final internetChecker = CheckInternetConnection();
 
@@ -117,7 +117,7 @@ class LoginApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Iniciar Sesión',
-      home: isLoggedIn ? const SecondPage() : const LoginPage(),
+      home: isLoggedIn ?  HomeScreen() : const LoginPage(),
     );
   }
 }
@@ -214,7 +214,7 @@ Future<void> _login() async {
 
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => const SecondPage()),
+        MaterialPageRoute(builder: (context) =>  HomeScreen()),
         (Route<dynamic> route) => false,
       );
     } else {

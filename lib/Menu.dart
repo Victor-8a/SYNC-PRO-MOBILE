@@ -1,0 +1,200 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sync_pro_mobile/Pedidos/Inicio/SecondPage.dart';
+import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
+import 'package:sync_pro_mobile/Pedidos/services/Configuraciones.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/PuntoDeVenta.dart';
+import 'package:sync_pro_mobile/main.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+   String _username = '';
+ 
+
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+  
+  void _onItemTapped(int index) {
+    setState(() {
+    });
+
+    _navigateToPage(index);
+  }
+
+  void _navigateToPage(int index) {
+    if (index == 0) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => SecondPage()),
+      );
+    }
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PuntoDeVentaPage()),
+      );
+    }
+  }
+
+  Future<void> logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    await prefs.remove('userId');
+    await prefs.remove('idVendedor');
+    await prefs.remove('username');
+    await deleteUsuario();
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (Route<dynamic> route) => false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Menú Principal'),
+        backgroundColor: Colors.blue[800], // Color más oscuro para el AppBar
+      ),
+      drawer: _buildDrawer(), // Drawer mejorado
+      body: _buildGridView(), // Mejoras en el GridView
+     
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: <Widget>[
+          DrawerHeader(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.indigo, Colors.blueAccent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.person,
+                  color: Colors.white,
+                  size: 48,
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Hola, $_username',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _buildDrawerItem(Icons.settings, 'Configuraciones', () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => ConfiguracionesPage()),
+            );
+          }),
+          _buildDrawerItem(Icons.logout, 'Cerrar sesión', logout),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(IconData icon, String title, GestureTapCallback onTap) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.indigo),
+      title: Text(title, style: TextStyle(fontSize: 18)),
+      onTap: onTap,
+    );
+  }
+
+  Widget _buildGridView() {
+    return GridView.count(
+      primary: false,
+      padding: const EdgeInsets.all(16),
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      crossAxisCount: 2,
+      children: <Widget>[
+        _buildGridItem('PEDIDOS', Colors.indigo[100]!, 0),
+        _buildGridItem('PUNTO DE VENTA', Colors.indigo[200]!, 1),
+        _buildGridItem('', Colors.indigo[300]!, null),
+        _buildGridItem('', Colors.indigo[400]!, null),
+        _buildGridItem('', Colors.indigo[500]!, null),
+        _buildGridItem('', Colors.indigo[600]!, null),
+      ],
+    );
+  }
+
+  Widget _buildGridItem(String title, Color color, int? index) {
+    return GestureDetector(
+      onTap: index != null
+          ? () {
+              _onItemTapped(index);
+            }
+          : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              spreadRadius: 2,
+              blurRadius: 5,
+              offset: Offset(2, 3),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey[800],
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  deleteUsuario() async {
+    DatabaseHelperUsuario dbHelper = DatabaseHelperUsuario();
+    final eliminar = await dbHelper.deleteUsuario();
+    return eliminar;
+  }
+
+    Future<void> _loadUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedUsername =
+        prefs.getString('username'); // Cambiado a 'userName'
+    setState(() {
+      _username = storedUsername ?? '';
+    });
+  }
+}
