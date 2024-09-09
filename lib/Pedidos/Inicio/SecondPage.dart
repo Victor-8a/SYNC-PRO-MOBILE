@@ -6,8 +6,6 @@ import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ObtenerPedido.dart';
 import 'package:sync_pro_mobile/Pedidos/services/SincronizarRuta.dart';
 import 'package:sync_pro_mobile/Pedidos/services/WarningWidgetCubit.dart';
-import '../PantallasPrincipales/PaginaInventario.dart';
-import '../PantallasPrincipales/PaginaCliente.dart';
 import '../PantallasPrincipales/PaginaListarPedido.dart';
 import '../PantallasPrincipales/PaginaRutas.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
@@ -42,9 +40,9 @@ class _SecondPageState extends State<SecondPage> {
   final ProductService productService = ProductService();
 
   final List<Widget> _pages = <Widget>[
-    PaginaInventario(),
+  
     PaginaListarPedidos(),
-    PaginaCliente(),
+ 
     PaginaRegistrar(),
   ];
 
@@ -74,7 +72,7 @@ class _SecondPageState extends State<SecondPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Sync Pro Mobile',
+          'Pedidos',
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: Colors.blue,
@@ -140,9 +138,9 @@ class _SecondPageState extends State<SecondPage> {
         index: _selectedIndex,
         height: 50,
         items: const <Widget>[
-          Icon(Icons.inventory),
+          // Icon(Icons.inventory),
           Icon(Icons.store_sharp),
-          Icon(Icons.person_3_rounded),
+          // Icon(Icons.person_3_rounded),
           Icon(Icons.sell),
           // Icon(Icons.person_add_alt),
         ],

@@ -11,14 +11,24 @@ import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/Pedidos/services/LocalidadService.dart';
 
+
+
+
+
 class PaginaCliente extends StatefulWidget {
   const PaginaCliente({Key? key}) : super(key: key);
+
+  
 
   @override
   _PaginaClienteState createState() => _PaginaClienteState();
 }
 
+
+
 class _PaginaClienteState extends State<PaginaCliente> {
+
+  
   List<Cliente> _clientes = [];
   List<Cliente> _filteredClientes = [];
   TextEditingController _searchController = TextEditingController();
@@ -112,8 +122,8 @@ Future<void> fetchClientes() async {
   }
 }
 
-
-  Future<void> saveClientesToLocalDatabase(List<Cliente> clientes) async {
+    
+ Future<void> saveClientesToLocalDatabase(List<Cliente> clientes) async {
     try {
       DatabaseHelperCliente databaseHelper = DatabaseHelperCliente();
       await databaseHelper.deleteAllClientes();
@@ -159,6 +169,15 @@ Future<void> fetchClientes() async {
 @override
 Widget build(BuildContext context) {
   return Scaffold(
+
+     appBar: AppBar(
+        title: const Text('Clientes',
+        style: TextStyle(
+          color: Colors.white,
+        )),
+        backgroundColor: Colors.blue,
+
+      ),
     body: Column(
       children: [
         Padding(

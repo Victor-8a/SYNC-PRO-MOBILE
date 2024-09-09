@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Inicio/SecondPage.dart';
+import 'package:sync_pro_mobile/Pedidos/PantallasPrincipales/PaginaCliente.dart';
+import 'package:sync_pro_mobile/Pedidos/PantallasPrincipales/PaginaInventario.dart';
 import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/Configuraciones.dart';
-import 'package:sync_pro_mobile/PuntoDeVenta/PuntoDeVenta.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/PantallasPriincipales/PuntoDeVenta.dart';
 import 'package:sync_pro_mobile/main.dart';
 
 void main() {
@@ -25,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _loadUserName();
   }
-  
+
   void _onItemTapped(int index) {
     setState(() {
     });
@@ -44,6 +46,20 @@ class _HomeScreenState extends State<HomeScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => PuntoDeVentaPage()),
+      );
+    }
+
+     if (index == 2) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PaginaCliente()),
+      );
+    }
+
+        if (index == 3) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => PaginaInventario()),
       );
     }
   }
@@ -67,8 +83,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Menú Principal'),
-        backgroundColor: Colors.blue[800], // Color más oscuro para el AppBar
+        title: Text('Sync Pro Mobile',
+            style: TextStyle(
+              color: Colors.white,
+            )),
+        backgroundColor: Colors.blue[600], // Color más oscuro para el AppBar
       ),
       drawer: _buildDrawer(), // Drawer mejorado
       body: _buildGridView(), // Mejoras en el GridView
@@ -131,57 +150,70 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildGridView() {
-    return GridView.count(
-      primary: false,
-      padding: const EdgeInsets.all(16),
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      crossAxisCount: 2,
-      children: <Widget>[
-        _buildGridItem('PEDIDOS', Colors.indigo[100]!, 0),
-        _buildGridItem('PUNTO DE VENTA', Colors.indigo[200]!, 1),
-        _buildGridItem('', Colors.indigo[300]!, null),
-        _buildGridItem('', Colors.indigo[400]!, null),
-        _buildGridItem('', Colors.indigo[500]!, null),
-        _buildGridItem('', Colors.indigo[600]!, null),
-      ],
-    );
-  }
+  return GridView.count(
+    primary: false,
+    padding: const EdgeInsets.all(16),
+    crossAxisSpacing: 12,
+    mainAxisSpacing: 12,
+    crossAxisCount: 2,
+    children: <Widget>[
+      _buildGridItem('PEDIDOS', Icons.shopping_cart, Colors.indigo[100]!, 0),
+      _buildGridItem('PUNTO DE VENTA', Icons.point_of_sale, Colors.indigo[200]!, 1),
+         _buildGridItem('CLIENTES', Icons.person, Colors.indigo[400]!, 2),
+      _buildGridItem('INVENTARIO', Icons.inventory, Colors.indigo[300]!, 3),
+      _buildGridItem('',null, Colors.indigo[500]!, null),  
+      _buildGridItem('',null, Colors.indigo[600]!, null),
+    ],
+  );
+}
 
-  Widget _buildGridItem(String title, Color color, int? index) {
-    return GestureDetector(
-      onTap: index != null
-          ? () {
-              _onItemTapped(index);
-            }
-          : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.2),
-              spreadRadius: 2,
-              blurRadius: 5,
-              offset: Offset(2, 3),
-            ),
-          ],
-        ),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          title,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.grey[800],
+Widget _buildGridItem(String title, IconData? icon, Color color, int? index) {
+  return GestureDetector(
+    onTap: index != null
+        ? () {
+            _onItemTapped(index);
+          }
+        : null,
+    child: Container(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(2, 3),
           ),
-          textAlign: TextAlign.center,
-        ),
+        ],
       ),
-    );
-  }
+      alignment: Alignment.center,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (icon != null)
+            Icon(
+              icon,
+              size: 48,
+              color: Colors.grey[800],
+            ),
+          SizedBox(height: 10), // Espacio entre el ícono y el texto
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[800],
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
 
   deleteUsuario() async {
     DatabaseHelperUsuario dbHelper = DatabaseHelperUsuario();
