@@ -53,7 +53,7 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
     String searchTerm = _searchController.text.toLowerCase();
     setState(() {
       _filteredProducts = widget.productos.where((product) {
-        return product.descripcion.toLowerCase().contains(searchTerm) || product.barras.toLowerCase().contains(searchTerm);
+        return product.descripcion.toLowerCase().contains(searchTerm) || product.barras.toLowerCase().contains(searchTerm) || product.categoriaSubCategoria.toLowerCase().contains(searchTerm) || product.marcas.toLowerCase().contains(searchTerm);
       }).toList();
     });
   }
@@ -201,6 +201,12 @@ void _showPrecioRangos(BuildContext context, int codigo) async {
               ),
               Text(
                 'Precio D: Q${product.precioD.toStringAsFixed(2)}',
+              ),
+              Text(
+                'Precio D: Q${product.marcas}',
+              ),
+              Text(
+                'Precio D: Q${product.categoriaSubCategoria}',
               ),
             ],
           ),

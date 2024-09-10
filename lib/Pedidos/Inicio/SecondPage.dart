@@ -40,9 +40,7 @@ class _SecondPageState extends State<SecondPage> {
   final ProductService productService = ProductService();
 
   final List<Widget> _pages = <Widget>[
-  
     PaginaListarPedidos(),
- 
     PaginaRegistrar(),
   ];
 
@@ -77,57 +75,64 @@ class _SecondPageState extends State<SecondPage> {
         ),
         backgroundColor: Colors.blue,
       ),
-   drawer: Drawer(
-    child: ListView(
-      padding: EdgeInsets.zero,
-      children: <Widget>[
-        DrawerHeader(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.indigo, Colors.blueAccent], // Gradiente de colores
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 48,
-              ),
-              SizedBox(height: 10),
-              Text(
-                'Hola, $_username', // Variable dinámica para el nombre de usuario
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.indigo,
+                    Colors.blueAccent
+                  ], // Gradiente de colores
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
-            ],
-          ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.person,
+                    color: Colors.white,
+                    size: 48,
+                  ),
+                  SizedBox(height: 10),
+                  Flexible(
+                    child: Text(
+                      'Hola, $_username', // Variable dinámica para el nombre de usuario
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      softWrap: true,
+                      overflow: TextOverflow.visible,
+                    ),
+                  )
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.sync, color: Colors.indigo),
+              title: const Text('Sincronizar Pedido'),
+              onTap: syncOrders, // Función para sincronizar pedidos
+            ),
+            ListTile(
+              leading: const Icon(Icons.sync, color: Colors.indigo),
+              title: const Text('Sincronizar Ruta'),
+              onTap: syncRutas, // Función para sincronizar rutas
+            ),
+            ListTile(
+              leading: const Icon(Icons.download, color: Colors.indigo),
+              title: const Text('Descargar Pedidos'),
+              onTap: fetchPedido, // Función para descargar pedidos
+            ),
+          ],
         ),
-        ListTile(
-          leading: const Icon(Icons.sync, color: Colors.indigo),
-          title: const Text('Sincronizar Pedido'),
-          onTap: syncOrders, // Función para sincronizar pedidos
-        ),
-        ListTile(
-          leading: const Icon(Icons.sync, color: Colors.indigo),
-          title: const Text('Sincronizar Ruta'),
-          onTap: syncRutas, // Función para sincronizar rutas
-        ),
-        ListTile(
-          leading: const Icon(Icons.download, color: Colors.indigo),
-          title: const Text('Descargar Pedidos'),
-          onTap: fetchPedido, // Función para descargar pedidos
-        ),
-      ],
-    ),
-  ),
+      ),
       body: Column(
         children: [
           WarningWidgetCubit(),

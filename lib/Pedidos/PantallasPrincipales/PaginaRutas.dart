@@ -320,7 +320,6 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
     estadoSeleccionado = detalle.estado;
 
     bool esIniciarVisita = detalle.inicio != '';
-
     void _mostrarDialogoIniciarVisita() {
       showDialog(
         context: context,
@@ -484,7 +483,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                     'La visita no está iniciada. No se pueden guardar los cambios.'),
             actions: <Widget>[
               TextButton(
-                child: Text('Cancelar'),
+                child: Text('Cerrar'),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -492,7 +491,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
               TextButton(
                 child: Text('Guardar'),
                 onPressed: () {
-                  if (rutaIniciada) {
+                  if (esIniciarVisita && rutaIniciada) {
                     // Solo guarda si la visita está iniciada y finalizada
                     _guardarCliente();
                     Navigator.of(context).pop();
@@ -761,39 +760,65 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                       itemCount: _detallesRuta.length,
                       itemBuilder: (context, index) {
                         final detalle = _detallesRuta[index];
+                        final estado = detalle.inicio != '' && detalle.fin != ''
+                            ? 'FINALIZADO'
+                            : detalle.inicio != ''
+                                ? 'INICIADO'
+                                : 'PENDIENTE';
+
+                        // Define un ícono basado en el estado
+                        Icon? estadoIcon;
+                        switch (estado) {
+                          case 'FINALIZADO':
+                            estadoIcon = Icon(Icons.check_circle,
+                                color: Colors.green); // Ícono para finalizado
+                            break;
+                          case 'INICIADO':
+                            estadoIcon = Icon(Icons.access_time,
+                                color: Colors.orange); // Ícono para iniciado
+                            break;
+                          case 'PENDIENTE':
+                            estadoIcon = Icon(Icons.hourglass_empty,
+                                color: Colors.red); // Ícono para pendiente
+                            break;
+                        }
+
                         return Card(
-                            child: Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: _getColorByEstado(
-                                  detalle.estado), // Color del borde
-                              width: 1.50, // Ancho del borde
-                            ),
-                            borderRadius:
-                                BorderRadius.circular(4.0), // Radio del borde
-                          ),
-                          child: ListTile(
-                            title: Text(
-                              detalle.nombreCliente ?? '',
-                              style: TextStyle(
-                                fontSize: 14, // Reducir el tamaño del texto
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: _getColorByEstado(
+                                    detalle.estado), // Color del borde
+                                width: 1.50, // Ancho del borde
                               ),
+                              borderRadius:
+                                  BorderRadius.circular(4.0), // Radio del borde
                             ),
-                            onTap: () async {
-                              DatabaseHelperCliente dbHelper =
-                                  DatabaseHelperCliente();
-                              Cliente cliente = await dbHelper
-                                  .getClientesById(detalle.codCliente);
-                              setState(() {
-                                clienteSeleccionado = detalle;
-                              });
-                              _mostrarDetallesCliente(detalle, cliente);
-                            },
+                            child: ListTile(
+                              leading:
+                                  estadoIcon, // Agrega el ícono en lugar del texto
+                              title: Text(
+                                detalle.nombreCliente ?? '',
+                                style: TextStyle(
+                                  fontSize: 14, // Reducir el tamaño del texto
+                                ),
+                              ),
+                              onTap: () async {
+                                DatabaseHelperCliente dbHelper =
+                                    DatabaseHelperCliente();
+                                Cliente cliente = await dbHelper
+                                    .getClientesById(detalle.codCliente);
+                                setState(() {
+                                  clienteSeleccionado = detalle;
+                                });
+                                _mostrarDetallesCliente(detalle, cliente);
+                              },
+                            ),
                           ),
-                        ));
+                        );
                       },
                     ),
-                  ),
+                  )
                 ],
               ),
             ),
@@ -921,7 +946,6 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
             TextButton(
               child: Text('Aceptar'),
               onPressed: () async {
-              
                 // Obtener la fecha actual
                 String fechaFin = DateTime.now().toIso8601String();
 
@@ -944,7 +968,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                       content:
                           Text('Ruta finalizada: ${rutaSeleccionada!.nombre}')),
                 );
-                  syncRutas();
+                syncRutas();
               },
             ),
           ],

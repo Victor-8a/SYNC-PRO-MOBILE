@@ -35,8 +35,6 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
     _loadOrders();
     super.initState();
     _tryFetchAndStoreVendedores();
-    insertarCliente();
-
     _initializeConfiguration();
   }
 
@@ -448,8 +446,8 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                           ),
                         ),
                       ).then((_) {
-                     _loadOrders();
-                  });
+                        _loadOrders();
+                      });
                     },
               child: Row(
                 mainAxisSize: MainAxisSize.min,

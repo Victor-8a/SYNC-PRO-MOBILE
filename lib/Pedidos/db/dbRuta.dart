@@ -98,4 +98,15 @@ Future<Localidad> getLocalidadById(int id) async {
     throw Exception('Localidad no encontrada'); // Lanzar excepción si no se encuentra la Localidad
   }
 }
+Future<int> isRutaIniciada() async {
+  final db = await dbProvider.database;
+  // Realiza una consulta que devuelva el número de rutas iniciadas
+  final result = await db.rawQuery(
+    'SELECT COUNT(*) as total FROM Ruta WHERE fechaInicio IS NOT NULL AND fechaFin = "";'
+  );
+  
+  // Retorna el número de rutas iniciadas
+  return Sqflite.firstIntValue(result) ?? 0;
+}
+
 }

@@ -42,7 +42,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
       setState(() {
         displayedProducts = products
             .where((product) =>
-                product.descripcion.toLowerCase().contains(query.toLowerCase() ) || product.barras.toLowerCase().contains(query.toLowerCase()))
+                product.descripcion.toLowerCase().contains(query.toLowerCase() ) || product.barras.toLowerCase().contains(query.toLowerCase() ) || product.categoriaSubCategoria.toLowerCase().contains(query.toLowerCase() ) || product.marcas.toLowerCase().contains(query.toLowerCase() ))
             .toList();
       });
     });

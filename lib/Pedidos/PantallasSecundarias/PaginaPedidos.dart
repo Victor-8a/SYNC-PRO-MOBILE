@@ -108,7 +108,6 @@ Future<void> syncOrders() async {
       await dbGuardarPedido.DatabaseHelperPedidos().getUnsyncedOrders();
   String? token = await login();
 
-  // ignore: unnecessary_null_comparison
   if (token == null) {
     token = await login();
     if (token == null) {
@@ -121,6 +120,16 @@ Future<void> syncOrders() async {
       return;
     }
   }
+
+  // Mostrar el Toast por 5 segundos al inicio de la sincronización
+  Fluttertoast.showToast(
+    msg: 'Iniciando la sincronización de pedidos.',
+    toastLength: Toast.LENGTH_LONG, // 4 segundos
+    gravity: ToastGravity.BOTTOM,
+  );
+
+  // Esperar 1 segundo adicional para cumplir 5 segundos
+  await Future.delayed(Duration(seconds: 1));
 
   for (var order in unsyncedOrders) {
     try {
@@ -159,15 +168,6 @@ Future<void> syncOrders() async {
         var jsonResponse = json.decode(response.body);
         int idPedido = jsonResponse['savedOrder']['id'];
 
-        print('Pedido sincronizado correctamente: $order');
-
-        Fluttertoast.showToast(
-          msg: 'Pedido sincronizado correctamente.',
-          textColor: Colors.blue,
-          toastLength: Toast.LENGTH_SHORT,
-          gravity: ToastGravity.BOTTOM,
-        );
-
         List<Map<String, dynamic>> unsyncedOrderDetails =
             await dbDetallePedidos.DatabaseHelperDetallePedidos()
                 .getUnsyncedOrderDetails(order['id']);
@@ -184,30 +184,19 @@ Future<void> syncOrders() async {
             var detailUrl = ApiRoutes.buildUri('detalle_pedidos/save');
             var detailBody = jsonEncode(detailCopy);
 
-            print('Enviando detalle del pedido: $detailBody');
             var detailResponse =
                 await http.post(detailUrl, headers: headers, body: detailBody);
 
             if (detailResponse.statusCode == 200) {
               syncedDetailsCount++;
               if (syncedDetailsCount == unsyncedOrderDetails.length) {
-                print(
-                    'Todos los detalles del pedido sincronizados correctamente.');
                 await dbGuardarPedido.DatabaseHelperPedidos()
                     .markOrderAsSynced(order['id'], idPedido);
-                Fluttertoast.showToast(
-                  msg: 'Pedido y detalles sincronizados correctamente.',
-                  textColor: Colors.blue,
-                  toastLength: Toast.LENGTH_SHORT,
-                  gravity: ToastGravity.BOTTOM,
-                );
               }
             } else {
-              print(
-                  'Error al sincronizar detalle del pedido: ${detailResponse.statusCode} - ${detailResponse.body}');
-
               Fluttertoast.showToast(
-                msg: 'Error,.No se pueden sincronizar los detalles del pedido.',
+                msg:
+                    'Error. No se pueden sincronizar los detalles del pedido.',
                 textColor: Colors.red,
                 toastLength: Toast.LENGTH_SHORT,
                 gravity: ToastGravity.BOTTOM,
@@ -218,8 +207,6 @@ Future<void> syncOrders() async {
           }
         }
       } else {
-        print(
-            'Error al sincronizar pedido: ${response.statusCode} - ${response.body}');
         Fluttertoast.showToast(
           msg: 'Error al sincronizar pedido: ${response.statusCode}',
           textColor: Colors.red,
@@ -228,7 +215,6 @@ Future<void> syncOrders() async {
         );
       }
     } catch (error) {
-      print('Error al sincronizar pedido: $error');
       Fluttertoast.showToast(
         msg: 'Error al sincronizar pedido.',
         toastLength: Toast.LENGTH_LONG,
@@ -236,6 +222,16 @@ Future<void> syncOrders() async {
       );
     }
   }
+
+  // Mostrar el Toast por 5 segundos al finalizar la sincronización
+  Fluttertoast.showToast(
+    msg: 'Sincronización de pedidos completada.',
+    toastLength: Toast.LENGTH_LONG, // 4 segundos
+    gravity: ToastGravity.BOTTOM,
+  );
+
+  // Esperar 1 segundo adicional para cumplir los 5 segundos
+  await Future.delayed(Duration(seconds: 1));
 }
 
 Future<int?> saveOrder(int selectedClient, String observations,
