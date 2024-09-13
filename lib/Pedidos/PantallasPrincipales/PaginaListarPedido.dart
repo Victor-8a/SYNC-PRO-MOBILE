@@ -161,7 +161,7 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                           pdf.addPage(
                             pw.Page(
                               pageFormat: PdfPageFormat(
-                                  80 * PdfPageFormat.mm, double.infinity),
+                                  105 * PdfPageFormat.mm, double.infinity),
                               build: (pw.Context context) {
                                 return pw.Container(
                                   padding: pw.EdgeInsets.all(5.0),
@@ -217,7 +217,7 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                                       pw.Text('DESCRIPCION PRODUCTO',
                                           style: pw.TextStyle(fontSize: 10)),
                                       pw.Text(
-                                          'CANT |PRECIO UNIT| DESC  |IMPORTE',
+                                          'BARRAS | MARCA | CANT | PRECIO UNIT | DESC | IMPORTE',
                                           style: pw.TextStyle(fontSize: 10)),
                                       pw.Center(
                                         child: pw.Text(
@@ -229,7 +229,10 @@ class _PaginaListarPedidosState extends State<PaginaListarPedidos> {
                                           crossAxisAlignment:
                                               pw.CrossAxisAlignment.start,
                                           children: [
-                                            pw.Text('${detail['Descripcion']}',
+                                            pw.Text(
+                                                '${detail['Descripcion']}' +
+                                                    ' | ${detail['barras']}' +
+                                                    ' | ${detail['marcas']}',
                                                 style:
                                                     pw.TextStyle(fontSize: 10)),
                                             pw.Text(

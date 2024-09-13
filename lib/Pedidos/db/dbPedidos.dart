@@ -62,6 +62,7 @@ class DatabaseHelperPedidos {
       JOIN 
         vendedores ON Orders.idVendedor = vendedores.value
       WHERE Orders.Anulado = 0
+      ORDER BY Orders.id DESC
     ''');
 
     return result;

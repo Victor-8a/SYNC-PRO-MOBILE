@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
 
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,35 +34,35 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
     setState(() {}); // Actualiza el estado para reflejar el cambio
   }
 
-  Future<void> _saveFilePath(String path) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(widget.path, path);
-    setState(() {
-      savedFilePath = path; // Actualiza savedFilePath con la nueva ruta
-    });
-  }
+  // Future<void> _saveFilePath(String path) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   await prefs.setString(widget.path, path);
+  //   setState(() {
+  //     savedFilePath = path; // Actualiza savedFilePath con la nueva ruta
+  //   });
+  // }
 
-  Future<void> _savePdfToDevice(BuildContext context) async {
-    final directory = await getExternalStorageDirectory();
-    final fileName = await _getFileNameFromUser(context);
+  // Future<void> _savePdfToDevice(BuildContext context) async {
+  //   final directory = await getExternalStorageDirectory();
+  //   final fileName = await _getFileNameFromUser(context);
 
-    if (fileName != null && fileName.isNotEmpty) {
-      final filePath = '${directory!.path}/$fileName.pdf';
-      final File file = File(filePath);
+  //   if (fileName != null && fileName.isNotEmpty) {
+  //     final filePath = '${directory!.path}/$fileName.pdf';
+  //     final File file = File(filePath);
 
-      try {
-        await file.writeAsBytes(await File(widget.path).readAsBytes());
-        await _saveFilePath(filePath);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('PDF guardado correctamente en $fileName.pdf')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar el PDF')),
-        );
-      }
-    }
-  }
+  //     try {
+  //       await file.writeAsBytes(await File(widget.path).readAsBytes());
+  //       await _saveFilePath(filePath);
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('PDF guardado correctamente en $fileName.pdf')),
+  //       );
+  //     } catch (e) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Error al guardar el PDF')),
+  //       );
+  //     }
+  //   }
+  // }
 
   Future<void> _sharePdf(BuildContext context) async {
     final directory = await getExternalStorageDirectory();
@@ -105,38 +107,34 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
                 Navigator.of(context).pop();
               },
             ),
-            TextButton(
-              child: Text('Guardar'),
-              onPressed: () {
-                Navigator.of(context).pop(controller.text);
-              },
-            ),
+            // TextButton(
+            //   child: Text('Guardar'),
+            //   onPressed: () {
+            //     Navigator.of(context).pop(controller.text);
+            //   },
+            // ),
           ],
         );
       },
     );
   }
 
-  Future<void> _printPdf() async {
-    final directory = await getExternalStorageDirectory();
-    final fileName = await _getFileNameFromUser(context);
+ 
+Future<void> _printPdf() async {
+  final fileBytes = await File(widget.path).readAsBytes();
 
-    if (fileName != null && fileName.isNotEmpty) {
-      final filePath = '${directory!.path}/$fileName.pdf';
-      final File file = File(filePath);
-
-      try {
-        await file.writeAsBytes(await File(widget.path).readAsBytes());
-
-        // final pdfFile = File(filePath);
-        // await Printing.sharePdf(bytes: await pdfFile.readAsBytes(), filename: fileName);
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al imprimir el PDF')),
-        );
-      }
-    }
+  try {
+    // Envía el archivo PDF a la impresora
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => fileBytes,
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error al imprimir el PDF')),
+    );
   }
+}
+  
 
   @override
   Widget build(BuildContext context) {
@@ -144,10 +142,10 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
       appBar: AppBar(
         title: Text('PDF'),
         actions: [
-          IconButton(
-            icon: Icon(Icons.save),
-            onPressed: () => _savePdfToDevice(context),
-          ),
+          // IconButton(
+          //   icon: Icon(Icons.save),
+          //   onPressed: () => _savePdfToDevice(context),
+          // ),
           IconButton(
             icon: Icon(Icons.share),
             onPressed: () => _sharePdf(context),

@@ -49,14 +49,25 @@ class _SeleccionarProductoState extends State<SeleccionarProducto> {
     super.dispose();
   }
 
-  void _onSearchChanged() {
-    String searchTerm = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredProducts = widget.productos.where((product) {
-        return product.descripcion.toLowerCase().contains(searchTerm) || product.barras.toLowerCase().contains(searchTerm) || product.categoriaSubCategoria.toLowerCase().contains(searchTerm) || product.marcas.toLowerCase().contains(searchTerm);
-      }).toList();
-    });
-  }
+void _onSearchChanged() {
+  String searchTerm = _searchController.text.toLowerCase();
+  setState(() {
+    // Divide el término de búsqueda en palabras individuales
+    List<String> searchTerms = searchTerm.split(' ').where((term) => term.isNotEmpty).toList();
+
+    _filteredProducts = widget.productos.where((product) {
+      // Obtiene todos los valores del producto como una sola lista de cadenas en minúsculas
+      List<String> productValues = product.toMap().values
+          .map((value) => value.toString().toLowerCase())
+          .toList();
+
+      // Verifica si todos los términos de búsqueda están presentes en alguna de las cadenas del producto
+      return searchTerms.every((term) =>
+        productValues.any((value) => value.contains(term))
+      );
+    }).toList();
+  });
+}
 
 void _showPrecioRangos(BuildContext context, int codigo) async {
   // Obtiene los rangos de precio para el producto con el código dado
@@ -203,10 +214,10 @@ void _showPrecioRangos(BuildContext context, int codigo) async {
                 'Precio D: Q${product.precioD.toStringAsFixed(2)}',
               ),
               Text(
-                'Precio D: Q${product.marcas}',
+                'Marca: ${product.marcas}',
               ),
               Text(
-                'Precio D: Q${product.categoriaSubCategoria}',
+                'Categoría: ${product.categoriaSubCategoria}',
               ),
             ],
           ),

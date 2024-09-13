@@ -15,12 +15,10 @@ class DatabaseHelperDetallePedidos {
 
 
   final result = await db.rawQuery('''
-    SELECT order_details.*, productos.barras
+    SELECT order_details.*, productos.barras, productos.marcas
     FROM order_details
     INNER JOIN productos ON order_details.CodArticulo = productos.codigo
     WHERE order_details.idPedido = ?
-
-    	
 
   ''', [idPedido]);
 

@@ -37,16 +37,32 @@ class _PaginaInventarioState extends State<PaginaInventario> {
     });
   }
 
-  void _filterProducts(String query) {
-    futureProducts.then((products) {
-      setState(() {
-        displayedProducts = products
-            .where((product) =>
-                product.descripcion.toLowerCase().contains(query.toLowerCase() ) || product.barras.toLowerCase().contains(query.toLowerCase() ) || product.categoriaSubCategoria.toLowerCase().contains(query.toLowerCase() ) || product.marcas.toLowerCase().contains(query.toLowerCase() ))
-            .toList();
-      });
+void filterProducts(String query) {
+  futureProducts.then((products) {
+    setState(() {
+      displayedProducts.clear(); // Limpiar la lista filtrada
+      if (query.isEmpty) {
+        displayedProducts.addAll(
+            products); // Si no hay búsqueda, mostrar todos los productos
+      } else {
+        query = query.toLowerCase();
+        // Divide el query en palabras individuales
+        List<String> searchTerms =
+            query.split(' ').where((term) => term.isNotEmpty).toList();
+
+        displayedProducts = products.where((product) {
+          // Obtiene los valores del producto como un String y lo convierte a minúsculas
+          String productString = product.toMap().values
+              .map((value) => value.toString().toLowerCase())
+              .join(' '); // Une todos los valores en una sola cadena
+
+          // Verifica si todos los términos de búsqueda están presentes en el producto
+          return searchTerms.every((term) => productString.contains(term));
+        }).toList();
+      }
     });
-  }
+  });
+}
 
   void _syncProducts() async {
     setState(() {
@@ -124,14 +140,12 @@ class _PaginaInventarioState extends State<PaginaInventario> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-
-        appBar: AppBar(
+      appBar: AppBar(
         title: const Text('Inventario',
-        style: TextStyle(
-          color: Colors.white,
-        )),
+            style: TextStyle(
+              color: Colors.white,
+            )),
         backgroundColor: Colors.blue,
-
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -142,7 +156,7 @@ class _PaginaInventarioState extends State<PaginaInventario> {
               children: [
                 Expanded(
                   child: TextField(
-                    onChanged: _filterProducts,
+                    onChanged: filterProducts,
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Buscar producto',
