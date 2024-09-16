@@ -12,6 +12,9 @@ class PuntoDeVentaPage extends StatefulWidget {
 class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
   final List<Product> products = [];
   final List<Product> cart = [];
+  List<Product> filteredProducts = [];
+  TextEditingController searchController = TextEditingController();
+  bool isSearching = false;
 
   double get total => cart.fold(0.0, (sum, item) => sum + item.precioFinal);
 
@@ -28,10 +31,38 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
           await productService.insertarProductService();
       setState(() {
         products.addAll(fetchedProducts);
+        filteredProducts = products;
       });
     } catch (e) {
       print('Error loading products: $e');
     }
+  }
+
+  void _filterProducts(String query) {
+    setState(() {
+      filteredProducts = products
+          .where((product) =>
+              product.descripcion.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    });
+  }
+
+  void _onSearchChanged(String query) {
+    _filterProducts(query);
+  }
+
+  void _startSearching() {
+    setState(() {
+      isSearching = true;
+    });
+  }
+
+  void _stopSearching() {
+    setState(() {
+      isSearching = false;
+      searchController.clear();
+      _filterProducts('');
+    });
   }
 
   void _removeFromCart(Product product) {
@@ -53,18 +84,33 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Punto de Venta',
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-        ),
+        title: isSearching
+            ? TextField(
+                controller: searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Buscar productos...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white),
+                ),
+                onChanged: _onSearchChanged,
+                onSubmitted: (value) => _onSearchChanged(value),
+              )
+            : Text(
+                'Punto de Venta',
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              ),
         backgroundColor: const Color.fromARGB(255, 68, 118, 255),
         actions: [
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {
-              // Función de búsqueda de productos
-            },
-          ),
+          isSearching
+              ? IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: _stopSearching,
+                )
+              : IconButton(
+                  icon: Icon(Icons.search),
+                  onPressed: _startSearching,
+                ),
           Stack(
             children: [
               IconButton(
@@ -97,13 +143,13 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
           children: [
             Expanded(
               child: ListView.builder(
-                itemCount: products.length,
+                itemCount: filteredProducts.length,
                 itemBuilder: (context, index) {
                   return ProductCard(
-                    product: products[index],
+                    product: filteredProducts[index],
                     onAddToCart: () {
                       setState(() {
-                        cart.add(products[index]);
+                        cart.add(filteredProducts[index]);
                       });
                     },
                   );
@@ -111,41 +157,45 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
               ),
             ),
             Divider(thickness: 1, color: Colors.grey[300]),
-            Padding(
+            Container(
               padding:
                   const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Total: Q${total.toStringAsFixed(2)}',
-                    style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue),
+                  Expanded(
+                    child: Wrap(
+                      direction: Axis.vertical,
+                      children: [
+                        Text(
+                          'Total: Q${total.toStringAsFixed(2)}',
+                          style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
                   ElevatedButton(
                     onPressed: cart.isEmpty
                         ? null
                         : () {
-                          openCart();
+                            openCart();
                           },
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           cart.isEmpty ? Colors.grey : Colors.green,
                       padding: EdgeInsets.symmetric(
-                          vertical: 12.0, horizontal: 24.0),
+                          vertical: 16.0, horizontal: 18.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
-
-                  
                       ),
                     ),
-                    child: Text('Continuar con la Venta',
+                    child: Text('Continuar Compra',
                         style: TextStyle(fontSize: 12, color: Colors.white)),
-                        
                   ),
-                  
                 ],
               ),
             ),

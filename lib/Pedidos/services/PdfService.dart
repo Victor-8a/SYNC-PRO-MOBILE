@@ -107,12 +107,12 @@ class _PdfViewerPageState extends State<PdfViewerPage> {
                 Navigator.of(context).pop();
               },
             ),
-            // TextButton(
-            //   child: Text('Guardar'),
-            //   onPressed: () {
-            //     Navigator.of(context).pop(controller.text);
-            //   },
-            // ),
+            TextButton(
+              child: Text('Guardar'),
+              onPressed: () {
+                Navigator.of(context).pop(controller.text);
+              },
+            ),
           ],
         );
       },
@@ -143,8 +143,8 @@ Future<void> _printPdf() async {
         title: Text('PDF'),
         actions: [
           // IconButton(
-          //   icon: Icon(Icons.save),
-          //   onPressed: () => _savePdfToDevice(context),
+          //   // icon: Icon(Icons.save),
+          //   // onPressed: () => _savePdfToDevice(context),
           // ),
           IconButton(
             icon: Icon(Icons.share),

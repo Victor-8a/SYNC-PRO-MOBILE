@@ -138,15 +138,17 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  
                   Expanded(
+                    
                     child: Text(
                       'Total: Q${_cart.entries.fold(0.0, (double sum, MapEntry<Product, int> entry) => sum + (entry.key.precioFinal) * entry.value).toStringAsFixed(2)}',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.deepPurple,                     
+                      ),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   SizedBox(
-                    width: 150,
                     child: ElevatedButton(
                       onPressed: _cart.isEmpty
                           ? null
@@ -155,12 +157,12 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: _cart.isEmpty ? Colors.grey : Colors.green,
-                        padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+                        padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 18.0),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
                       ),
-                      child: Text('Finalizar Compra', style: TextStyle(fontSize: 16, color: Colors.white)),
+                      child: Text('Finalizar Compra', style: TextStyle(fontSize: 15, color: Colors.white)),
                     ),
                   ),
                 ],
