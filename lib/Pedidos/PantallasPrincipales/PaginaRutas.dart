@@ -7,12 +7,12 @@ import 'package:sync_pro_mobile/Pedidos/Models/Localidad.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/ListarRuta.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbCliente.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbLocalidad.dart';
+import 'package:sync_pro_mobile/db/dbCliente.dart';
+import 'package:sync_pro_mobile/db/dbLocalidad.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Ruta.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbRuta.dart';
+import 'package:sync_pro_mobile/db/dbRuta.dart';
 import 'package:sync_pro_mobile/Pedidos/services/SincronizarRuta.dart';
-import '../db/dbDetalleRuta.dart'; // Asegúrate de importar el modelo Ruta si no lo has hecho aún
+import '../../db/dbDetalleRuta.dart'; // Asegúrate de importar el modelo Ruta si no lo has hecho aún
 
 Future<Vendedor> loadSalesperson() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();

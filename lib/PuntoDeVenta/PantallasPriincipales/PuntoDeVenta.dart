@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
-import 'package:sync_pro_mobile/PuntoDeVenta/PantallasPriincipales/mostrarCarrito.dart';
+import 'package:sync_pro_mobile/db/dbCarrito.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/PantallasSecundarias/MostrarCarrito.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/PantallasSecundarias/ProductCard.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/ProductoPuntoDeVentaService.dart';
+import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
 
 class PuntoDeVentaPage extends StatefulWidget {
   @override
@@ -15,8 +16,6 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
   List<Product> filteredProducts = [];
   TextEditingController searchController = TextEditingController();
   bool isSearching = false;
-
-  double get total => cart.fold(0.0, (sum, item) => sum + item.precioFinal);
 
   @override
   void initState() {
@@ -65,19 +64,18 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
     });
   }
 
-  void _removeFromCart(Product product) {
-    setState(() {
-      cart.remove(product);
-    });
-  }
-
   void openCart() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) =>
-            MostrarCarrito(cart: cart, onRemove: _removeFromCart),
+        builder: (context) => MostrarCarrito(),
       ),
-    );
+    ).then((value) {
+      setState(() {});
+    });
+  }
+
+  Future<int> _getCartItemCount() async {
+    return await DatabaseHelperCarrito().getProductCount();
   }
 
   @override
@@ -98,7 +96,8 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
               )
             : Text(
                 'Punto de Venta',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                style:
+                    TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
               ),
         backgroundColor: const Color.fromARGB(255, 68, 118, 255),
         actions: [
@@ -111,29 +110,40 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
                   icon: Icon(Icons.search),
                   onPressed: _startSearching,
                 ),
-          Stack(
-            children: [
-              IconButton(
-                icon: Icon(Icons.shopping_cart),
-                onPressed: cart.isNotEmpty ? openCart : null,
-              ),
-              if (cart.isNotEmpty)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '${cart.length}',
-                      style: TextStyle(color: Colors.white, fontSize: 12),
-                    ),
+          FutureBuilder<int>(
+            future: _getCartItemCount(),
+            builder: (context, snapshot) {
+              int itemCount = 0;
+              if (snapshot.connectionState == ConnectionState.done) {
+                if (snapshot.hasData) {
+                  itemCount = snapshot.data!;
+                }
+              }
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.shopping_cart),
+                    onPressed: itemCount > 0 ? openCart : null,
                   ),
-                ),
-            ],
+                  if (itemCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '$itemCount',
+                          style: TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -164,37 +174,60 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Wrap(
-                      direction: Axis.vertical,
-                      children: [
-                        Text(
-                          'Total: Q${total.toStringAsFixed(2)}',
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                    child: FutureBuilder<int>(
+                      future: DatabaseHelperCarrito().getTotalCarrito(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Center(
+                              child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else if (snapshot.hasData) {
+                          double total = snapshot.data!.toDouble();
+                          return Wrap(
+                            direction: Axis.vertical,
+                            children: [
+                              Text(
+                                'Total: Q${total.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          );
+                        } else {
+                          return Text('Carrito vacío');
+                        }
+                      },
                     ),
                   ),
-                  ElevatedButton(
-                    onPressed: cart.isEmpty
-                        ? null
-                        : () {
-                            openCart();
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          cart.isEmpty ? Colors.grey : Colors.green,
-                      padding: EdgeInsets.symmetric(
-                          vertical: 16.0, horizontal: 18.0),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    child: Text('Continuar Compra',
-                        style: TextStyle(fontSize: 12, color: Colors.white)),
+                  FutureBuilder<int>(
+                    future: _getCartItemCount(),
+                    builder: (context, snapshot) {
+                      bool isButtonEnabled = false;
+                      if (snapshot.connectionState == ConnectionState.done) {
+                        if (snapshot.hasData) {
+                          isButtonEnabled = snapshot.data! > 0;
+                        }
+                      }
+                      return ElevatedButton(
+                        onPressed: isButtonEnabled ? openCart : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isButtonEnabled
+                              ? Colors.green
+                              : Colors.grey,
+                          padding: EdgeInsets.symmetric(
+                              vertical: 16.0, horizontal: 18.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: Text('Continuar Compra',
+                            style: TextStyle(fontSize: 12, color: Colors.white)),
+                      );
+                    },
                   ),
                 ],
               ),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbConfiguraciones.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 
 class ConfiguracionesPage extends StatefulWidget {
   @override

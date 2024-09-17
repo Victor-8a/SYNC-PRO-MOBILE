@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Localidad.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbLocalidad.dart';
+import 'package:sync_pro_mobile/db/dbLocalidad.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart'; // Importa tu clase DatabaseHelperRuta
 
 Future<List<Localidad>> fetchRuta() async {

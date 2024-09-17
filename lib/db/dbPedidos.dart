@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Pedido.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbDetallePedidos.dart';
+import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
 
 import 'bd.dart';
 

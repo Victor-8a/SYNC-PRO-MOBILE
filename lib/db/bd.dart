@@ -14,39 +14,48 @@ class DatabaseHelper {
     _database = await _initDatabase();
     return _database!;
   }
-Future<Database> _initDatabase() async {
-  final dbPath = await getDatabasesPath();
-  final path = join(dbPath, 'sync_pro_mobile.db');
+  Future<Database> _initDatabase() async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, 'sync_pro_mobile.db');
 
-  return await openDatabase(
-    path,
-    version: 4, // Incrementa la versión de la base de datos
-    onCreate: (db, version) async {
-      await _createVendedoresTable(db);
-      await _createLocalidadTable(db);
-      await _createClientesTable(db);
-      await _createProductosTable(db);
-      await _createOrdersTable(db);
-      await _createOrderDetailsTable(db);
-      await _createEmpresaTable(db);
-      await _createRutaTable(db);
-      await _createDetalleRutaTable(db);
-      await _createConfiguracionTable(db);
-      await _createRangoPrecioProductoTable(db);
-      await _createUsuarioTable(db);
-      print('Database created and tables initialized');
-    },
-    onUpgrade: (db, oldVersion, newVersion) async {
-      if (oldVersion < 4) {
-        // Si la versión anterior es menor a 3, agrega el nuevo campo a la tabla Configuraciones
-        await db.execute('''
-          ALTER TABLE Configuraciones ADD COLUMN clientesFiltrados INTEGER DEFAULT 0
-        ''');
-        print('Database upgraded to version 3: "clientesFiltrados" column added to Configuraciones');
-      }
-    },
-  );
-}
+    return await openDatabase(
+      path,
+      version: 5, // Incrementa la versión de la base de datos
+      onCreate: (db, version) async {
+        await _createVendedoresTable(db);
+        await _createLocalidadTable(db);
+        await _createClientesTable(db);
+        await _createProductosTable(db);
+        await _createOrdersTable(db);
+        await _createOrderDetailsTable(db);
+        await _createEmpresaTable(db);
+        await _createRutaTable(db);
+        await _createDetalleRutaTable(db);
+        await _createConfiguracionTable(db);
+        await _createRangoPrecioProductoTable(db);
+        await _createUsuarioTable(db);
+        await _createCarritoTable(db);
+        print('Database created and tables initialized');
+      },
+      
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 4) {
+          // Si la versión anterior es menor a 3, agrega el nuevo campo a la tabla Configuraciones
+          await db.execute('''
+      ALTER TABLE Configuraciones ADD COLUMN clientesFiltrados INTEGER DEFAULT 0
+    ''');
+          print(
+              'Database upgraded to version 5: "clientesFiltrados" column added to Configuraciones');
+        }
+
+        if (oldVersion < 5) {
+          // Si la versión anterior es menor a 4, crea la tabla Carrito
+          await _createCarritoTable(db);
+          print('Database upgraded to version 5: "Carrito" table created');
+        }
+      },
+    );
+  }
 
   Future<void> _createClientesTable(Database db) async {
     await db.execute('''
@@ -235,8 +244,6 @@ Future<Database> _initDatabase() async {
     ''');
   }
 
-  
-
   // Future<void> deleteAllTables() async {
   //   final db = await database;
   //   await db.execute('DROP TABLE IF EXISTS clientes');
@@ -267,6 +274,18 @@ Future<Database> _initDatabase() async {
       FOREIGN KEY (CodProducto) REFERENCES productos(codigo)
     )
   ''');
+  }
+
+  Future<void> _createCarritoTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE Carrito(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        idProducto INTEGER,
+        Cantidad INTEGER,
+        Precio REAL,
+        FOREIGN KEY (idProducto) REFERENCES productos(codigo)
+      )
+    ''');
   }
 
   // Método para crear la tabla

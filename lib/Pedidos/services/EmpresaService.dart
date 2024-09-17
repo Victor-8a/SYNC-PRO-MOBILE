@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Empresa.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbEmpresa.dart';
+import 'package:sync_pro_mobile/db/dbEmpresa.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 
 class ImageModel {

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Localidad.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Ruta.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbDetalleRuta.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbRuta.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbCliente.dart';
+import 'package:sync_pro_mobile/db/dbDetalleRuta.dart';
+import 'package:sync_pro_mobile/db/dbRuta.dart';
+import 'package:sync_pro_mobile/db/dbCliente.dart';
 
 class ListarRuta extends StatelessWidget {
   final DatabaseHelperRuta dbHelperRuta = DatabaseHelperRuta();

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbProducto.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbRangoPrecioProducto.dart';
+import 'package:sync_pro_mobile/db/dbProducto.dart';
+import 'package:sync_pro_mobile/db/dbRangoPrecioProducto.dart';
 
 class SeleccionarProducto extends StatefulWidget {
   final List<Product> productos;

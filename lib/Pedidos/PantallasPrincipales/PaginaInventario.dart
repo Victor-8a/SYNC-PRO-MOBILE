@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbRangoPrecioProducto.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
+import 'package:sync_pro_mobile/db/dbRangoPrecioProducto.dart';
+import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ProductoService.dart';
 
 class PaginaInventario extends StatefulWidget {

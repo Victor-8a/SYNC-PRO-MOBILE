@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
+import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ObtenerPedido.dart';
 import 'package:sync_pro_mobile/Pedidos/services/SincronizarRuta.dart';
 import 'package:sync_pro_mobile/Pedidos/services/WarningWidgetCubit.dart';

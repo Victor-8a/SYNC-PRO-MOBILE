@@ -3,9 +3,9 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbCliente.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbConfiguraciones.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
+import 'package:sync_pro_mobile/db/dbCliente.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
+import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 
 class ClienteService {

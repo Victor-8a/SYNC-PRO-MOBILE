@@ -1,4 +1,4 @@
-import 'package:sync_pro_mobile/Pedidos/db/bd.dart';
+import 'package:sync_pro_mobile/db/bd.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/RangoPrecioProducto.dart'; // Importa tu modelo
 

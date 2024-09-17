@@ -6,7 +6,7 @@ import 'package:http/http.dart' as http; // For HTTP requests
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 import 'bd.dart';
 import 'package:sqflite/sqflite.dart';
-import '../Models/Vendedor.dart';
+import '../Pedidos/Models/Vendedor.dart';
 
 class DatabaseHelperVendedor {
 final dbProvider = DatabaseHelper();

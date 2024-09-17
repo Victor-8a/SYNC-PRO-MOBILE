@@ -5,10 +5,10 @@ import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Pedidos/Models/Pedido.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/DetallePedido.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart'; 
-import 'package:sync_pro_mobile/Pedidos/db/dbPedidos.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbDetallePedidos.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbProducto.dart'; 
-import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
+import 'package:sync_pro_mobile/db/dbPedidos.dart';
+import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
+import 'package:sync_pro_mobile/db/dbProducto.dart'; 
+import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/Pedidos/services/LocalidadService.dart';
 import 'package:sqflite/sqflite.dart'; // Asegúrate de importar este paquete para utilizar Sqflite.

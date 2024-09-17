@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 
-import 'package:sync_pro_mobile/Pedidos/db/dbUsuario.dart';
+import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'bd.dart';
 
 class DatabaseHelperCliente {

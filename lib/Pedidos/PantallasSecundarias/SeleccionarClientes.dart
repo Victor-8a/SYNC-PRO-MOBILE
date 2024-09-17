@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbConfiguraciones.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import '../Models/Cliente.dart';
 import '../Models/Ruta.dart';
-import '../db/dbCliente.dart';
-import '../db/dbRuta.dart';
+import '../../db/dbCliente.dart';
+import '../../db/dbRuta.dart';
 
 class SeleccionarCliente extends StatefulWidget {
   const SeleccionarCliente({Key? key, required List clientes}) : super(key: key);

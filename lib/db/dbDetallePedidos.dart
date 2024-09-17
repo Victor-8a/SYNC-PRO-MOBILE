@@ -1,6 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
-import 'package:sync_pro_mobile/Pedidos/db/bd.dart';
+import 'package:sync_pro_mobile/db/bd.dart';
 
 class DatabaseHelperDetallePedidos {
   final dbProvider = DatabaseHelper();

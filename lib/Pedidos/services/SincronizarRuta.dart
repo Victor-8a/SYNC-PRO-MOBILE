@@ -3,8 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbDetalleRuta.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbRuta.dart';
+import 'package:sync_pro_mobile/db/dbDetalleRuta.dart';
+import 'package:sync_pro_mobile/db/dbRuta.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 
 Future<void> syncRutas() async {

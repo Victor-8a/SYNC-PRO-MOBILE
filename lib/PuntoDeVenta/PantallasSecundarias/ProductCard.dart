@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
+import 'package:sync_pro_mobile/db/dbCarrito.dart'; // Asegúrate de importar donde tienes definido el método insertCarrito
 
 class ProductCard extends StatelessWidget {
   final Product product;
@@ -31,16 +31,15 @@ class ProductCard extends StatelessWidget {
                         color: Colors.blue),
                   ),
                   SizedBox(height: 8),
-                
-                   Text(
-                    'Codigo de barra: ${product.barras}',
+                  Text(
+                    'Código de barra: ${product.barras}',
                     style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                   ),
-                    Text(
+                  Text(
                     'Precio: Q${product.precioFinal.toStringAsFixed(2)}',
                     style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                   ),
-                    Text(
+                  Text(
                     'Existencia: ${product.existencia}',
                     style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                   ),
@@ -48,7 +47,15 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             ElevatedButton.icon(
-              onPressed: onAddToCart,
+              onPressed: () async {
+                // Llamamos al método insertCarrito con la cantidad deseada
+                await DatabaseHelperCarrito().insertCarrito(product, 1);
+
+                // También podrías mostrar una notificación o mensaje al usuario
+
+                // Llamamos al callback que puede estar manejando otras acciones
+                onAddToCart();
+              },
               icon: Icon(Icons.add, size: 20),
               label: Text('Añadir'),
               style: ElevatedButton.styleFrom(

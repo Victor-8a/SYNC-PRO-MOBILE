@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'bd.dart';
 import 'package:sqflite/sqflite.dart';
-import '../Models/Producto.dart';
+import '../Pedidos/Models/Producto.dart';
 
 class DatabaseHelperProducto {
 final dbProvider = DatabaseHelper();

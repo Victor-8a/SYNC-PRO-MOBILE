@@ -6,11 +6,11 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbConfiguraciones.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbDetallePedidos.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbEmpresa.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbPedidos.dart';
-import 'package:sync_pro_mobile/Pedidos/db/dbVendedores.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
+import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
+import 'package:sync_pro_mobile/db/dbEmpresa.dart';
+import 'package:sync_pro_mobile/db/dbPedidos.dart';
+import 'package:sync_pro_mobile/db/dbVendedores.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ClienteService.dart';
 import 'package:sync_pro_mobile/Pedidos/services/PdfService.dart'; // Asegúrate de que esta importación esté correcta
 // import 'package:google_fonts/google_fonts.dart'; // Importa Google Fonts
