@@ -5,6 +5,7 @@ import 'package:sync_pro_mobile/PuntoDeVenta/PantallasSecundarias/ProductCard.da
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/ProductoPuntoDeVentaService.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
 
+
 class PuntoDeVentaPage extends StatefulWidget {
   @override
   _PuntoDeVentaPageState createState() => _PuntoDeVentaPageState();
@@ -15,7 +16,7 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
   final List<Product> cart = [];
   List<Product> filteredProducts = [];
   TextEditingController searchController = TextEditingController();
-  bool isSearching = false;
+  bool isSearching = true;
 
   @override
   void initState() {
@@ -52,7 +53,7 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
 
   void _startSearching() {
     setState(() {
-      isSearching = true;
+      isSearching = false;
     });
   }
 
@@ -73,6 +74,8 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
       setState(() {});
     });
   }
+
+
 
   Future<int> _getCartItemCount() async {
     return await DatabaseHelperCarrito().getProductCount();
@@ -174,12 +177,12 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: FutureBuilder<int>(
+                    child: FutureBuilder<double>(
                       future: DatabaseHelperCarrito().getTotalCarrito(),
                       builder: (context, snapshot) {
                         if (snapshot.connectionState == ConnectionState.waiting) {
                           return Center(
-                              child: CircularProgressIndicator());
+                              child: SizedBox());
                         } else if (snapshot.hasError) {
                           return Text('Error: ${snapshot.error}');
                         } else if (snapshot.hasData) {
@@ -193,7 +196,7 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.blue),
-                                overflow: TextOverflow.ellipsis,
+                        
                               ),
                             ],
                           );

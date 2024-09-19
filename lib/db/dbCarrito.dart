@@ -16,7 +16,7 @@ Future<List<Map<String, dynamic>>> getCarritoItems() async {
   ''');
 }
 
-Future<int> getTotalCarrito() async {
+Future<double> getTotalCarrito() async {
   final db = await dbProvider.database;
   final result = await db.rawQuery('''
     SELECT SUM(Cantidad * Precio) as Total
@@ -25,7 +25,7 @@ Future<int> getTotalCarrito() async {
 
   // Verificamos si hay un resultado y lo convertimos a int
   if (result.isNotEmpty && result.first['Total'] != null) {
-    return (result.first['Total'] as num).toInt();
+    return (result.first['Total'] as num).toDouble();
   } else {
     return 0; // Si no hay resultado, devolvemos 0
   }

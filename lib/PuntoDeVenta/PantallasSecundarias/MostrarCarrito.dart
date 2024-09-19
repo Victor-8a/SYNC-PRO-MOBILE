@@ -16,9 +16,8 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
 
   @override
   void initState() {
-      _loadCartFromDatabase();
+    _loadCartFromDatabase();
     super.initState();
-  
   }
 
   // Cargar productos desde la base de datos
@@ -33,7 +32,7 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
     // Agrupar productos en un mapa de productos y cantidades
     Map<Product, int> cartMap = {};
     for (var item in cartItems) {
-      final product = Product.fromMap(item); // Ajustar según cómo conviertas el producto desde la BD
+      final product = Product.fromMap(item); // Ajustar según cómo conviertes el producto desde la BD
       cartMap[product] = item['Cantidad'] as int;
     }
 
@@ -83,6 +82,8 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                       itemBuilder: (context, index) {
                         final product = _cart.keys.elementAt(index);
                         final quantity = _cart[product]!;
+                        final TextEditingController _controller =
+                            TextEditingController(text: quantity.toString());
 
                         return ListTile(
                           title: Text(product.descripcion,
@@ -101,15 +102,31 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                                         product, quantity - 1);
                                   } else {
                                     _updateQuantityInDatabase(
-                                        product, 0); // Aquí eliminamos el producto si la cantidad llega a 0
+                                        product, 0); // Eliminar producto si la cantidad es 0
                                   }
                                 },
                               ),
                               SizedBox(
                                 width: 50,
-                                child: Text(
-                                  quantity.toString(),
+                                child: TextField(
+                                  controller: _controller,
+                                  keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
+                                  onSubmitted: (value) {
+                                    // Validar la entrada del usuario
+                                    int? newQuantity = int.tryParse(value);
+                                    if (newQuantity != null &&
+                                        newQuantity > 0) {
+                                      _updateQuantityInDatabase(
+                                          product, newQuantity);
+                                    } else if (newQuantity == 0) {
+                                      _updateQuantityInDatabase(
+                                          product, 0); // Eliminar producto
+                                    } else {
+                                      // Restaurar el valor anterior si la entrada es inválida
+                                      _controller.text = quantity.toString();
+                                    }
+                                  },
                                   style: TextStyle(fontSize: 18),
                                 ),
                               ),
