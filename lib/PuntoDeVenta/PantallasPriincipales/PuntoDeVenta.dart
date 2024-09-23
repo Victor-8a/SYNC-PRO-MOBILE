@@ -75,8 +75,6 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
     });
   }
 
-
-
   Future<int> _getCartItemCount() async {
     return await DatabaseHelperCarrito().getProductCount();
   }

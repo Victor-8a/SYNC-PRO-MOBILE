@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
-import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ObtenerPedido.dart';
 import 'package:sync_pro_mobile/Pedidos/services/SincronizarRuta.dart';
 import 'package:sync_pro_mobile/Pedidos/services/WarningWidgetCubit.dart';
@@ -158,11 +157,6 @@ class _SecondPageState extends State<SecondPage> {
     );
   }
 
-  deleteUsuario() async {
-    DatabaseHelperUsuario dbHelper = DatabaseHelperUsuario();
-    final eliminar = await dbHelper.deleteUsuario();
-    return eliminar;
-  }
 }
 
 // La clase LoginPage debe estar definida aquí o importada desde otro archivo

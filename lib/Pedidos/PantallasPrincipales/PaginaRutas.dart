@@ -585,7 +585,7 @@ class _PaginaRegistrarState extends State<PaginaRegistrar> {
                                   setState(() {
                                     estadoSeleccionado = newValue!;
                                   });
-                                },
+                                }, 
                                 items: estados.map((String value) {
                                   return DropdownMenuItem<String>(
                                     value: value,
