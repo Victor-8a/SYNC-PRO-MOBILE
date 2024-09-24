@@ -239,7 +239,8 @@ class DatabaseHelper {
     CREATE TABLE Configuraciones(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       usaRuta INTEGER DEFAULT 0,
-      clientesFiltrados INTEGER DEFAULT 0
+      clientesFiltrados INTEGER DEFAULT 0,
+      usaApertura INTEGER DEFAULT 0
     )
     ''');
   }

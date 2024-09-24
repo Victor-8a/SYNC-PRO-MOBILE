@@ -13,6 +13,8 @@ class DatabaseHelperConfiguraciones {
     }
     return false; 
   }
+
+
 Future<bool> getClientesFiltrados() async {
   final db = await dbProvider.database;
   final List<Map<String, dynamic>> maps = await db.query('Configuraciones', where: 'id = ?', whereArgs: [1]);
@@ -25,9 +27,17 @@ Future<bool> getClientesFiltrados() async {
   print('No se encontró configuración, devolviendo false por defecto');
   return false;
 }
+  Future<bool> getUsaApertura() async {
+    final db = await dbProvider.database;
+    final List<Map<String, dynamic>> maps = await db.query('Configuraciones', where: 'id = ?', whereArgs: [1]);
+    if (maps.isNotEmpty) {
+      return maps.first['usaApertura'] == 1;
+    }
+    return false; 
+  }
 
 
-Future<void> setConfiguracion(bool usaRuta, bool clientesFiltrados) async {
+Future<void> setConfiguracion(bool usaRuta, bool clientesFiltrados, bool usaApertura ) async {
   final db = await dbProvider.database;
   await db.insert(
     'Configuraciones',
@@ -35,6 +45,7 @@ Future<void> setConfiguracion(bool usaRuta, bool clientesFiltrados) async {
       'id': 1,
       'usaRuta': usaRuta ? 1 : 0,
       'clientesFiltrados': clientesFiltrados ? 1 : 0,
+      'usaApertura': usaApertura ? 1 : 0,
     },
     conflictAlgorithm: ConflictAlgorithm.replace,
   );
@@ -69,6 +80,7 @@ Future<void> insertConfiguracionSiEstaVacia() async {
         'id': 1,
         'usaRuta': 0,
         'clientesFiltrados': 0,
+        'usaApertura': 0,
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );

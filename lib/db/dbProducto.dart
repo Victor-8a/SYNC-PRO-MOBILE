@@ -39,7 +39,6 @@ final db = await dbProvider.database;
 
   Future<void> deleteAllProducts() async {
   final db = await dbProvider.database;
-
     await db.delete('productos');
   }
 }

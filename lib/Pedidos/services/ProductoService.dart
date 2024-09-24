@@ -37,7 +37,6 @@ class ProductService {
       ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
-        DatabaseHelperProducto().deleteAllProducts();
         final List<dynamic> data = jsonDecode(response.body);
         final products = data.map((json) => Product.fromJson(json)).toList();
         await saveProductsToLocalDatabase(products);

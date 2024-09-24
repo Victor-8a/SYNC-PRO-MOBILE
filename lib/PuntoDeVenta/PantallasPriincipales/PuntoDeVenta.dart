@@ -5,7 +5,6 @@ import 'package:sync_pro_mobile/PuntoDeVenta/PantallasSecundarias/ProductCard.da
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/ProductoPuntoDeVentaService.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
 
-
 class PuntoDeVentaPage extends StatefulWidget {
   @override
   _PuntoDeVentaPageState createState() => _PuntoDeVentaPageState();
@@ -26,7 +25,7 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
 
   void _loadProducts() async {
     try {
-      ProductService productService = ProductService();
+      ProductServicePOS productService = ProductServicePOS();
       List<Product> fetchedProducts =
           await productService.insertarProductService();
       setState(() {
@@ -66,11 +65,13 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
   }
 
   void openCart() {
-    Navigator.of(context).push(
+    Navigator.of(context)
+        .push(
       MaterialPageRoute(
         builder: (context) => MostrarCarrito(),
       ),
-    ).then((value) {
+    )
+        .then((value) {
       setState(() {});
     });
   }
@@ -178,9 +179,9 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
                     child: FutureBuilder<double>(
                       future: DatabaseHelperCarrito().getTotalCarrito(),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Center(
-                              child: SizedBox());
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return Center(child: SizedBox());
                         } else if (snapshot.hasError) {
                           return Text('Error: ${snapshot.error}');
                         } else if (snapshot.hasData) {
@@ -194,7 +195,6 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.blue),
-                        
                               ),
                             ],
                           );
@@ -216,9 +216,8 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
                       return ElevatedButton(
                         onPressed: isButtonEnabled ? openCart : null,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isButtonEnabled
-                              ? Colors.green
-                              : Colors.grey,
+                          backgroundColor:
+                              isButtonEnabled ? Colors.green : Colors.grey,
                           padding: EdgeInsets.symmetric(
                               vertical: 16.0, horizontal: 18.0),
                           shape: RoundedRectangleBorder(
@@ -226,7 +225,8 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
                           ),
                         ),
                         child: Text('Continuar Compra',
-                            style: TextStyle(fontSize: 12, color: Colors.white)),
+                            style:
+                                TextStyle(fontSize: 12, color: Colors.white)),
                       );
                     },
                   ),

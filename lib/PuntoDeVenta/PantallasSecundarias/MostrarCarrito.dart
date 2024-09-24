@@ -32,7 +32,8 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
     // Agrupar productos en un mapa de productos y cantidades
     Map<Product, int> cartMap = {};
     for (var item in cartItems) {
-      final product = Product.fromMap(item); // Ajustar según cómo conviertes el producto desde la BD
+      final product = Product.fromMap(
+          item); // Ajustar según cómo conviertes el producto desde la BD
       cartMap[product] = item['Cantidad'] as int;
     }
 
@@ -101,8 +102,8 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                                     _updateQuantityInDatabase(
                                         product, quantity - 1);
                                   } else {
-                                    _updateQuantityInDatabase(
-                                        product, 0); // Eliminar producto si la cantidad es 0
+                                    _updateQuantityInDatabase(product,
+                                        0); // Eliminar producto si la cantidad es 0
                                   }
                                 },
                               ),
@@ -131,8 +132,8 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                                 ),
                               ),
                               IconButton(
-                                icon: Icon(Icons.add_circle,
-                                    color: Colors.green),
+                                icon:
+                                    Icon(Icons.add_circle, color: Colors.green),
                                 onPressed: () {
                                   _updateQuantityInDatabase(
                                       product, quantity + 1);

@@ -10,11 +10,13 @@ class _ConfiguracionesPageState extends State<ConfiguracionesPage> {
   final DatabaseHelperConfiguraciones dbHelper = DatabaseHelperConfiguraciones();
   bool usarRuta = false;
   bool clientesFiltrados = false;
+  bool usarApertura = false;
 
   @override
   void initState() {
     _loadUsaRuta();
     _loadClientesFiltrados();
+    _loadUsaApertura();
     super.initState();
   }
 
@@ -22,7 +24,12 @@ class _ConfiguracionesPageState extends State<ConfiguracionesPage> {
     bool value = await dbHelper.getUsaRuta();
     setState(() {
       usarRuta = value;
-      clientesFiltrados = value;
+    });
+  }
+    Future<void> _loadUsaApertura() async {
+    bool value = await dbHelper.getUsaApertura();
+    setState(() {
+      usarApertura = value;
     });
   }
 
@@ -32,6 +39,8 @@ class _ConfiguracionesPageState extends State<ConfiguracionesPage> {
       clientesFiltrados = value;
     });
   }
+  
+
 
   void _toggleUsaRuta(bool value) {
     setState(() {
@@ -45,8 +54,16 @@ class _ConfiguracionesPageState extends State<ConfiguracionesPage> {
     });
   }
 
+  
+  void _toggleUsaApertura(bool value) {
+    setState(() {
+      usarApertura = value;
+    });
+  }
+
+
   Future<void> saveconfiguraciones() async {
-    await dbHelper.setConfiguracion(usarRuta, clientesFiltrados);
+    await dbHelper.setConfiguracion(usarRuta, clientesFiltrados,usarApertura);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Configuración guardada')),
     );
@@ -114,6 +131,21 @@ class _ConfiguracionesPageState extends State<ConfiguracionesPage> {
                   activeColor: Colors.blue,
                   onChanged: (bool value) {
                     _toggleClientesFiltrados(value);
+                  },
+                ),
+                  SizedBox(height: 20),
+                SwitchListTile(
+                  value: usarApertura,
+                  title: Text(
+                    'Usar Apertura de Caja',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  activeColor: Colors.blue,
+                  onChanged: (bool value) {
+                    _toggleUsaApertura(value);
                   },
                 ),
                 SizedBox(height: 40),
