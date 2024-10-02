@@ -46,3 +46,7 @@ app.*.map.json
 # syncPro
 # contraseña
 # J*2f^t7@xL9p!S5w
+
+#clases a ignorar 
+
+/lib/Pedidos/services/ApiRoutes.dart

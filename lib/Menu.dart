@@ -159,7 +159,8 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisCount: 2,
       children: <Widget>[
         _buildGridItem('PEDIDOS', Icons.shopping_cart, Colors.indigo[100]!, 0),
-        _buildGridItem('PUNTO DE VENTA', Icons.point_of_sale, Colors.indigo[200]!, 1),
+        _buildGridItem(
+            'PUNTO DE VENTA', Icons.point_of_sale, Colors.indigo[200]!, 1),
         _buildGridItem('CLIENTES', Icons.person, Colors.indigo[400]!, 2),
         _buildGridItem('INVENTARIO', Icons.inventory, Colors.indigo[300]!, 3),
         _buildGridItem('', null, Colors.indigo[500]!, null),
@@ -167,60 +168,64 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-Widget _buildGridItem(String title, IconData? icon, Color color, int? index) {
-  return Material(
-    color: Colors.transparent,
-    child: InkWell(
-      onTap: index != null
-          ? () {
-              _onItemTapped(index);
-            }
-          : null,
-      splashColor: Colors.white.withOpacity(0.5), // Aumenta la opacidad del splash
-      highlightColor: Colors.white.withOpacity(0.3), // Aumenta la visibilidad del highlight
-      hoverColor: Colors.white.withOpacity(0.1),
-      splashFactory: InkRipple.splashFactory,
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200), // Añade animación para cambios visuales
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              spreadRadius: 2,
-              blurRadius: 5,
-              offset: Offset(2, 3),
-            ),
-          ],
-        ),
-        alignment: Alignment.center,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null)
-              Icon(
-                icon,
-                size: 48,
-                color: Colors.grey[800],
+
+  Widget _buildGridItem(String title, IconData? icon, Color color, int? index) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: index != null
+            ? () {
+                _onItemTapped(index);
+              }
+            : null,
+        splashColor:
+            Colors.white.withOpacity(0.5), // Aumenta la opacidad del splash
+        highlightColor: Colors.white
+            .withOpacity(0.3), // Aumenta la visibilidad del highlight
+        hoverColor: Colors.white.withOpacity(0.1),
+        splashFactory: InkRipple.splashFactory,
+        child: AnimatedContainer(
+          duration: Duration(
+              milliseconds: 200), // Añade animación para cambios visuales
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                spreadRadius: 2,
+                blurRadius: 5,
+                offset: Offset(2, 3),
               ),
-            SizedBox(height: 10),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[800],
+            ],
+          ),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (icon != null)
+                Icon(
+                  icon,
+                  size: 48,
+                  color: Colors.grey[800],
+                ),
+              SizedBox(height: 10),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   deleteUsuario() async {
     DatabaseHelperUsuario dbHelper = DatabaseHelperUsuario();

@@ -17,20 +17,12 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
   Cliente _selectedClient =
       Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
   Color _buttonColor = Colors.blue;
-  // ignore: unused_field
-  int? _selectedSalespersonId;
   DateTime _selectedDate = DateTime.now();
-
-  // Variables para el Dropdown
   String _selectedPaymentType = 'Contado';
-
-  // Variables para FEL
   bool _useFEL = false;
   final TextEditingController _nitController = TextEditingController();
   final TextEditingController _felNameController = TextEditingController();
   final TextEditingController _felAddressController = TextEditingController();
-
-  // Controlador de base de datos
   final DatabaseHelperCarrito _databaseHelper = DatabaseHelperCarrito();
   List<Map<String, dynamic>> _cartItems = [];
 
@@ -51,196 +43,172 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Finalizar Compra'),
-      ),
-      
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              FutureBuilder<Vendedor>(
-                future: loadSalesperson(),
-                builder: (context, snapshot) {
-                  if (snapshot.hasError) {
-                    return SizedBox(height: 1);
-                  } else if (snapshot.hasData && snapshot.data != null) {
-                    Vendedor _selectedSalesperson = snapshot.data!;
-                    _selectedSalespersonId = _selectedSalesperson.value;
-                    return Column(
-                      children: [
-                        Text(
-                          'Fecha: ${_selectedDate.toString().substring(0, 10)}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        Text(
-                          'Vendedor: ${_selectedSalesperson.nombre}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      ],
-                    );
-                  } else {
-                    return SizedBox(height: 1);
-                  }
-                },
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Cliente: ' + _selectedClient.nombre,
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _navigateToSeleccionarCliente(context);
-                },
-                child: Text(
-                  'Seleccionar Cliente',
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _buttonColor,
-                ),
-              ),
-              SizedBox(height: 10.0),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Tipo de Pago: ',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(width: 10),
-                    DropdownButton<String>(
-                      value: _selectedPaymentType,
-                      items: <String>['Contado', 'Crédito']
-                          .map<DropdownMenuItem<String>>((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedPaymentType = newValue!;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              CheckboxListTile(
-                title: Text("FEL"),
-                value: _useFEL,
-                onChanged: (bool? value) {
-                  setState(() {
-                    _useFEL = value ?? false;
-                  });
-                },
-                controlAffinity: ListTileControlAffinity.leading,
-              ),
-              if (_useFEL) ...[
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: _nitController,
-                    decoration: InputDecoration(
-                      labelText: 'NIT',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: _felNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Nombre',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextField(
-                    controller: _felAddressController,
-                    decoration: InputDecoration(
-                      labelText: 'Dirección',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
-              SizedBox(height: 20.0),
-              Text(
-                'Venta',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-              ),
-              _cartItems.isEmpty
-                  ? Text("No hay productos en el carrito.")
+          title:
+              Text('Finalizar Compra', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.blue),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Sección fija
+            _buildFixedSection(),
+
+            // Separador
+            Divider(thickness: 2),
+
+            // Sección desplazable
+            Expanded(
+              child: _cartItems.isEmpty
+                  ? Center(child: Text("No hay productos en el carrito."))
                   : ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
                       itemCount: _cartItems.length,
                       itemBuilder: (context, index) {
                         final product = Product.fromMap(_cartItems[index]);
-                        return ListTile(
-                          title: Text(product.descripcion),
-                          subtitle: Text(
-                              'Cantidad: ${_cartItems[index]['Cantidad']} - Precio: Q${product.precioFinal.toStringAsFixed(2)}'),
+                        return Card(
+                          elevation: 4,
+                          margin: EdgeInsets.symmetric(vertical: 8.0),
+                          child: ListTile(
+                            title: Text(product.descripcion),
+                            subtitle: Text(
+                                'Cantidad: ${_cartItems[index]['Cantidad']} - Precio: Q${product.precioFinal.toStringAsFixed(2)}'),
+                          ),
                         );
                       },
                     ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: FutureBuilder<double>(
-                        future: DatabaseHelperCarrito().getTotalCarrito(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return Center(child: SizedBox());
-                          } else if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          } else if (snapshot.hasData) {
-                            double total = snapshot.data!.toDouble();
-                            return Wrap(
-                              direction: Axis.vertical,
-                              children: [
-                                Text(
-                                  'Total: Q${total.toStringAsFixed(2)}',
-                                  style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.blue),
-                                ),
-                              ],
-                            );
-                          } else {
-                            return Text('Carrito vacío');
-                          }
-                        },
-                      ),
-                    )
-                  ],
-                ),
-              )
-            ],
-          ),
+            ),
+            _buildTotalSection(),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildFixedSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        FutureBuilder<Vendedor>(
+          future: loadSalesperson(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return SizedBox(height: 1);
+            } else if (snapshot.hasData && snapshot.data != null) {
+              Vendedor _selectedSalesperson = snapshot.data!;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Fecha: ${_selectedDate.toString().substring(0, 10)}',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    'Vendedor: ${_selectedSalesperson.nombre}',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ],
+              );
+            } else {
+              return SizedBox(height: 1);
+            }
+          },
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                'Cliente: ' + _selectedClient.nombre,
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                _navigateToSeleccionarCliente(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _buttonColor,
+              ),
+              icon: Icon(
+                Icons.search,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(
+              'Tipo de Pago: ',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            SizedBox(width: 10),
+            DropdownButton<String>(
+              value: _selectedPaymentType,
+              items: <String>['Contado', 'Crédito']
+                  .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _selectedPaymentType = newValue!;
+                });
+              },
+            ),
+          ],
+        ),
+        CheckboxListTile(
+          title: Row(
+            children: [
+              Text("FEL"),
+              SizedBox(width: 10),
+              if (_nitController.text.isNotEmpty)
+                Text(
+                  "NIT: ${_nitController.text}",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+            ],
+          ),
+          value: _useFEL,
+          onChanged: (bool? value) {
+            _useFEL = value!;
+            if (_useFEL = true) {
+              setState(() {
+                _showFELDialog(value);
+              });
+            }
+          },
+          controlAffinity: ListTileControlAffinity.leading,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTotalSection() {
+    return FutureBuilder<double>(
+      future: _databaseHelper.getTotalCarrito(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else if (snapshot.hasData) {
+          double total = snapshot.data!;
+          return Text(
+            'Total: Q${total.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          );
+        } else {
+          return Text('Carrito vacío');
+        }
+      },
     );
   }
 
@@ -262,18 +230,69 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? idVendedor = prefs.getString('idVendedor');
     String? vendedorName = prefs.getString('vendedorName');
-
     return Vendedor(value: int.parse(idVendedor!), nombre: vendedorName!);
   }
 
   Future<void> _saveSelectedClient(Cliente cliente) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
     Map<String, dynamic> clientData = cliente.toJson();
     List<String> selectedClientJson = clientData.entries.map((entry) {
       return '${entry.key}: ${entry.value.toString()}';
     }).toList();
-
     await prefs.setStringList('selectedClient', selectedClientJson);
+  }
+
+  void _showFELDialog(bool) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Datos FEL'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nitController,
+                decoration: InputDecoration(
+                  labelText: 'NIT',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _felNameController,
+                decoration: InputDecoration(
+                  labelText: 'Nombre',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _felAddressController,
+                decoration: InputDecoration(
+                  labelText: 'Dirección',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Guardar datos FEL (si es necesario)
+                Navigator.of(context).pop();
+              },
+              child: Text('Guardar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
