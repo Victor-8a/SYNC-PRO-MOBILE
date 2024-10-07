@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/PantallasSecundarias/FinalizarCompra.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/VerificarExistencia.dart';
 import 'package:sync_pro_mobile/db/dbCarrito.dart';
 
 class MostrarCarrito extends StatefulWidget {
@@ -23,7 +24,7 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
   // Cargar productos desde la base de datos
   Future<void> _loadCartFromDatabase() async {
     setState(() {
-      _isLoading = false;
+      _isLoading = true;
     });
 
     // Obtener los productos del carrito desde la base de datos
@@ -54,10 +55,45 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
     _loadCartFromDatabase();
   }
 
-  void _finalizarCompra() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => FinalizarCompra()),
+  void finalizarCompra() async {
+    List<Product> productosInsuficientes = await validarExistencias(_cart);
+    if (productosInsuficientes.isEmpty) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => FinalizarCompra()),
+      );
+    } else {
+      String mensajeError =
+          "Algunos productos exceden la existencia disponible:\n";
+
+      for (var producto in productosInsuficientes) {
+        int cantidadDisponible = producto.existencia;
+        mensajeError +=
+            "${producto.descripcion}: Solo hay ${cantidadDisponible} disponibles.\n";
+        Divider(thickness: 2);
+      }
+
+      _mostrarMensajeError(mensajeError);
+    }
+  }
+
+  void _mostrarMensajeError(String mensaje) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Error de Existencias"),
+          content: Text(mensaje),
+          actions: <Widget>[
+            TextButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -168,7 +204,7 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                             onPressed: _cart.isEmpty
                                 ? null
                                 : () {
-                                    _finalizarCompra();
+                                    finalizarCompra();
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:

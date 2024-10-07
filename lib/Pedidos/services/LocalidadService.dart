@@ -1,23 +1,28 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:sync_pro_mobile/Pedidos/Models/Localidad.dart';
+import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbLocalidad.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart'; // Importa tu clase DatabaseHelperRuta
 
 Future<List<Localidad>> fetchRuta() async {
   try {
     // Obtener el token del almacenamiento local
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('token');
-    
+    String? token = await login();
+    if (token == null) {
+      throw Exception('No se encontró el token');
+    }
+
     // Verificar si el token es válido
+    // ignore: unnecessary_null_comparison
     if (token == null) {
       throw Exception('Token de autorización no válido');
     }
 
     // Configurar la URL y los headers para la solicitud HTTP
-    var url = ApiRoutes.buildUri('localidad'); // Ajusta la URL según tu endpoint
+    var url =
+        ApiRoutes.buildUri('localidad'); // Ajusta la URL según tu endpoint
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -30,7 +35,8 @@ Future<List<Localidad>> fetchRuta() async {
     if (response.statusCode == 200) {
       // Decodificar la respuesta JSON
       final List<dynamic> jsonResponse = json.decode(response.body);
-      List<Localidad> rutas = jsonResponse.map((data) => Localidad.fromJson(data)).toList();
+      List<Localidad> rutas =
+          jsonResponse.map((data) => Localidad.fromJson(data)).toList();
 
       // Insertar las rutas en la base de datos local
       DatabaseHelperLocalidad databaseHelperRuta = DatabaseHelperLocalidad();
@@ -50,7 +56,7 @@ Future<List<Localidad>> fetchRuta() async {
   } catch (error) {
     // Manejar cualquier error que ocurra durante la solicitud
     print('Error al obtener las rutas: $error');
+
     throw error;
   }
 }
- 

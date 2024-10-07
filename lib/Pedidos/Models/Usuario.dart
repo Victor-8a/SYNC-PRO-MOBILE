@@ -42,16 +42,20 @@ class Usuario {
     required this.idEncargado,
     required this.passUser,
   });
-factory Usuario.fromJson(Map<String, dynamic> json) {
+  factory Usuario.fromJson(Map<String, dynamic> json) {
     return Usuario(
       id: json['id'] ?? 0,
       nombre: json['nombre'] ?? '',
       claveEntrada: json['claveEntrada'] ?? '',
       claveInterna: json['claveInterna'] ?? '',
       cambiarPrecio: json['cambiarPrecio'] ?? false,
-      porcPrecio: (json['porcPrecio'] is int) ? (json['porcPrecio'] as int).toDouble() : json['porcPrecio']?.toDouble() ?? 0.0,
+      porcPrecio: (json['porcPrecio'] is int)
+          ? (json['porcPrecio'] as int).toDouble()
+          : json['porcPrecio']?.toDouble() ?? 0.0,
       aplicarDesc: json['aplicarDesc'] ?? false,
-      porcDesc: (json['porcDesc'] is int) ? (json['porcDesc'] as int).toDouble() : json['porcDesc']?.toDouble() ?? 0.0,
+      porcDesc: (json['porcDesc'] is int)
+          ? (json['porcDesc'] as int).toDouble()
+          : json['porcDesc']?.toDouble() ?? 0.0,
       existNegativa: json['existNegativa'] ?? false,
       anulado: json['anulado'] ?? false,
       tema: json['tema'] ?? '',
@@ -69,7 +73,6 @@ factory Usuario.fromJson(Map<String, dynamic> json) {
 
   // Convertir de objeto a JSON
   Map<String, dynamic> toJson() {
-    
     return {
       'id': id,
       'Nombre': nombre,

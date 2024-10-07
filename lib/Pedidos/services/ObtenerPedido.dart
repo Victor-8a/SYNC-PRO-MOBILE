@@ -4,10 +4,10 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Pedidos/Models/Pedido.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/DetallePedido.dart';
-import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart'; 
+import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbPedidos.dart';
 import 'package:sync_pro_mobile/db/dbDetallePedidos.dart';
-import 'package:sync_pro_mobile/db/dbProducto.dart'; 
+import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/Pedidos/services/LocalidadService.dart';
@@ -15,12 +15,14 @@ import 'package:sqflite/sqflite.dart'; // Asegúrate de importar este paquete pa
 
 Future<List<Pedido>> fetchPedido() async {
   try {
-    final dbHelperProductos = DatabaseHelperProducto(); 
-    final dbHelperPedidos = DatabaseHelperPedidos(); 
-    final dbHelperDetallePedidos = DatabaseHelperDetallePedidos(); // Instancia para la tabla de detalles
+    final dbHelperProductos = DatabaseHelperProducto();
+    final dbHelperPedidos = DatabaseHelperPedidos();
+    final dbHelperDetallePedidos =
+        DatabaseHelperDetallePedidos(); // Instancia para la tabla de detalles
 
     // Verificar si hay pedidos no sincronizados
-    List<Map<String, dynamic>> unsyncedOrders = await dbHelperPedidos.getUnsyncedOrders();
+    List<Map<String, dynamic>> unsyncedOrders =
+        await dbHelperPedidos.getUnsyncedOrders();
 
     if (unsyncedOrders.isNotEmpty) {
       // Mostrar una notificación si hay pedidos no sincronizados
@@ -41,7 +43,8 @@ Future<List<Pedido>> fetchPedido() async {
     if (countProductos == 0) {
       // Mostrar una notificación si no hay productos
       Fluttertoast.showToast(
-        msg: "No hay productos en la base de datos. Cargue su inventario primero.",
+        msg:
+            "No hay productos en la base de datos. Cargue su inventario primero.",
         toastLength: Toast.LENGTH_SHORT,
         gravity: ToastGravity.BOTTOM,
         backgroundColor: Colors.red,
@@ -52,7 +55,8 @@ Future<List<Pedido>> fetchPedido() async {
 
     // Verificar si existen pedidos en la base de datos antes de intentar limpiar las tablas
     final countPedidos = await dbHelperPedidos.getOrderCount();
-    final countDetallePedidos = await dbHelperDetallePedidos.getOrderDetailCount();
+    final countDetallePedidos =
+        await dbHelperDetallePedidos.getOrderDetailCount();
 
     if (countPedidos > 0) {
       await dbHelperPedidos.deleteAllOrders();
@@ -73,16 +77,15 @@ Future<List<Pedido>> fetchPedido() async {
       fontSize: 16.0,
     );
 
-    
-    String? token =  await login();
-    
+    String? token = await login();
+
     if (token == null) {
       throw Exception('Token de autorización no válido');
     }
 
     DatabaseHelperUsuario dbHelperUsuario = DatabaseHelperUsuario();
     int? idVendedor = await dbHelperUsuario.getIdVendedor();
-    
+
     if (idVendedor == null) {
       throw Exception('No se pudo obtener el id del vendedor');
     }
@@ -99,15 +102,17 @@ Future<List<Pedido>> fetchPedido() async {
       await fetchRuta();
       final List<dynamic> jsonResponse = json.decode(response.body);
       print('Pedidos obtenidos exitosamente: ${jsonResponse}');
-      List<Pedido> pedidos = jsonResponse.map((data) => Pedido.fromJson(data)).toList();
+      List<Pedido> pedidos =
+          jsonResponse.map((data) => Pedido.fromJson(data)).toList();
 
       for (var pedido in pedidos) {
         // Insertar nuevo pedido
         await dbHelperPedidos.insertPedido(pedido);
 
         // Obtener el detalle del pedido
-        List<DetallePedido> detalles = await fetchDetallePedido(pedido.id!, token);
-        
+        List<DetallePedido> detalles =
+            await fetchDetallePedido(pedido.id!, token);
+
         // Insertar los nuevos detalles
         for (var detalle in detalles) {
           await dbHelperDetallePedidos.insertOrderDetail(detalle.toJson());
@@ -148,7 +153,8 @@ Future<List<Pedido>> fetchPedido() async {
   }
 }
 
-Future<List<DetallePedido>> fetchDetallePedido(int pedidoId, String token) async {
+Future<List<DetallePedido>> fetchDetallePedido(
+    int pedidoId, String token) async {
   try {
     var url = ApiRoutes.buildUri('detalle_pedidos/listV2/$pedidoId');
     var headers = {

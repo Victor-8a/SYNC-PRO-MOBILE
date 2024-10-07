@@ -3,6 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/MetodoPago.dart';
+
 import 'package:sync_pro_mobile/db/dbCarrito.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarClientes.dart';
 
@@ -14,11 +16,17 @@ class FinalizarCompra extends StatefulWidget {
 }
 
 class _FinalizarCompraState extends State<FinalizarCompra> {
-  Cliente _selectedClient =
-      Cliente(codCliente: 0, nombre: '', cedula: '', direccion: '');
+  Cliente _selectedClient = Cliente(
+    codCliente: 0,
+    nombre: '',
+    cedula: '',
+    direccion: '',
+    credito: false,
+  );
+
   Color _buttonColor = Colors.blue;
   DateTime _selectedDate = DateTime.now();
-  String _selectedPaymentType = 'Contado';
+  String _selectedPaymentType = 'Contado'; // Valor predeterminado
   bool _useFEL = false;
   final TextEditingController _nitController = TextEditingController();
   final TextEditingController _felNameController = TextEditingController();
@@ -36,6 +44,21 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
     final cartItems = await _databaseHelper.getCarritoItems();
     setState(() {
       _cartItems = cartItems;
+    });
+  }
+
+  // Función para manejar el cambio de cliente
+  void _onClientChanged(Cliente newClient) {
+    setState(() {
+      _selectedClient = newClient;
+
+      // Si el cliente no tiene crédito, forzamos el valor de _selectedPaymentType a "Contado"
+      if (!_selectedClient.credito) {
+        _selectedPaymentType = 'Contado'; // Aseguramos un valor válido
+      } else if (_selectedPaymentType == 'Crédito') {
+        _selectedPaymentType =
+            'Contado'; // Cambiar a Contado si estaba en Crédito
+      }
     });
   }
 
@@ -76,7 +99,41 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                       },
                     ),
             ),
-            _buildTotalSection(),
+            Divider(thickness: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildTotalSection(),
+                SizedBox(width: 30),
+                ElevatedButton(
+                  onPressed: () {
+                    showPaymentOptionsModal(
+                      context, // Pasar el contexto
+                      (String selectedOption) {
+                        // Callback para manejar la selección
+                        setState(() {
+                          _selectedPaymentType =
+                              selectedOption; // Actualizar selección
+                        });
+                      },
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Colors.blue, // Cambiar el color de fondo a azul
+                    iconColor:
+                        Colors.white, // Cambiar el color del texto (opcional)
+                  ),
+                  child: Text(
+                    'Método de Pago',
+                    style: TextStyle(
+                      color:
+                          Colors.white, // Asegúrate de que el texto sea legible
+                    ),
+                  ),
+                ),
+              ],
+            )
           ],
         ),
       ),
@@ -145,13 +202,21 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
             SizedBox(width: 10),
             DropdownButton<String>(
               value: _selectedPaymentType,
-              items: <String>['Contado', 'Crédito']
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
+              items: _selectedClient.credito
+                  ? <String>['Contado', 'Crédito']
+                      .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList()
+                  : <String>['Contado']
+                      .map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
               onChanged: (String? newValue) {
                 setState(() {
                   _selectedPaymentType = newValue!;
@@ -160,29 +225,47 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
             ),
           ],
         ),
-        CheckboxListTile(
-          title: Row(
-            children: [
-              Text("FEL"),
-              SizedBox(width: 10),
-              if (_nitController.text.isNotEmpty)
-                Text(
-                  "NIT: ${_nitController.text}",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Checkbox con el título
+            Expanded(
+              child: CheckboxListTile(
+                title: Row(
+                  children: [
+                    if (_nitController.text.isNotEmpty)
+                      Text(
+                        "NIT: ${_nitController.text}",
+                      ),
+                  ],
                 ),
-            ],
-          ),
-          value: _useFEL,
-          onChanged: (bool? value) {
-            _useFEL = value!;
-            if (_useFEL = true) {
-              setState(() {
-                _showFELDialog(value);
-              });
-            }
-          },
-          controlAffinity: ListTileControlAffinity.leading,
-        ),
+                value: _useFEL,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _useFEL = value!;
+                  });
+                },
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+            ),
+
+            // Botón para acceder al diálogo
+            ElevatedButton(
+              onPressed: () {
+                if (_useFEL) {
+                  // Mostrar el diálogo si el checkbox está habilitado
+                  _showFELDialog();
+                } else {
+                  // Mostrar mensaje si el checkbox no está habilitado
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(
+                          'Debes habilitar el acceso a FEL para continuar.')));
+                }
+              },
+              child: Text('Datos FEL'),
+            ),
+          ],
+        )
       ],
     );
   }
@@ -219,9 +302,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
     ).then((selectedClient) {
       if (selectedClient != null) {
         _saveSelectedClient(selectedClient);
-        setState(() {
-          _selectedClient = selectedClient;
-        });
+        _onClientChanged(selectedClient); // Actualizar cliente aquí
       }
     });
   }
@@ -242,7 +323,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
     await prefs.setStringList('selectedClient', selectedClientJson);
   }
 
-  void _showFELDialog(bool) {
+  void _showFELDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {

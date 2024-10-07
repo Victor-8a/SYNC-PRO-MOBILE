@@ -72,7 +72,9 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
       ),
     )
         .then((value) {
-      setState(() {});
+      setState(() {
+        _loadProducts();
+      });
     });
   }
 
@@ -87,7 +89,7 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
         title: isSearching
             ? TextField(
                 controller: searchController,
-                autofocus: true,
+                autofocus: false,
                 decoration: InputDecoration(
                   hintText: 'Buscar productos...',
                   border: InputBorder.none,

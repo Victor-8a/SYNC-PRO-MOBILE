@@ -2,11 +2,8 @@
 
 class ApiRoutes {
   static const String baseUrl = 'http://192.168.1.26:4000'; //pruebas
-  // static const String baseUrl = 'http://85.10.196.212:4001'; //Dixma
-// static const String baseUrl = 'http://85.10.196.212:4002'; //MRG
-// static const String baseUrl = 'http://85.10.196.212:4003'; //FerrePlus
-// static const String baseUrl = 'http://85.10.196.212:4004'; //IM1
-// static const String baseUrl = 'http://85.10.196.212:4005'; //GalaxyCELL
+
+  // static const String baseUrl = 'http://85.10.196.212:4006';
 
   // Método para obtener la URL completa concatenando la base con la ruta específica
   static Uri buildUri(String endpoint) {

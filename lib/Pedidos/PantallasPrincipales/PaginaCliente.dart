@@ -44,93 +44,93 @@ class _PaginaClienteState extends State<PaginaCliente> {
     super.dispose();
   }
 
-Future<void> fetchClientes() async {
-  // Verificar si hay una ruta iniciada
-  int rutaIniciada = await DatabaseHelperRuta().isRutaIniciada();
-  
-  if (rutaIniciada > 0) {
-    print('No se puede completar el método. Hay una ruta iniciada.');
+  Future<void> fetchClientes() async {
+    // Verificar si hay una ruta iniciada
+    int rutaIniciada = await DatabaseHelperRuta().isRutaIniciada();
 
-       Fluttertoast.showToast(
-                    msg: "No se puede cargar los clientes. Hay una ruta iniciada.",
-                    toastLength: Toast.LENGTH_SHORT,
-                    gravity: ToastGravity.BOTTOM,
-                    backgroundColor: Colors.black,
-                    textColor: Colors.white,
-                  );
+    if (rutaIniciada > 0) {
+      print('No se puede completar el método. Hay una ruta iniciada.');
 
-    return; // Salir del método si hay una ruta iniciada
-  }
+      Fluttertoast.showToast(
+        msg: "No se puede cargar los clientes. Hay una ruta iniciada.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black,
+        textColor: Colors.white,
+      );
 
-  setState(() {
-    _isLoading = true; // Mostrar el indicador de carga
-  });
-
-  try {
-    DatabaseHelperUsuario dbHelperUsuario = DatabaseHelperUsuario();
-    int? idVendedor = await dbHelperUsuario.getIdVendedor();
-
-    if (idVendedor == null) {
-      throw Exception('No se pudo obtener el id del vendedor');
+      return; // Salir del método si hay una ruta iniciada
     }
 
-    bool clientesFiltrados =
-        await DatabaseHelperConfiguraciones().getClientesFiltrados();
+    setState(() {
+      _isLoading = true; // Mostrar el indicador de carga
+    });
 
-    Uri url;
-    if (clientesFiltrados) {
-      url = ApiRoutes.buildUri('cliente/id-vendedor/$idVendedor');
-    } else {
-      url = ApiRoutes.buildUri('cliente');
-    }
+    try {
+      DatabaseHelperUsuario dbHelperUsuario = DatabaseHelperUsuario();
+      int? idVendedor = await dbHelperUsuario.getIdVendedor();
 
-    var connectivityResult = await Connectivity()
-        .checkConnectivity()
-        .timeout(Duration(seconds: 5));
-
-    if (connectivityResult == ConnectivityResult.none) {
-      print(
-          'No hay conexión a Internet, recuperando clientes de la base de datos local');
-      return await retrieveClientesFromLocalDatabase();
-    }
-
-    await fetchRuta();
-
-    String? token = await login();
-    if (token == null) {
-      throw Exception('No se encontró el token');
-    }
-
-    final response = await http.get(
-      url,
-      headers: {'Authorization': 'Bearer $token'},
-    ).timeout(Duration(seconds: 5));
-
-    if (response.statusCode == 200) {
-      DatabaseHelperCliente().deleteAllClientes();
-      print('Se elimino correctamente');
-      final List<dynamic> jsonResponse = json.decode(response.body);
-      final clientes =
-          jsonResponse.map((json) => Cliente.fromJson(json)).toList();
-      if (_isMounted) {
-        setState(() {
-          _clientes = clientes;
-          _filteredClientes = clientes;
-          saveClientesToLocalDatabase(clientes);
-          _isLoading = false;
-        });
+      if (idVendedor == null) {
+        throw Exception('No se pudo obtener el id del vendedor');
       }
-    } else {
-      throw Exception('Fallo al cargar clientes');
-    }
-  } catch (error) {
-    print('Error al obtener clientes: $error');
-    if (_isMounted) {
-      await retrieveClientesFromLocalDatabase();
+
+      bool clientesFiltrados =
+          await DatabaseHelperConfiguraciones().getClientesFiltrados();
+
+      Uri url;
+      if (clientesFiltrados) {
+        url = ApiRoutes.buildUri('cliente/id-vendedor/$idVendedor');
+      } else {
+        url = ApiRoutes.buildUri('cliente');
+      }
+
+      var connectivityResult = await Connectivity()
+          .checkConnectivity()
+          .timeout(Duration(seconds: 5));
+
+      if (connectivityResult == ConnectivityResult.none) {
+        print(
+            'No hay conexión a Internet, recuperando clientes de la base de datos local');
+        return await retrieveClientesFromLocalDatabase();
+      }
+
+      await fetchRuta();
+
+      String? token = await login();
+      if (token == null) {
+        throw Exception('No se encontró el token');
+      }
+
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Bearer $token'},
+      ).timeout(Duration(seconds: 5));
+
+      if (response.statusCode == 200) {
+        DatabaseHelperCliente().deleteAllClientes();
+        print('Se elimino correctamente');
+        final List<dynamic> jsonResponse = json.decode(response.body);
+        final clientes =
+            jsonResponse.map((json) => Cliente.fromJson(json)).toList();
+
+        if (_isMounted) {
+          setState(() {
+            _clientes = clientes;
+            _filteredClientes = clientes;
+            saveClientesToLocalDatabase(clientes);
+            _isLoading = false;
+          });
+        }
+      } else {
+        throw Exception('Fallo al cargar clientes');
+      }
+    } catch (error) {
+      print('Error al obtener clientes: $error');
+      if (_isMounted) {
+        await retrieveClientesFromLocalDatabase();
+      }
     }
   }
-}
-
 
   Future<void> saveClientesToLocalDatabase(List<Cliente> clientes) async {
     try {

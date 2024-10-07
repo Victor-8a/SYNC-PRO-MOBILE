@@ -62,9 +62,10 @@ class Cliente {
   });
 
   factory Cliente.fromJson(Map<String, dynamic> json) {
-
     return Cliente(
-      codCliente: (json['CodCliente'] == null) ? json['codCliente'] : json['CodCliente'],
+      codCliente: (json['CodCliente'] == null)
+          ? json['codCliente']
+          : json['CodCliente'],
       nombre: (json['Nombre'] == null) ? json['nombre'] : json['Nombre'],
       cedula: (json['Cedula'] == null) ? json['cedula'] : json['Cedula'],
       direccion: json['direccion'] ?? '',
@@ -73,7 +74,11 @@ class Cliente {
       telefono2: json['telefono2'] ?? '',
       celular: json['celular'] ?? '',
       email: json['email'] ?? '',
-      credito: json['credito'] == 1,
+      credito: (json['Credito'] == true ||
+              json['Credito'] == 1 ||
+              json['credito'] == 1)
+          ? true
+          : false,
       limiteCredito: (json['limiteCredito'] ?? 0.0).toDouble(),
       plazoCredito: (json['plazoCredito'] ?? 0.0).toDouble(),
       tipoPrecio: (json['tipoPrecio'] ?? 0.0).toDouble(),

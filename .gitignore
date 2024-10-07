@@ -47,6 +47,10 @@ app.*.map.json
 # contraseña
 # J*2f^t7@xL9p!S5w
 
-#clases a ignorar 
-
-/lib/Pedidos/services/ApiRoutes.dart
+#Apis
+  // static const String baseUrl = 'http://85.10.196.212:4001'; //Dixma
+// static const String baseUrl = 'http://85.10.196.212:4002'; //MRG
+// static const String baseUrl = 'http://85.10.196.212:4003'; //FerrePlus
+// static const String baseUrl = 'http://85.10.196.212:4004'; //IM1
+ // static const String baseUrl = 'http://85.10.196.212:4005'; //GalaxyCELL
+  // static const String baseUrl = 'http://85.10.196.212:4006'; //Farmacia San Antonio

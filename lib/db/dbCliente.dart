@@ -22,11 +22,13 @@ class DatabaseHelperCliente {
   Future<List<Cliente>> getClientes() async {
     final db = await dbProvider.database;
     final List<Map<String, dynamic>> maps;
-    
+
     if (clientesFiltrados) {
       // Aplicar el filtro basado en la configuración
-      int? idVendedor = await _getIdVendedor(); // Asegúrate de definir este método si es necesario
-      maps = await db.query('clientes', where: 'idVendedor = ?', whereArgs: [idVendedor]);
+      int? idVendedor =
+          await _getIdVendedor(); // Asegúrate de definir este método si es necesario
+      maps = await db
+          .query('clientes', where: 'idVendedor = ?', whereArgs: [idVendedor]);
     } else {
       maps = await db.query('clientes');
     }
@@ -38,7 +40,8 @@ class DatabaseHelperCliente {
 
   Future<Cliente> getClientesById(int id) async {
     final db = await dbProvider.database;
-    final result = await db.query('clientes', where: 'codCliente = ?', whereArgs: [id]);
+    final result =
+        await db.query('clientes', where: 'codCliente = ?', whereArgs: [id]);
     return Cliente.fromJson(result.first);
   }
 
@@ -47,10 +50,14 @@ class DatabaseHelperCliente {
     final List<Map<String, dynamic>> maps;
 
     if (clientesFiltrados) {
-      int? idVendedor = await _getIdVendedor(); // Aplicar el filtro basado en la configuración
-      maps = await db.query('clientes', where: 'idLocalidad = ? AND idVendedor = ?', whereArgs: [idLocalidad, idVendedor]);
+      int? idVendedor =
+          await _getIdVendedor(); // Aplicar el filtro basado en la configuración
+      maps = await db.query('clientes',
+          where: 'idLocalidad = ? AND idVendedor = ?',
+          whereArgs: [idLocalidad, idVendedor]);
     } else {
-      maps = await db.query('clientes', where: 'idLocalidad = ?', whereArgs: [idLocalidad]);
+      maps = await db.query('clientes',
+          where: 'idLocalidad = ?', whereArgs: [idLocalidad]);
     }
 
     return List.generate(maps.length, (i) {
