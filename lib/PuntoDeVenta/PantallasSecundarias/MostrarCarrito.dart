@@ -21,20 +21,16 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
     super.initState();
   }
 
-  // Cargar productos desde la base de datos
   Future<void> _loadCartFromDatabase() async {
     setState(() {
       _isLoading = true;
     });
 
-    // Obtener los productos del carrito desde la base de datos
     final cartItems = await _databaseHelper.getCarritoItems();
 
-    // Agrupar productos en un mapa de productos y cantidades
     Map<Product, int> cartMap = {};
     for (var item in cartItems) {
-      final product = Product.fromMap(
-          item); // Ajustar según cómo conviertes el producto desde la BD
+      final product = Product.fromMap(item);
       cartMap[product] = item['Cantidad'] as int;
     }
 
