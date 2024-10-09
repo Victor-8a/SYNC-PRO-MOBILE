@@ -79,7 +79,7 @@ Future<String?> login() async {
   }
 
   final response = await http.post(
-    ApiRoutes.buildUri('auth/signIn'),
+    ApiRoutes.buildUri('auth/login'),
     headers: <String, String>{
       'Content-Type': 'application/json; charset=UTF-8',
     },
@@ -133,7 +133,7 @@ Future<void> syncOrders() async {
 
   for (var order in unsyncedOrders) {
     try {
-      var url = ApiRoutes.buildUri('pedidos/save');
+      var url = ApiRoutes.buildUri('pedidos');
       var headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -181,13 +181,13 @@ Future<void> syncOrders() async {
             detailCopy.remove('Id');
             detailCopy['IdPedido'] = idPedido;
 
-            var detailUrl = ApiRoutes.buildUri('detalle_pedidos/save');
+            var detailUrl = ApiRoutes.buildUri('detalle_pedidos');
             var detailBody = jsonEncode(detailCopy);
 
             var detailResponse =
                 await http.post(detailUrl, headers: headers, body: detailBody);
 
-            if (detailResponse.statusCode == 200) {
+            if (detailResponse.statusCode == 201) {
               syncedDetailsCount++;
               if (syncedDetailsCount == unsyncedOrderDetails.length) {
                 await dbGuardarPedido.DatabaseHelperPedidos()
@@ -219,6 +219,8 @@ Future<void> syncOrders() async {
         toastLength: Toast.LENGTH_LONG,
         gravity: ToastGravity.BOTTOM,
       );
+      print('error aqui');
+      print(error);
     }
   }
 

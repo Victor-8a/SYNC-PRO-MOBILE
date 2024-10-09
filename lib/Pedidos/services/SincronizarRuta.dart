@@ -8,7 +8,8 @@ import 'package:sync_pro_mobile/db/dbRuta.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 
 Future<void> syncRutas() async {
-  List<Map<String, dynamic>> unsyncedRutas = await DatabaseHelperRuta().getUnsyncedRutas();
+  List<Map<String, dynamic>> unsyncedRutas =
+      await DatabaseHelperRuta().getUnsyncedRutas();
   String? token = await login();
 
   for (var ruta in unsyncedRutas) {
@@ -33,12 +34,12 @@ Future<void> syncRutas() async {
       String modificarFecha(String fechaOriginal) {
         String sinT = fechaOriginal.replaceAll('T', ' ');
         int puntoIndex = sinT.lastIndexOf('.');
-        
+
         if (puntoIndex != -1 && sinT.length > puntoIndex + 4) {
           return sinT.substring(0, puntoIndex + 4);
         } else {
           return sinT;
-        } 
+        }
       }
 
       // Modificar fechaInicio
@@ -58,7 +59,7 @@ Future<void> syncRutas() async {
       }
 
       var body = jsonEncode(rutaCopy);
-      var url = ApiRoutes.buildUri('ruta/save');
+      var url = ApiRoutes.buildUri('ruta');
       var headers = {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -74,7 +75,8 @@ Future<void> syncRutas() async {
 
       if (response.statusCode == 200) {
         var jsonResponse = json.decode(response.body);
-        print('Respuesta de la API: $jsonResponse'); // Imprimir la respuesta completa para depurar
+        print(
+            'Respuesta de la API: $jsonResponse'); // Imprimir la respuesta completa para depurar
 
         if (jsonResponse != null && jsonResponse.containsKey('savedRoute')) {
           var savedRoute = jsonResponse['savedRoute'];
@@ -88,32 +90,52 @@ Future<void> syncRutas() async {
               gravity: ToastGravity.BOTTOM,
             );
 
-            List<Map<String, dynamic>> unsyncedDetalleRuta = await DatabaseHelperDetalleRuta().getNumeroPedidoReal(ruta['id']);
+            List<Map<String, dynamic>> unsyncedDetalleRuta =
+                await DatabaseHelperDetalleRuta()
+                    .getNumeroPedidoReal(ruta['id']);
             print(unsyncedDetalleRuta);
 
             int syncedDetailsCount = 0;
             for (var detail in unsyncedDetalleRuta) {
               try {
                 var detailCopy = Map<String, dynamic>.from(detail);
-                
-                // Modificar campos inicio y fin
                 if (detailCopy.containsKey('inicio')) {
                   String fechaOriginal = detailCopy['inicio'];
-                  String fechaModificada = modificarFecha(fechaOriginal);
+                  String fechaModificada;
+
+                  // ignore: unnecessary_null_comparison
+                  if (fechaOriginal == null || fechaOriginal.isEmpty) {
+                    fechaModificada = modificarFecha(DateTime.now()
+                        .toIso8601String()); // Usar la fecha actual en formato ISO 8601
+                  } else {
+                    fechaModificada = modificarFecha(fechaOriginal);
+                  }
+
                   detailCopy['inicio'] = fechaModificada;
                   print('Inicio Modificado: $fechaModificada');
                 }
 
                 if (detailCopy.containsKey('fin')) {
                   String fechaOriginal = detailCopy['fin'];
-                  String fechaModificada = modificarFecha(fechaOriginal);
+                  String fechaModificada;
+
+                  // ignore: unnecessary_null_comparison
+                  if (fechaOriginal == null || fechaOriginal.isEmpty) {
+                    fechaModificada = modificarFecha(DateTime.now()
+                        .toIso8601String()); // Usar la fecha actual en formato ISO 8601
+                  } else {
+                    fechaModificada = modificarFecha(fechaOriginal);
+                  }
+
                   detailCopy['fin'] = fechaModificada;
                   print('Fin Modificado: $fechaModificada');
                 }
 
                 // Verificar si idPedido es 0 y establecerlo como cadena vacía
-                if (detailCopy.containsKey('idPedido') && detailCopy['idPedido'] == 0) {
-                  detailCopy['idPedido'] = "";  // Establecer el valor como cadena vacía
+                if (detailCopy.containsKey('idPedido') &&
+                    detailCopy['idPedido'] == 0) {
+                  detailCopy['idPedido'] =
+                      ""; // Establecer el valor como cadena vacía
                 }
 
                 detailCopy.remove('id');
@@ -121,18 +143,20 @@ Future<void> syncRutas() async {
                 print(detailCopy);
                 print('detalle de la ruta');
 
-                var detailUrl = ApiRoutes.buildUri('detalle_ruta/save');
+                var detailUrl = ApiRoutes.buildUri('detalle_ruta');
                 var detailBody = jsonEncode(detailCopy);
 
                 print('Enviando detalle de la ruta: $detailBody');
-                var detailResponse = await http.post(detailUrl, headers: headers, body: detailBody);
-         
+                var detailResponse = await http.post(detailUrl,
+                    headers: headers, body: detailBody);
 
                 if (detailResponse.statusCode == 200) {
                   syncedDetailsCount++;
                   if (syncedDetailsCount == unsyncedDetalleRuta.length) {
-                    print('Todos los detalles de la ruta sincronizados correctamente.');
-                    await DatabaseHelperRuta().markRutaAsSynced(ruta['id'], idRuta);
+                    print(
+                        'Todos los detalles de la ruta sincronizados correctamente.');
+                    await DatabaseHelperRuta()
+                        .markRutaAsSynced(ruta['id'], idRuta);
                     Fluttertoast.showToast(
                       msg: 'Ruta y detalles sincronizados correctamente.',
                       textColor: Colors.blue,
@@ -141,9 +165,11 @@ Future<void> syncRutas() async {
                     );
                   }
                 } else {
-                  print('Error al sincronizar detalle de la ruta: ${detailResponse.statusCode} - ${detailResponse.body}');
+                  print(
+                      'Error al sincronizar detalle de la ruta: ${detailResponse.statusCode} - ${detailResponse.body}');
                   Fluttertoast.showToast(
-                    msg: 'Error. No se pueden sincronizar los detalles de la ruta.',
+                    msg:
+                        'Error. No se pueden sincronizar los detalles de la ruta.',
                     textColor: Colors.red,
                     toastLength: Toast.LENGTH_SHORT,
                     gravity: ToastGravity.BOTTOM,
@@ -159,7 +185,8 @@ Future<void> syncRutas() async {
               }
             }
           } else {
-            print('Error: la respuesta de la API no contiene el campo esperado.');
+            print(
+                'Error: la respuesta de la API no contiene el campo esperado.');
             Fluttertoast.showToast(
               msg: 'Error al sincronizar ruta: campo esperado no encontrado.',
               textColor: Colors.red,
@@ -177,7 +204,8 @@ Future<void> syncRutas() async {
           );
         }
       } else {
-        print('Error al sincronizar ruta: ${response.statusCode} - ${response.body}');
+        print(
+            'Error al sincronizar ruta: ${response.statusCode} - ${response.body}');
         Fluttertoast.showToast(
           msg: 'Error al sincronizar ruta: ${response.statusCode}',
           textColor: Colors.red,

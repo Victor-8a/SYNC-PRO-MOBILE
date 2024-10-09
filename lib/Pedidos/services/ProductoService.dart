@@ -17,7 +17,7 @@ class ProductService {
       }
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token =await login();
+      String? token = await login();
 
       // Lógica para obtener un token válido
       if (token == null) {
@@ -30,7 +30,7 @@ class ProductService {
       }
 
       final response = await http.get(
-        ApiRoutes.buildUri('dashboard/personalizado'),
+        ApiRoutes.buildUri('inventario/personalizado'),
         headers: {
           'Authorization': 'Bearer $token',
         },
@@ -42,7 +42,7 @@ class ProductService {
         await saveProductsToLocalDatabase(products);
         fetchAndSaveRangoPrecios();
         return products;
-      }  else {
+      } else {
         throw Exception('Failed to load products');
       }
     } catch (error) {

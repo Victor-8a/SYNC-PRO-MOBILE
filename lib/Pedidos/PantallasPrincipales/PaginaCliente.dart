@@ -79,7 +79,7 @@ class _PaginaClienteState extends State<PaginaCliente> {
 
       Uri url;
       if (clientesFiltrados) {
-        url = ApiRoutes.buildUri('cliente/id-vendedor/$idVendedor');
+        url = ApiRoutes.buildUri('cliente/vendedor/$idVendedor');
       } else {
         url = ApiRoutes.buildUri('cliente');
       }

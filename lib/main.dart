@@ -76,7 +76,7 @@ Future<Vendedor> loadSalesperson() async {
   if (idVendedor != null) {
     try {
       final response =
-          await http.get(ApiRoutes.buildUri('vendedor/id/$idVendedor'));
+          await http.get(ApiRoutes.buildUri('vendedor/$idVendedor'));
 
       if (response.statusCode == 200) {
         Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));
@@ -117,7 +117,7 @@ class LoginApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Iniciar Sesión',
-      home: isLoggedIn ?  HomeScreen() : const LoginPage(),
+      home: isLoggedIn ? HomeScreen() : const LoginPage(),
     );
   }
 }
@@ -134,106 +134,103 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _contrasenaController = TextEditingController();
   // ignore: unused_field
   bool _mostrarError = false;
-Future<void> _login() async {
+  Future<void> _login() async {
+    String usuario = _usuarioController.text;
+    String contrasena = _contrasenaController.text;
 
-  String usuario = _usuarioController.text;
-  String contrasena = _contrasenaController.text;
-
-  final response = await http.post(
-    ApiRoutes.buildUri('auth/signInV2'),
-    headers: <String, String>{
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-    body: jsonEncode(<String, String>{
-      'Nombre': usuario,
-      'password': contrasena,
-    }),
-  );
-
-  if (response.statusCode == 200) {
-    
-  Fluttertoast.showToast(
-    msg: "Iniciando sesión",
-    toastLength: Toast.LENGTH_SHORT,
-    gravity: ToastGravity.BOTTOM,
-    timeInSecForIosWeb: 3,
-    backgroundColor: Colors.blue,
-    textColor: Colors.white,
-    fontSize: 16.0
-  );
-    final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-
-    String token = jsonResponse['token'];
-    Map<String, dynamic> userJson = jsonResponse['user'];
-    String? nombreUsuario = userJson['nombre'];
-    int id = userJson['id'] ?? 0;
-
-    await saveTokenToStorage(token);
-    await saveIdToStorage(id.toString(), 1);
-    await saveIdToStorage(userJson['idVendedor']?.toString() ?? '', 2);
-    await savePasswordToStorage(contrasena);
-
-    if (nombreUsuario != null) {
-      await saveUsernameToStorage(nombreUsuario);
-      await loadSalesperson();
-
-      try {
-        Empresa empresa = await fetchEmpresa(id);
-        print('Empresa cargada exitosamente: ${empresa.empresa}');
-      } catch (error) {
-        print('Error al obtener la empresa: $error');
-      }
-
-      try {
-        await fetchImage().then((imageModel) async {
-          await saveImageToFile(imageModel);
-          print('Imagen guardada correctamente en el dispositivo.');
-        }).catchError((error) {
-          print('Error al obtener la imagen: $error');
-        });
-      } catch (error) {
-        print('Error en la descarga y guardado de imagen: $error');
-      }
-
-      // Inserta el usuario en la base de datos
-      try {
-        Usuario usuario = Usuario.fromJson(userJson);
-        await insertUsuario(usuario);
-        print('Usuario guardado en la base de datos.');
-      } catch (error) {
-        print('Error al guardar el usuario en la base de datos: $error');
-      }
-
-      // Verifica si la tabla Configuraciones está vacía e inserta si es necesario
-      try {
-        await DatabaseHelperConfiguraciones().insertConfiguracionSiEstaVacia();
-        print('Configuración insertada si estaba vacía.');
-      } catch (error) {
-        print('Error al verificar o insertar configuración: $error');
-      }
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) =>  HomeScreen()),
-        (Route<dynamic> route) => false,
-      );
-    } else {
-      print('No se pudo encontrar el nombre de usuario en la respuesta.');
-    }
-  } else {
-    setState(() {
-      _mostrarError = true;
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Datos inválidos'),
-        backgroundColor: Colors.red,
-      ),
+    final response = await http.post(
+      ApiRoutes.buildUri('auth/login'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'Nombre': usuario,
+        'password': contrasena,
+      }),
     );
-  }
-}
 
+    if (response.statusCode == 200) {
+      Fluttertoast.showToast(
+          msg: "Iniciando sesión",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 3,
+          backgroundColor: Colors.blue,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+      String token = jsonResponse['token'];
+      Map<String, dynamic> userJson = jsonResponse['user'];
+      String? nombreUsuario = userJson['nombre'];
+      int id = userJson['id'] ?? 0;
+
+      await saveTokenToStorage(token);
+      await saveIdToStorage(id.toString(), 1);
+      await saveIdToStorage(userJson['idVendedor']?.toString() ?? '', 2);
+      await savePasswordToStorage(contrasena);
+
+      if (nombreUsuario != null) {
+        await saveUsernameToStorage(nombreUsuario);
+        await loadSalesperson();
+
+        try {
+          Empresa empresa = await fetchEmpresa(id);
+          print('Empresa cargada exitosamente: ${empresa.empresa}');
+        } catch (error) {
+          print('Error al obtener la empresa: $error');
+        }
+
+        try {
+          await fetchImage().then((imageModel) async {
+            await saveImageToFile(imageModel);
+            print('Imagen guardada correctamente en el dispositivo.');
+          }).catchError((error) {
+            print('Error al obtener la imagen: $error');
+          });
+        } catch (error) {
+          print('Error en la descarga y guardado de imagen: $error');
+        }
+
+        // Inserta el usuario en la base de datos
+        try {
+          Usuario usuario = Usuario.fromJson(userJson);
+          await insertUsuario(usuario);
+          print('Usuario guardado en la base de datos.');
+        } catch (error) {
+          print('Error al guardar el usuario en la base de datos: $error');
+        }
+
+        // Verifica si la tabla Configuraciones está vacía e inserta si es necesario
+        try {
+          await DatabaseHelperConfiguraciones()
+              .insertConfiguracionSiEstaVacia();
+          print('Configuración insertada si estaba vacía.');
+        } catch (error) {
+          print('Error al verificar o insertar configuración: $error');
+        }
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+          (Route<dynamic> route) => false,
+        );
+      } else {
+        print('No se pudo encontrar el nombre de usuario en la respuesta.');
+      }
+    } else {
+      setState(() {
+        _mostrarError = true;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Datos inválidos'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -336,11 +333,9 @@ Future<void> _login() async {
       ),
     );
   }
-  
-Future<void> insertUsuario(Usuario usuario) async {
+
+  Future<void> insertUsuario(Usuario usuario) async {
     DatabaseHelperUsuario dbHelper = DatabaseHelperUsuario();
     await dbHelper.insertUsuario(usuario);
-    
- }
-  
+  }
 }

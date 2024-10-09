@@ -106,15 +106,19 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                 _buildTotalSection(),
                 SizedBox(width: 30),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    // Obtener el total desde la base de datos
+                    double total =
+                        await DatabaseHelperCarrito().getTotalCarrito();
+
+                    // Mostrar el modal con el total obtenido
                     showPaymentOptionsModal(
-                      context, // Pasar el contexto
-                      (String selectedOption) {
-                        // Callback para manejar la selección
-                        setState(() {
-                          _selectedPaymentType =
-                              selectedOption; // Actualizar selección
-                        });
+                      context,
+                      total,
+                      (String selectedPaymentMethod) {
+                        // Aquí puedes manejar la acción cuando se selecciona el método de pago.
+                        print(
+                            'Método de pago seleccionado: $selectedPaymentMethod');
                       },
                     );
                   },
@@ -122,7 +126,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                     backgroundColor:
                         Colors.blue, // Cambiar el color de fondo a azul
                     iconColor:
-                        Colors.white, // Cambiar el color del texto (opcional)
+                        Colors.white, // Cambiar el color del icono (opcional)
                   ),
                   child: Text(
                     'Método de Pago',

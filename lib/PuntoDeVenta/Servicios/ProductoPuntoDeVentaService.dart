@@ -22,14 +22,14 @@ class ProductServicePOS {
     }
 
     final response = await http.get(
-      ApiRoutes.buildUri('dashboard/personalizado'),
+      ApiRoutes.buildUri('inventario/personalizado'),
       headers: {
         'Authorization': 'Bearer $token',
       },
     ).timeout(Duration(seconds: 5));
 
     if (response.statusCode == 200) {
-          DatabaseHelperProducto().deleteAllProducts();
+      DatabaseHelperProducto().deleteAllProducts();
       final List<dynamic> data = jsonDecode(response.body);
       final producto = data.map((json) => Product.fromJson(json)).toList();
       await saveProductsToLocalDatabase(producto);

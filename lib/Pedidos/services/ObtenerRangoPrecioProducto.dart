@@ -14,7 +14,7 @@ Future<void> fetchAndSaveRangoPrecios() async {
   }
 
   final response = await http.get(
-    ApiRoutes.buildUri('rango_precio_producto/'),
+    ApiRoutes.buildUri('rango_precio_producto'),
     headers: {
       "Content-Type": "application/json",
       "Authorization": "Bearer $token",

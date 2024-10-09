@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
 
 Future<List<Product>> validarExistencias(Map<Product, int> cart) async {
-  final url = Uri.parse('http://192.168.1.169:3333/user/checkStock');
+  final url = Uri.parse('http://192.168.1.169:3333/inventario/checkStock');
   final headers = {"Content-Type": "application/json"};
   final body = json
       .encode({"codigos": cart.keys.map((product) => product.codigo).toList()});

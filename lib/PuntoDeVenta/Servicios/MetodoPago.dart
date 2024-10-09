@@ -8,13 +8,17 @@ final List<String> _paymentOptions = [
 ];
 
 final List<String> _banks = ['Banco A', 'Banco B', 'Banco C'];
-
 void showPaymentOptionsModal(
-    BuildContext context, Function(String) onSelected) {
+    BuildContext context, double total, Function(String) onSelected) {
   String selectedPayment = _paymentOptions.first;
   String selectedBank = _banks.first;
   String referenceNumber = '';
-  double amount = 0.0;
+  double amount = total; // Inicializamos el monto con el total
+  double change = 0.0; // Para sugerir el vuelto
+
+  // Definimos el TextEditingController fuera del setState
+  TextEditingController amountController =
+      TextEditingController(text: total.toStringAsFixed(2));
 
   showModalBottomSheet(
     context: context,
@@ -64,6 +68,13 @@ void showPaymentOptionsModal(
                     onChanged: (String? newValue) {
                       setState(() {
                         selectedPayment = newValue!;
+                        if (selectedPayment == 'Efectivo') {
+                          // Si se selecciona efectivo, se puede calcular el vuelto
+                          change = (amount > total) ? amount - total : 0.0;
+                        } else {
+                          // Resetear el vuelto si no es efectivo
+                          change = 0.0;
+                        }
                       });
                     },
                     decoration: InputDecoration(
@@ -74,6 +85,8 @@ void showPaymentOptionsModal(
                   ),
                   SizedBox(height: 16),
                   TextField(
+                    controller:
+                        amountController, // Usamos el controlador para manejar el campo
                     decoration: InputDecoration(
                       labelText: 'Monto',
                       hintText: 'Ingrese el monto',
@@ -83,7 +96,13 @@ void showPaymentOptionsModal(
                     keyboardType: TextInputType.number,
                     onChanged: (value) {
                       setState(() {
-                        amount = double.tryParse(value) ?? 0.0;
+                        amount = double.tryParse(value) ?? total;
+                        // Calcular el vuelto solo si es efectivo
+                        if (selectedPayment == 'Efectivo') {
+                          change = (amount > total) ? amount - total : 0.0;
+                        } else {
+                          change = 0.0;
+                        }
                       });
                     },
                   ),
@@ -123,12 +142,23 @@ void showPaymentOptionsModal(
                       },
                     ),
                   ],
+                  if (selectedPayment == 'Efectivo' && change > 0) ...[
+                    SizedBox(height: 16),
+                    Text(
+                      'Vuelto: \Q${change.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ],
                   SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Total a pagar: \Q${amount.toStringAsFixed(2)}',
+                        'Total a pagar: \Q${total.toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -136,13 +166,26 @@ void showPaymentOptionsModal(
                       ),
                       ElevatedButton.icon(
                         onPressed: () {
-                          if (amount > 0 &&
-                              (selectedPayment == 'Efectivo' ||
+                          // Validar que el monto no sea menor al total
+                          if (amount < total) {
+                            // Mostrar error si el monto es insuficiente
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'El monto no puede ser menor al total a pagar.'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if ((selectedPayment == 'Efectivo' &&
+                                  amount >= total) ||
+                              (selectedPayment != 'Efectivo' &&
                                   referenceNumber.isNotEmpty)) {
                             onSelected(selectedPayment);
                             Navigator.pop(context);
                           } else {
-                            // Simple validación para asegurarse de que los campos estén completos
+                            // Validación si el monto es insuficiente o falta referencia
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(

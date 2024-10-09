@@ -12,7 +12,6 @@ class Product {
   final String categoriaSubCategoria;
   final String observaciones;
 
-
   Product({
     required this.codigo,
     required this.barras,
@@ -30,7 +29,7 @@ class Product {
 
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      codigo: json['codigo'] ?? 0,
+      codigo: json['Codigo'] ?? 0,
       barras: json['Barras'] ?? '',
       descripcion: json['Descripcion'] ?? '',
       existencia: json['Existencia'] ?? 0,
@@ -44,8 +43,6 @@ class Product {
       observaciones: json['Observaciones'] ?? '',
     );
   }
-
-
 
   Map<String, dynamic> toJson(int cantidad) {
     return {

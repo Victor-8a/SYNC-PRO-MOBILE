@@ -90,7 +90,7 @@ Future<List<Pedido>> fetchPedido() async {
       throw Exception('No se pudo obtener el id del vendedor');
     }
 
-    var url = ApiRoutes.buildUri('pedidos/listV2/seller/$idVendedor');
+    var url = ApiRoutes.buildUri('pedidos/vendedor/$idVendedor');
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -156,7 +156,7 @@ Future<List<Pedido>> fetchPedido() async {
 Future<List<DetallePedido>> fetchDetallePedido(
     int pedidoId, String token) async {
   try {
-    var url = ApiRoutes.buildUri('detalle_pedidos/listV2/$pedidoId');
+    var url = ApiRoutes.buildUri('detalle_pedidos/pedidos/$pedidoId');
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',

@@ -73,7 +73,7 @@ class _PuntoDeVentaPageState extends State<PuntoDeVentaPage> {
     )
         .then((value) {
       setState(() {
-        _loadProducts();
+        // _loadProducts();
       });
     });
   }

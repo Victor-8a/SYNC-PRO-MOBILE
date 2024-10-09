@@ -13,8 +13,6 @@ void main() {
   ));
 }
 
-
-   
 class CrearCliente extends StatefulWidget {
   const CrearCliente({Key? key}) : super(key: key);
 
@@ -59,76 +57,71 @@ class _CrearClienteState extends State<CrearCliente> {
   }
 
   void _crearCliente() async {
-  bool shouldCreate = await showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Confirmación'),
-        content: const Text('¿Está seguro de que desea agregar el cliente?'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Sí'),
-          ),
-        ],
-      );
-    },
-  );
-
-  if (shouldCreate) {
-    String? token = await login();
-
-    if (token == null) {
-      print('Token no encontrado');
-      return;
-    }
-
-    final body = jsonEncode({
-      "Cedula": _selectedOption == 'CF' ? 'CF' : _cedulaController.text,
-      "Nombre": _nombreController.text,
-      "Celular": _celularController.text,
-      "Telefono1": _telCasaController.text,
-      "Telefono2": _telOficinaController.text,
-      "Direccion": _direccionController.text,
-      "Email": _emailController.text,
-      "Observaciones": _observacionesController.text,
-      "Contacto": _nombreContactoController.text,
-      "TelContacto": _telContactoController.text,
-      "InHabilitado": false,
-    });
-
-    final response = await http.post(
-     ApiRoutes.buildUri('cliente/save'),
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
+    bool shouldCreate = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmación'),
+          content: const Text('¿Está seguro de que desea agregar el cliente?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Sí'),
+            ),
+          ],
+        );
       },
-      body: body,
     );
 
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cliente creado exitosamente')),
-      );
-      _limpiarCampos();
+    if (shouldCreate) {
+      String? token = await login();
 
-      // Redirige a PaginaPedidos
-    //   Navigator.pushReplacement(
-    //     context,
-    //     MaterialPageRoute(builder: (context) => PaginaPedidos(cliente: null,)),
-    //   );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al crear cliente: ${response.body}')),
+      if (token == null) {
+        print('Token no encontrado');
+        return;
+      }
+
+      final body = jsonEncode({
+        "Cedula": _selectedOption == 'CF' ? 'CF' : _cedulaController.text,
+        "Nombre": _nombreController.text,
+        "Celular": _celularController.text,
+        "Telefono1": _telCasaController.text,
+        "Telefono2": _telOficinaController.text,
+        "Direccion": _direccionController.text,
+        "Email": _emailController.text,
+        "Observaciones": _observacionesController.text,
+        "Contacto": _nombreContactoController.text,
+        "TelContacto": _telContactoController.text,
+        "InHabilitado": false,
+      });
+
+      final response = await http.post(
+        ApiRoutes.buildUri('cliente/save'),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: body,
       );
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cliente creado exitosamente')),
+        );
+        _limpiarCampos();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Error al crear cliente llene los campos obligatorios')),
+        );
+      }
     }
   }
-}
-
 
   void _cancelar() async {
     bool shouldCancel = await showDialog(
