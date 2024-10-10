@@ -1,10 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
+import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/MetodoPago.dart';
-
+import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/db/dbCarrito.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarClientes.dart';
 
@@ -33,11 +36,28 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
   final TextEditingController _felAddressController = TextEditingController();
   final DatabaseHelperCarrito _databaseHelper = DatabaseHelperCarrito();
   List<Map<String, dynamic>> _cartItems = [];
+  double? _lastTotal;
+  Future<double>?
+      _totalFuture; // Variable para mantener el último valor del total
 
   @override
   void initState() {
     super.initState();
+
+    _totalFuture = _getTotalCarrito();
+
     _loadCartFromDatabase();
+
+    _nitController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  // Simulación de una función que obtiene el total del carrito
+  Future<double> _getTotalCarrito() async {
+    // Aquí puedes quitar el delay, solo es para simular el tiempo de carga
+    await Future.delayed(Duration(seconds: 2));
+    return _databaseHelper.getTotalCarrito();
   }
 
   Future<void> _loadCartFromDatabase() async {
@@ -235,11 +255,15 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
             // Checkbox con el título
             Expanded(
               child: CheckboxListTile(
-                title: Row(
+                title: Column(
                   children: [
                     if (_nitController.text.isNotEmpty)
                       Text(
                         "NIT: ${_nitController.text}",
+                        style: TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold),
                       ),
                   ],
                 ),
@@ -252,13 +276,12 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                 controlAffinity: ListTileControlAffinity.leading,
               ),
             ),
-
             // Botón para acceder al diálogo
             ElevatedButton(
               onPressed: () {
                 if (_useFEL) {
                   // Mostrar el diálogo si el checkbox está habilitado
-                  _showFELDialog();
+                  showFELDialog();
                 } else {
                   // Mostrar mensaje si el checkbox no está habilitado
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -276,16 +299,25 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
 
   Widget _buildTotalSection() {
     return FutureBuilder<double>(
-      future: _databaseHelper.getTotalCarrito(),
+      future: _totalFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+        // Si está esperando los datos, pero tenemos un valor anterior
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _lastTotal != null) {
+          return Text(
+            'Total: Q${_lastTotal!.toStringAsFixed(2)} (Actualizando...)', // Muestra el valor previo con un texto indicativo
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          );
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else if (snapshot.hasData) {
           double total = snapshot.data!;
           return Text(
-            'Total: Q${total.toStringAsFixed(2)}',
+            'Total: Q${total.toStringAsFixed(2)}', // Actualiza el valor cuando llega el nuevo total
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -327,7 +359,8 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
     await prefs.setStringList('selectedClient', selectedClientJson);
   }
 
-  void _showFELDialog() {
+  // Función para mostrar el diálogo
+  void showFELDialog() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -342,6 +375,10 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                   labelText: 'NIT',
                   border: OutlineInputBorder(),
                 ),
+                onSubmitted: (value) async {
+                  // Llamar la función de consulta cuando se ingrese el NIT
+                  await consultarNit(_nitController.text);
+                },
               ),
               SizedBox(height: 10),
               TextField(
@@ -350,6 +387,11 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                   labelText: 'Nombre',
                   border: OutlineInputBorder(),
                 ),
+                enabled: false, // Campo bloqueado para que no sea editable
+                maxLines: null, // Permitir múltiples líneas
+                minLines: 1, // Número mínimo de líneas visibles
+                textAlignVertical: TextAlignVertical
+                    .top, // Alinear texto al principio del TextField
               ),
               SizedBox(height: 10),
               TextField(
@@ -358,6 +400,11 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                   labelText: 'Dirección',
                   border: OutlineInputBorder(),
                 ),
+                enabled: false,
+                maxLines: null, // Permitir múltiples líneas
+                minLines: 1, // Número mínimo de líneas visibles
+                textAlignVertical: TextAlignVertical
+                    .top, // Campo bloqueado para que no sea editable
               ),
             ],
           ),
@@ -370,7 +417,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
             ),
             ElevatedButton(
               onPressed: () {
-                // Guardar datos FEL (si es necesario)
+                // Aquí puedes guardar los datos si es necesario
                 Navigator.of(context).pop();
               },
               child: Text('Guardar'),
@@ -378,6 +425,57 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
           ],
         );
       },
+    );
+  }
+
+  Future<void> consultarNit(String nit) async {
+    final url = ApiRoutes.buildUri('fel/consultaNit/$nit');
+
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+
+        // Verifica que la respuesta sea exitosa
+        if (jsonData['success'] == true && jsonData['data'] != null) {
+          final data = jsonData['data'];
+
+          // Limpieza del nombre, eliminando comas dobles y espacios innecesarios
+          String nombre = data['nombre'] ?? 'No disponible';
+          nombre = nombre.replaceAll(RegExp(r',,'), ',').trim();
+
+          // Si la dirección está vacía, muestra un mensaje predeterminado
+          String direccion = (data['direccion']?.trim().isEmpty ?? true)
+              ? ''
+              : data['direccion'];
+
+          // Rellena los controladores con la información obtenida
+          _felNameController.text = nombre;
+          _felAddressController.text = direccion;
+        } else {
+          // Maneja el error si no se encuentra el NIT
+          _showError('Datos no disponibles para el NIT ingresado');
+          _felNameController.text = 'No disponible';
+          _felAddressController.text = 'No disponible';
+        }
+      } else {
+        // Maneja el error si la respuesta no es correcta
+        _showError('Error al consultar NIT');
+        _felNameController.text = 'No disponible';
+        _felAddressController.text = 'No disponible';
+      }
+    } catch (e) {
+      // Maneja la excepción en caso de error de red o servidor
+      _showError('Error de conexión: $e');
+      _felNameController.text = 'No disponible';
+      _felAddressController.text = 'No disponible';
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 }

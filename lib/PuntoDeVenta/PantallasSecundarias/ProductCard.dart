@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
-import 'package:sync_pro_mobile/db/dbCarrito.dart'; // Asegúrate de importar donde tienes definido el método insertCarrito
+import 'package:sync_pro_mobile/db/dbCarrito.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
