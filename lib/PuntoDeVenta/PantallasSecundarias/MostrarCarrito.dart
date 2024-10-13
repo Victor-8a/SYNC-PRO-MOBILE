@@ -52,44 +52,86 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
   }
 
   void finalizarCompra() async {
+    // Validar existencias de productos en el carrito
     List<Product> productosInsuficientes = await validarExistencias(_cart);
+
+    // Si no hay productos insuficientes, proceder a la siguiente pantalla
     if (productosInsuficientes.isEmpty) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => FinalizarCompra()),
-      );
+      _navegarAFinalizarCompra();
     } else {
-      String mensajeError =
-          "Algunos productos exceden la existencia disponible:\n";
-
-      for (var producto in productosInsuficientes) {
-        int cantidadDisponible = producto.existencia;
-        mensajeError +=
-            "${producto.descripcion}: Solo hay ${cantidadDisponible} disponibles.\n";
-        Divider(thickness: 2);
-      }
-
-      _mostrarMensajeError(mensajeError);
+      // Mostrar mensaje de error si hay productos insuficientes
+      _mostrarMensajeError(_generarMensajeError(productosInsuficientes));
     }
+  }
+
+// Función auxiliar para navegar a la pantalla de finalizar compra
+  void _navegarAFinalizarCompra() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => FinalizarCompra()),
+    );
+  }
+
+  String _generarMensajeError(List<Product> productosInsuficientes) {
+    StringBuffer mensajeError =
+        StringBuffer("Algunos productos exceden la existencia disponible:\n");
+
+    for (var producto in productosInsuficientes) {
+      int cantidadDisponible = producto.existencia;
+      mensajeError.writeln(
+          "${producto.descripcion}: Solo hay ${cantidadDisponible} disponibles.");
+    }
+
+    return mensajeError.toString();
   }
 
   void _mostrarMensajeError(String mensaje) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Error de Existencias"),
-          content: Text(mensaje),
-          actions: <Widget>[
-            TextButton(
-              child: Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15.0)), // Bordes redondeados
+        title: Row(
+          children: [
+            Icon(Icons.error_outline,
+                color: Colors.red, size: 28), // Icono de advertencia
+            SizedBox(width: 10), // Espacio entre el icono y el texto
+            Text('Error de Stock',
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ],
-        );
-      },
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                mensaje,
+                style: TextStyle(
+                    fontSize: 16,
+                    height: 1.4), // Ajuste de tamaño y espacio entre líneas
+              ),
+              SizedBox(height: 20), // Espacio entre el texto y el botón
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              'Aceptar',
+              style: TextStyle(color: Colors.white),
+            ),
+            style: TextButton.styleFrom(
+              backgroundColor:
+                  Colors.red, // Fondo del botón rojo para llamar la atención
+              padding: EdgeInsets.symmetric(
+                  vertical: 12, horizontal: 20), // Tamaño del botón
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)), // Bordes redondeados
+            ),
+          ),
+        ],
+      ),
     );
   }
 

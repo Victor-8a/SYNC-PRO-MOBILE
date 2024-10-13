@@ -33,6 +33,7 @@ class _PaginaClienteState extends State<PaginaCliente> {
   @override
   void initState() {
     super.initState();
+
     _isMounted = true;
     _searchController.addListener(_onSearchChanged);
     retrieveClientesFromLocalDatabase();

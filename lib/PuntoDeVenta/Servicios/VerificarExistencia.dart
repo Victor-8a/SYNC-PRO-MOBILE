@@ -1,10 +1,29 @@
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
+import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
+import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 
 Future<List<Product>> validarExistencias(Map<Product, int> cart) async {
-  final url = Uri.parse('http://192.168.1.169:3333/inventario/checkStock');
-  final headers = {"Content-Type": "application/json"};
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? token = await login();
+
+  // Lógica para obtener un token válido
+  if (token == null) {
+    token = await login();
+    if (token == null) {
+      throw Exception('No token found and unable to login');
+    }
+    // Guardar el token en SharedPreferences
+    await prefs.setString('token', token);
+  }
+
+  final url = ApiRoutes.buildUri('inventario/checkStock');
+  final headers = {
+    "Content-Type": "application/json",
+    "Authorization": "Bearer $token"
+  };
   final body = json
       .encode({"codigos": cart.keys.map((product) => product.codigo).toList()});
 

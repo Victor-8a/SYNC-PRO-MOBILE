@@ -3,8 +3,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/FEL.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/MetodoPago.dart';
-
 import 'package:sync_pro_mobile/db/dbCarrito.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarClientes.dart';
 
@@ -29,15 +29,30 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
   String _selectedPaymentType = 'Contado'; // Valor predeterminado
   bool _useFEL = false;
   final TextEditingController _nitController = TextEditingController();
-  final TextEditingController _felNameController = TextEditingController();
-  final TextEditingController _felAddressController = TextEditingController();
   final DatabaseHelperCarrito _databaseHelper = DatabaseHelperCarrito();
   List<Map<String, dynamic>> _cartItems = [];
+  double? _lastTotal;
+  Future<double>?
+      _totalFuture; // Variable para mantener el último valor del total
 
   @override
   void initState() {
     super.initState();
+
+    _totalFuture = _getTotalCarrito();
+
     _loadCartFromDatabase();
+
+    _nitController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  // Simulación de una función que obtiene el total del carrito
+  Future<double> _getTotalCarrito() async {
+    // Aquí puedes quitar el delay, solo es para simular el tiempo de carga
+    await Future.delayed(Duration(seconds: 2));
+    return _databaseHelper.getTotalCarrito();
   }
 
   Future<void> _loadCartFromDatabase() async {
@@ -48,6 +63,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
   }
 
   // Función para manejar el cambio de cliente
+
   void _onClientChanged(Cliente newClient) {
     setState(() {
       _selectedClient = newClient;
@@ -235,11 +251,15 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
             // Checkbox con el título
             Expanded(
               child: CheckboxListTile(
-                title: Row(
+                title: Column(
                   children: [
                     if (_nitController.text.isNotEmpty)
                       Text(
                         "NIT: ${_nitController.text}",
+                        style: TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold),
                       ),
                   ],
                 ),
@@ -252,13 +272,12 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                 controlAffinity: ListTileControlAffinity.leading,
               ),
             ),
-
             // Botón para acceder al diálogo
             ElevatedButton(
               onPressed: () {
                 if (_useFEL) {
                   // Mostrar el diálogo si el checkbox está habilitado
-                  _showFELDialog();
+                  showFELDialog(context, _nitController);
                 } else {
                   // Mostrar mensaje si el checkbox no está habilitado
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -276,16 +295,25 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
 
   Widget _buildTotalSection() {
     return FutureBuilder<double>(
-      future: _databaseHelper.getTotalCarrito(),
+      future: _totalFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
+        // Si está esperando los datos, pero tenemos un valor anterior
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            _lastTotal != null) {
+          return Text(
+            'Total: Q${_lastTotal!.toStringAsFixed(2)} (Actualizando...)', // Muestra el valor previo con un texto indicativo
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
+          );
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else if (snapshot.hasData) {
           double total = snapshot.data!;
           return Text(
-            'Total: Q${total.toStringAsFixed(2)}',
+            'Total: Q${total.toStringAsFixed(2)}', // Actualiza el valor cuando llega el nuevo total
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -325,59 +353,5 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
       return '${entry.key}: ${entry.value.toString()}';
     }).toList();
     await prefs.setStringList('selectedClient', selectedClientJson);
-  }
-
-  void _showFELDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Datos FEL'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _nitController,
-                decoration: InputDecoration(
-                  labelText: 'NIT',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: _felNameController,
-                decoration: InputDecoration(
-                  labelText: 'Nombre',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: _felAddressController,
-                decoration: InputDecoration(
-                  labelText: 'Dirección',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Guardar datos FEL (si es necesario)
-                Navigator.of(context).pop();
-              },
-              child: Text('Guardar'),
-            ),
-          ],
-        );
-      },
-    );
   }
 }
