@@ -13,7 +13,7 @@ void showFELDialog(BuildContext context, TextEditingController _nitController) {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text('Datos FEL'),
+        title: Text('FEL'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
