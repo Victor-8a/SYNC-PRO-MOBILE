@@ -8,6 +8,7 @@ import 'package:sync_pro_mobile/Menu.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Empresa.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Usuario.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
+import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
@@ -72,11 +73,23 @@ Future<void> savePasswordToStorage(String password) async {
 Future<Vendedor> loadSalesperson() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? idVendedor = prefs.getString('idVendedor');
+  String? token = await login();
+
+  if (token == null) {
+    throw Exception('Token de autorización no válido');
+  }
 
   if (idVendedor != null) {
     try {
-      final response =
-          await http.get(ApiRoutes.buildUri('vendedor/$idVendedor'));
+      // Construcción de los headers con el token
+      var headers = {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token', // Incluye el token aquí
+      };
+
+      // Solicitud HTTP GET con los headers y el token
+      final response = await http
+          .get(ApiRoutes.buildUri('vendedor/$idVendedor'), headers: headers);
 
       if (response.statusCode == 200) {
         Vendedor vendedor = Vendedor.fromJson(jsonDecode(response.body));

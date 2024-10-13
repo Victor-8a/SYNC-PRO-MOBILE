@@ -1,13 +1,10 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
-import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/FEL.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/MetodoPago.dart';
-import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/db/dbCarrito.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarClientes.dart';
 
@@ -32,8 +29,6 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
   String _selectedPaymentType = 'Contado'; // Valor predeterminado
   bool _useFEL = false;
   final TextEditingController _nitController = TextEditingController();
-  final TextEditingController _felNameController = TextEditingController();
-  final TextEditingController _felAddressController = TextEditingController();
   final DatabaseHelperCarrito _databaseHelper = DatabaseHelperCarrito();
   List<Map<String, dynamic>> _cartItems = [];
   double? _lastTotal;
@@ -68,6 +63,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
   }
 
   // Función para manejar el cambio de cliente
+
   void _onClientChanged(Cliente newClient) {
     setState(() {
       _selectedClient = newClient;
@@ -281,7 +277,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
               onPressed: () {
                 if (_useFEL) {
                   // Mostrar el diálogo si el checkbox está habilitado
-                  showFELDialog();
+                  showFELDialog(context, _nitController);
                 } else {
                   // Mostrar mensaje si el checkbox no está habilitado
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -357,125 +353,5 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
       return '${entry.key}: ${entry.value.toString()}';
     }).toList();
     await prefs.setStringList('selectedClient', selectedClientJson);
-  }
-
-  // Función para mostrar el diálogo
-  void showFELDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Datos FEL'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _nitController,
-                decoration: InputDecoration(
-                  labelText: 'NIT',
-                  border: OutlineInputBorder(),
-                ),
-                onSubmitted: (value) async {
-                  // Llamar la función de consulta cuando se ingrese el NIT
-                  await consultarNit(_nitController.text);
-                },
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: _felNameController,
-                decoration: InputDecoration(
-                  labelText: 'Nombre',
-                  border: OutlineInputBorder(),
-                ),
-                enabled: false, // Campo bloqueado para que no sea editable
-                maxLines: null, // Permitir múltiples líneas
-                minLines: 1, // Número mínimo de líneas visibles
-                textAlignVertical: TextAlignVertical
-                    .top, // Alinear texto al principio del TextField
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: _felAddressController,
-                decoration: InputDecoration(
-                  labelText: 'Dirección',
-                  border: OutlineInputBorder(),
-                ),
-                enabled: false,
-                maxLines: null, // Permitir múltiples líneas
-                minLines: 1, // Número mínimo de líneas visibles
-                textAlignVertical: TextAlignVertical
-                    .top, // Campo bloqueado para que no sea editable
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Cancelar'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Aquí puedes guardar los datos si es necesario
-                Navigator.of(context).pop();
-              },
-              child: Text('Guardar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> consultarNit(String nit) async {
-    final url = ApiRoutes.buildUri('fel/consultaNit/$nit');
-
-    try {
-      final response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-
-        // Verifica que la respuesta sea exitosa
-        if (jsonData['success'] == true && jsonData['data'] != null) {
-          final data = jsonData['data'];
-
-          // Limpieza del nombre, eliminando comas dobles y espacios innecesarios
-          String nombre = data['nombre'] ?? 'No disponible';
-          nombre = nombre.replaceAll(RegExp(r',,'), ',').trim();
-
-          // Si la dirección está vacía, muestra un mensaje predeterminado
-          String direccion = (data['direccion']?.trim().isEmpty ?? true)
-              ? ''
-              : data['direccion'];
-
-          // Rellena los controladores con la información obtenida
-          _felNameController.text = nombre;
-          _felAddressController.text = direccion;
-        } else {
-          // Maneja el error si no se encuentra el NIT
-          _showError('Datos no disponibles para el NIT ingresado');
-          _felNameController.text = 'No disponible';
-          _felAddressController.text = 'No disponible';
-        }
-      } else {
-        // Maneja el error si la respuesta no es correcta
-        _showError('Error al consultar NIT');
-        _felNameController.text = 'No disponible';
-        _felAddressController.text = 'No disponible';
-      }
-    } catch (e) {
-      // Maneja la excepción en caso de error de red o servidor
-      _showError('Error de conexión: $e');
-      _felNameController.text = 'No disponible';
-      _felAddressController.text = 'No disponible';
-    }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sync_pro_mobile/Pedidos/services/ClienteService.dart';
 import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import '../Models/Cliente.dart';
 import '../Models/Ruta.dart';
@@ -6,7 +7,8 @@ import '../../db/dbCliente.dart';
 import '../../db/dbRuta.dart';
 
 class SeleccionarCliente extends StatefulWidget {
-  const SeleccionarCliente({Key? key, required List clientes}) : super(key: key);
+  const SeleccionarCliente({Key? key, required List clientes})
+      : super(key: key);
 
   @override
   _SeleccionarClienteState createState() => _SeleccionarClienteState();
@@ -22,6 +24,7 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
 
   @override
   void initState() {
+    insertarCliente();
     super.initState();
     _isMounted = true;
     _searchController.addListener(_onSearchChanged);
@@ -73,7 +76,8 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
       Ruta? rutaActiva = await databaseHelperRuta.getRutaActiva();
       // ignore: unnecessary_null_comparison
       if (rutaActiva != null) {
-     List<Cliente> clientes = await DatabaseHelperCliente().getClientesLocalidad(rutaActiva.idLocalidad);
+        List<Cliente> clientes = await DatabaseHelperCliente()
+            .getClientesLocalidad(rutaActiva.idLocalidad);
         if (_isMounted) {
           setState(() {
             _clientes = clientes;
@@ -182,5 +186,10 @@ class _SeleccionarClienteState extends State<SeleccionarCliente> {
         ],
       ),
     );
+  }
+
+  void insertarCliente() async {
+    ClienteService clienteService = ClienteService();
+    clienteService.insertarCliente(); // Asegúrate de usar el nombre correcto
   }
 }

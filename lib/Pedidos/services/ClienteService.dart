@@ -17,29 +17,29 @@ class ClienteService {
       if (idVendedor == null) {
         throw Exception('No se pudo obtener el id del vendedor');
       }
-      
-
       // Verificar si se deben usar los clientes filtrados
-      bool clientesFiltrados = await DatabaseHelperConfiguraciones().getClientesFiltrados();
+      bool clientesFiltrados =
+          await DatabaseHelperConfiguraciones().getClientesFiltrados();
 
       // Construir la URL en función de la configuración
       Uri url;
       if (clientesFiltrados) {
-        url = ApiRoutes.buildUri('cliente/id-vendedor/$idVendedor');
+        url = ApiRoutes.buildUri('cliente/vendedor/$idVendedor');
       } else {
-        url = ApiRoutes.buildUri('cliente');  // Suponiendo que esta es la URL cuando no se usa idVendedor
+        url = ApiRoutes.buildUri(
+            'cliente'); // Suponiendo que esta es la URL cuando no se usa idVendedor
       }
 
       var connectivityResult = await Connectivity()
           .checkConnectivity()
           .timeout(Duration(seconds: 5));
       if (connectivityResult == ConnectivityResult.none) {
-        print('No hay conexión a Internet, recuperando clientes de la base de datos local');
+        print(
+            'No hay conexión a Internet, recuperando clientes de la base de datos local');
         return await _retrieveClientesFromLocalDatabase();
       }
 
-  
-      String? token =  await login();
+      String? token = await login();
       if (token == null) {
         throw Exception('No se encontró el token');
       }
@@ -50,9 +50,10 @@ class ClienteService {
       ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
-          DatabaseHelperCliente().deleteAllClientes();
+        DatabaseHelperCliente().deleteAllClientes();
         final List<dynamic> jsonResponse = json.decode(response.body);
-        final clientes = jsonResponse.map((json) => Cliente.fromJson(json)).toList();
+        final clientes =
+            jsonResponse.map((json) => Cliente.fromJson(json)).toList();
         await _saveClientesToLocalDatabase(clientes);
         return clientes;
       } else {
@@ -63,7 +64,6 @@ class ClienteService {
       return await _retrieveClientesFromLocalDatabase();
     }
   }
-
 
   Future<void> _saveClientesToLocalDatabase(List<Cliente> clientes) async {
     try {

@@ -51,8 +51,6 @@ class ProductCard extends StatelessWidget {
                 // Llamamos al método insertCarrito con la cantidad deseada
                 await DatabaseHelperCarrito().insertCarrito(product, 1);
 
-                // También podrías mostrar una notificación o mensaje al usuario
-
                 // Llamamos al callback que puede estar manejando otras acciones
                 onAddToCart();
               },
