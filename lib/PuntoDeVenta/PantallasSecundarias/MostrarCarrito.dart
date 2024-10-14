@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/PantallasSecundarias/FinalizarCompra.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/VerificarExistencia.dart';
@@ -11,7 +12,7 @@ class MostrarCarrito extends StatefulWidget {
 
 class _MostrarCarritoState extends State<MostrarCarrito> {
   Map<Product, int> _cart = {};
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   final DatabaseHelperCarrito _databaseHelper = DatabaseHelperCarrito();
 
@@ -68,7 +69,10 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
   void _navegarAFinalizarCompra() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => FinalizarCompra()),
+      MaterialPageRoute(
+          builder: (context) => FinalizarCompra(
+                selectedClient: Cliente(),
+              )),
     );
   }
 

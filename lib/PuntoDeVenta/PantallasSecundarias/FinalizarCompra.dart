@@ -9,7 +9,8 @@ import 'package:sync_pro_mobile/db/dbCarrito.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarClientes.dart';
 
 class FinalizarCompra extends StatefulWidget {
-  const FinalizarCompra({Key? key}) : super(key: key);
+  const FinalizarCompra({Key? key, required Cliente selectedClient})
+      : super(key: key);
 
   @override
   _FinalizarCompraState createState() => _FinalizarCompraState();
@@ -18,9 +19,9 @@ class FinalizarCompra extends StatefulWidget {
 class _FinalizarCompraState extends State<FinalizarCompra> {
   Cliente _selectedClient = Cliente(
     codCliente: 0,
-    nombre: '',
+    nombre: 'CONSUMIDOR FINAL',
     cedula: '',
-    direccion: '',
+    direccion: 'CIUDAD',
     credito: false,
   );
 
@@ -45,6 +46,10 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
 
     _nitController.addListener(() {
       setState(() {});
+    });
+
+    setState(() {
+      _selectedClient = _selectedClient;
     });
   }
 
@@ -123,7 +128,6 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                 SizedBox(width: 30),
                 ElevatedButton(
                   onPressed: () async {
-                    // Obtener el total desde la base de datos
                     double total =
                         await DatabaseHelperCarrito().getTotalCarrito();
 
@@ -194,7 +198,9 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
           children: [
             Expanded(
               child: Text(
-                'Cliente: ' + _selectedClient.nombre,
+                _selectedClient.nombre.isNotEmpty
+                    ? 'Cliente: ' + _selectedClient.nombre
+                    : 'Cliente: CONSUMIDOR FINAL',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
@@ -276,13 +282,18 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
             ElevatedButton(
               onPressed: () {
                 if (_useFEL) {
-                  // Mostrar el diálogo si el checkbox está habilitado
-                  showFELDialog(context, _nitController);
+                  showFELDialog(context, _nitController, _selectedClient)
+                      .then((clienteResponse) {
+                    if (clienteResponse != null) {
+                      // Actualiza automáticamente el cliente seleccionado
+                      _onClientChanged(clienteResponse);
+                    }
+                  });
                 } else {
-                  // Mostrar mensaje si el checkbox no está habilitado
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                          'Debes habilitar el acceso a FEL para continuar.')));
+                    content:
+                        Text('Debes habilitar el acceso a FEL para continuar.'),
+                  ));
                 }
               },
               child: Text('Datos FEL'),

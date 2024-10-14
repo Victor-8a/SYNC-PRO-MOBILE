@@ -1,15 +1,26 @@
-// Función para mostrar el diálogo
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
+import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 import 'package:http/http.dart' as http;
 
-// final TextEditingController _nitController = TextEditingController();
 final TextEditingController _felNameController = TextEditingController();
 final TextEditingController _felAddressController = TextEditingController();
+Cliente _ClientePorDefecto() {
+  return Cliente(
+    codCliente: 0,
+    nombre: 'CONSUMIDOR FINAL',
+    cedula: '',
+    direccion: 'CIUDAD',
+    credito: false,
+  );
+}
+
 // Función para mostrar el diálogo
-void showFELDialog(BuildContext context, TextEditingController _nitController) {
-  showDialog(
+Future<Cliente?> showFELDialog(BuildContext context,
+    TextEditingController _nitController, Cliente clienteResponse) {
+  return showDialog<Cliente?>(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
@@ -24,7 +35,8 @@ void showFELDialog(BuildContext context, TextEditingController _nitController) {
                 border: OutlineInputBorder(),
               ),
               onSubmitted: (value) async {
-                await consultarNit(_nitController.text, context);
+                await consultarNit(
+                    _nitController, _nitController.text, context);
               },
             ),
             SizedBox(height: 10),
@@ -61,9 +73,15 @@ void showFELDialog(BuildContext context, TextEditingController _nitController) {
             child: Text('Cancelar'),
           ),
           ElevatedButton(
-            onPressed: () {
-              // Aquí puedes guardar los datos si es necesario
-              Navigator.of(context).pop();
+            onPressed: () async {
+              Cliente clienteResponse = await guardarDatosCliente(
+                _nitController.text,
+                _felNameController.text,
+                _felAddressController.text,
+                context,
+              );
+              Navigator.of(context)
+                  .pop(clienteResponse); // Pasar el cliente de vuelta
             },
             child: Text('Guardar'),
           ),
@@ -73,8 +91,9 @@ void showFELDialog(BuildContext context, TextEditingController _nitController) {
   );
 }
 
-Future<void> consultarNit(String nit, BuildContext context) async {
-  // Recibir context
+// Función para consultar el NIT
+Future<void> consultarNit(TextEditingController _nitController, String nit,
+    BuildContext context) async {
   final url = ApiRoutes.buildUri('fel/consultaNit/$nit');
 
   try {
@@ -86,7 +105,7 @@ Future<void> consultarNit(String nit, BuildContext context) async {
       if (jsonData['success'] == true && jsonData['data'] != null) {
         final data = jsonData['data'];
 
-        String nombre = data['nombre'] ?? 'No disponible';
+        String nombre = data['nombre'] ?? 'CONSUMIDOR FINAL';
         nombre = nombre.replaceAll(RegExp(r',,'), ',').trim();
 
         String direccion = (data['direccion']?.trim().isEmpty ?? true)
@@ -96,25 +115,77 @@ Future<void> consultarNit(String nit, BuildContext context) async {
         _felNameController.text = nombre;
         _felAddressController.text = direccion;
       } else {
-        _showError('Datos no disponibles para el NIT ingresado',
-            context); // Pasar context aquí
-        _felNameController.text = 'No disponible';
-        _felAddressController.text = 'No disponible';
+        _showError('Datos no disponibles para el NIT ingresado', context);
+        _nitController.text = "CF";
+        _felNameController.text = 'CONSUMIDOR FINAL';
+        _felAddressController.text = 'CIUDAD';
       }
     } else {
-      _showError('Error al consultar NIT', context); // Pasar context aquí
-      _felNameController.text = 'No disponible';
-      _felAddressController.text = 'No disponible';
+      _showError('Error al consultar NIT', context);
+      _nitController.text = "CF";
+      _felNameController.text = 'CONSUMIDOR FINAL';
+      _felAddressController.text = 'CIUDAD';
     }
   } catch (e) {
-    _showError('Error de conexión: $e', context); // Pasar context aquí
-    _felNameController.text = 'No disponible';
-    _felAddressController.text = 'No disponible';
+    _showError('Error de conexión: $e', context);
+    _felNameController.text = 'CONSUMIDOR FINAL';
+    _felAddressController.text = 'CIUDAD';
   }
 }
 
+// Función para enviar los datos del cliente
+
+Future<Cliente> guardarDatosCliente(
+    String nit, String nombre, String direccion, BuildContext context) async {
+  final url = ApiRoutes.buildUri('cliente/cedula');
+  String? token = await login();
+  final body = jsonEncode({
+    'Cedula': nit,
+    'Nombre': nombre,
+    'Direccion': direccion,
+  });
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+      if (jsonData != null &&
+          jsonData['cliente'] != null &&
+          jsonData['cliente']['Cedula'] != null) {
+        final cliente = Cliente.fromJson(jsonData['cliente']);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Datos guardados exitosamente')),
+        );
+        return cliente; // Retorna el cliente guardado
+      } else {
+        // Si la respuesta es inválida, devuelve el cliente por defecto
+        _showError('Error: Datos inválidos en la respuesta', context);
+        return _ClientePorDefecto();
+      }
+    } else {
+      // En caso de error al guardar
+      _showError('Error al guardar los datos. Código: ${response.statusCode}',
+          context);
+      return _ClientePorDefecto();
+    }
+  } catch (FormatException) {
+    // Manejo de excepciones
+    _showError('Error al decodificar los datos', context);
+    return _ClientePorDefecto();
+  }
+}
+
+// Función para mostrar errores
 void _showError(String message, BuildContext context) {
-  // Recibir context aquí
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(content: Text(message)),
   );
