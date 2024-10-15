@@ -28,7 +28,6 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
     });
 
     final cartItems = await _databaseHelper.getCarritoItems();
-
     Map<Product, int> cartMap = {};
     for (var item in cartItems) {
       final product = Product.fromMap(item);
@@ -45,11 +44,15 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
   Future<void> _updateQuantityInDatabase(Product product, int quantity) async {
     if (quantity > 0) {
       await _databaseHelper.updateCarritoItem(product.codigo, quantity);
+      setState(() {
+        _cart[product] = quantity; // Actualizar solo la cantidad del producto
+      });
     } else {
       await _databaseHelper.removeCarritoItem(product.codigo);
+      setState(() {
+        _cart.remove(product); // Eliminar el producto del carrito
+      });
     }
-    // Refrescar la vista después de la actualización
-    _loadCartFromDatabase();
   }
 
   void finalizarCompra() async {
@@ -65,14 +68,15 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
     }
   }
 
-// Función auxiliar para navegar a la pantalla de finalizar compra
+  // Función auxiliar para navegar a la pantalla de finalizar compra
   void _navegarAFinalizarCompra() {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => FinalizarCompra(
-                selectedClient: Cliente(),
-              )),
+        builder: (context) => FinalizarCompra(
+          selectedClient: Cliente(),
+        ),
+      ),
     );
   }
 
