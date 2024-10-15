@@ -37,7 +37,7 @@ class Pedido {
       numPedido: json['id'],
       codCliente: json['CodCliente'],
       fecha: json['Fecha'],
-      observaciones: json['Observaciones'],
+      observaciones: json['Observaciones'] == null ? "" : json['Observaciones'],
       idUsuario: json['IdUsuario'],
       fechaEntrega: json['FechaEntrega'],
       codMoneda: json['CodMoneda'],

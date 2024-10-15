@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
 
 class LocalStorage {
   static late SharedPreferences prefs;
@@ -19,7 +22,7 @@ class LocalStorage {
   static Future<void> setInt(String name, int value) async {
     await prefs.setInt(name, value);
   }
- 
+
   static int? getInt(String name) {
     return prefs.getInt(name);
   }
@@ -46,5 +49,40 @@ class LocalStorage {
 
   static List<String>? getStringList(String name) {
     return prefs.getStringList(name);
+  }
+}
+
+Future<String> getTokenFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String token = prefs.getString('token') ??
+      ""; // Si el token no existe, devuelve una cadena vacía
+  return token;
+}
+
+Future<String?> getUsernameFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? username = prefs.getString('username');
+  return username;
+}
+
+Future<String?> getPasswordFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? password = prefs.getString('password');
+  return password;
+}
+
+Future<String> getIdFromStorage() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String userId = prefs.getString('userId') ??
+      ""; // Si el id no existe, devuelve una cadena vacía
+  return userId;
+}
+
+Future<Vendedor?> getSalesperson() async {
+  String? salespersonJson = await LocalStorage.getString('salesperson');
+  if (salespersonJson != null) {
+    return Vendedor.fromJson(jsonDecode(salespersonJson));
+  } else {
+    return null;
   }
 }

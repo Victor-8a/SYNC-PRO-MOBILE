@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
-import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/PaginaPedidos.dart';
 import 'package:sync_pro_mobile/Pedidos/services/ObtenerPedido.dart';
+import 'package:sync_pro_mobile/Pedidos/services/SincronizarPedidos.dart';
 import 'package:sync_pro_mobile/Pedidos/services/SincronizarRuta.dart';
 import 'package:sync_pro_mobile/Pedidos/services/WarningWidgetCubit.dart';
 import '../PantallasPrincipales/PaginaListarPedido.dart';
@@ -156,7 +156,6 @@ class _SecondPageState extends State<SecondPage> {
       ),
     );
   }
-
 }
 
 // La clase LoginPage debe estar definida aquí o importada desde otro archivo
