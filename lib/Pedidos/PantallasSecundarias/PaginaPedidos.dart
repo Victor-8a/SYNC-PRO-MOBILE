@@ -39,7 +39,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   bool usarRuta = false;
   Ruta? miRuta;
-  // Porcentaje de descuento
 
   void _loadSelectedProducts() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
