@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/PantallasSecundarias/FinalizarCompra.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/AperturaCajaActiva.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/VerificarExistencia.dart';
 import 'package:sync_pro_mobile/db/dbCarrito.dart';
 
@@ -13,11 +14,14 @@ class MostrarCarrito extends StatefulWidget {
 class _MostrarCarritoState extends State<MostrarCarrito> {
   Map<Product, int> _cart = {};
   bool _isLoading = false;
+  bool _canFinalizePurchase =
+      true; // Nueva variable para habilitar/deshabilitar la compra
 
   final DatabaseHelperCarrito _databaseHelper = DatabaseHelperCarrito();
 
   @override
   void initState() {
+    // _checkAperturaCaja();
     _loadCartFromDatabase();
     super.initState();
   }
@@ -55,20 +59,63 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
     }
   }
 
-  void finalizarCompra() async {
-    // Validar existencias de productos en el carrito
-    List<Product> productosInsuficientes = await validarExistencias(_cart);
+  // Future<void> _checkAperturaCaja() async {
+  //   dynamic aperturaResult = await getAperturaCajaActiva();
 
-    // Si no hay productos insuficientes, proceder a la siguiente pantalla
-    if (productosInsuficientes.isEmpty) {
-      _navegarAFinalizarCompra();
-    } else {
-      // Mostrar mensaje de error si hay productos insuficientes
-      _mostrarMensajeError(_generarMensajeError(productosInsuficientes));
+  //   if (aperturaResult == -1) {
+  //     setState(() {
+  //       _canFinalizePurchase = false;
+  //     });
+  //     _mostrarSnackbar(
+  //         'No puedes realizar ventas, no cuentas con apertura de caja.');
+  //   } else {
+  //     setState(() {
+  //       _canFinalizePurchase = true;
+  //     });
+  //   }
+  // }
+
+  // void _mostrarSnackbar(String mensaje) {
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(mensaje),
+  //         backgroundColor: Colors.red,
+  //         duration: Duration(seconds: 3),
+  //       ),
+  //     );
+  //   });
+  // }
+
+  void finalizarCompra() async {
+    dynamic aperturaResult = await getAperturaCajaActiva();
+
+    if (aperturaResult == -1) {
+      _mostrarMensajeError(
+        'No puedes finalizar la compra, no cuentas con apertura de caja.',
+      );
+
+      setState(() {
+        _canFinalizePurchase = false;
+      });
+
+      return;
+    }
+
+    if (aperturaResult == 0 || aperturaResult is int) {
+      List<Product> productosInsuficientes = await validarExistencias(_cart);
+
+      if (productosInsuficientes.isEmpty) {
+        setState(() {
+          _canFinalizePurchase = true;
+        });
+        _navegarAFinalizarCompra();
+      } else {
+        _mostrarMensajeError(_generarMensajeError(productosInsuficientes));
+      }
     }
   }
 
-  // Función auxiliar para navegar a la pantalla de finalizar compra
   void _navegarAFinalizarCompra() {
     Navigator.push(
       context,
@@ -104,8 +151,7 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
             Icon(Icons.error_outline,
                 color: Colors.red, size: 28), // Icono de advertencia
             SizedBox(width: 10), // Espacio entre el icono y el texto
-            Text('Error de Stock',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            Text('Error', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
         content: SingleChildScrollView(
@@ -247,14 +293,16 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                         ),
                         SizedBox(
                           child: ElevatedButton(
-                            onPressed: _cart.isEmpty
+                            onPressed: _cart.isEmpty || !_canFinalizePurchase
                                 ? null
                                 : () {
                                     finalizarCompra();
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor:
-                                  _cart.isEmpty ? Colors.grey : Colors.green,
+                                  _cart.isEmpty || !_canFinalizePurchase
+                                      ? Colors.grey
+                                      : Colors.green,
                               padding: EdgeInsets.symmetric(
                                   vertical: 18.0, horizontal: 18.0),
                               shape: RoundedRectangleBorder(

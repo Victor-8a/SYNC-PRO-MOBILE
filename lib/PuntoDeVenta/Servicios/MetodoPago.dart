@@ -1,41 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:sync_pro_mobile/Pedidos/services/BancosService.dart';
 
-final List<String> _paymentOptions = [
-  'Efectivo',
-  'Tarjeta',
-  'Transferencia',
-  'Cheque'
-];
-
-final List<String> _banks = ['Banco A', 'Banco B', 'Banco C'];
 void showPaymentOptionsModal(
     BuildContext context, double total, Function(String) onSelected) {
-  String selectedPayment = _paymentOptions.first;
-  String selectedBank = _banks.first;
-  String referenceNumber = '';
-  double amount = total; // Inicializamos el monto con el total
-  double change = 0.0; // Para sugerir el vuelto
+  final List<String> _paymentOptions = [
+    'Efectivo',
+    'Tarjeta',
+    'Transferencia',
+    'Cheque'
+  ];
 
-  // Definimos el TextEditingController fuera del setState
+  final List<String> _cardOptions = ['American Express', 'Mastercard', 'Visa'];
+
+  String selectedPayment = _paymentOptions.first;
+  String selectedBankOrCard = '';
+  List<String> _banks = []; // Lista vacía de bancos
+  String referenceNumber = '';
+  double amount = total;
+  double change = 0.0;
+
   TextEditingController amountController =
       TextEditingController(text: total.toStringAsFixed(2));
+
+  // Método para cargar los bancos solo una vez
+  void loadBanks() async {
+    List<String> banks = await fetchBanks();
+    if (banks.isNotEmpty) {
+      _banks = banks; // Asignar la lista de bancos cargados
+    }
+  }
 
   showModalBottomSheet(
     context: context,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
     ),
-    isScrollControlled: true, // Permite ajustar el tamaño según el teclado
+    isScrollControlled: true,
     builder: (BuildContext context) {
+      // Cargar los bancos al abrir el modal
+      loadBanks();
+
       return StatefulBuilder(
         builder: (BuildContext context, StateSetter setState) {
           return Padding(
             padding: EdgeInsets.only(
               left: 16.0,
               right: 16.0,
-              bottom: MediaQuery.of(context)
-                  .viewInsets
-                  .bottom, // Ajuste del padding por el teclado
+              bottom: MediaQuery.of(context).viewInsets.bottom,
               top: 16.0,
             ),
             child: SingleChildScrollView(
@@ -68,11 +79,10 @@ void showPaymentOptionsModal(
                     onChanged: (String? newValue) {
                       setState(() {
                         selectedPayment = newValue!;
+                        selectedBankOrCard = ''; // Resetear el banco o tarjeta
                         if (selectedPayment == 'Efectivo') {
-                          // Si se selecciona efectivo, se puede calcular el vuelto
                           change = (amount > total) ? amount - total : 0.0;
                         } else {
-                          // Resetear el vuelto si no es efectivo
                           change = 0.0;
                         }
                       });
@@ -85,8 +95,7 @@ void showPaymentOptionsModal(
                   ),
                   SizedBox(height: 16),
                   TextField(
-                    controller:
-                        amountController, // Usamos el controlador para manejar el campo
+                    controller: amountController,
                     decoration: InputDecoration(
                       labelText: 'Monto',
                       hintText: 'Ingrese el monto',
@@ -97,7 +106,6 @@ void showPaymentOptionsModal(
                     onChanged: (value) {
                       setState(() {
                         amount = double.tryParse(value) ?? total;
-                        // Calcular el vuelto solo si es efectivo
                         if (selectedPayment == 'Efectivo') {
                           change = (amount > total) ? amount - total : 0.0;
                         } else {
@@ -106,10 +114,39 @@ void showPaymentOptionsModal(
                       });
                     },
                   ),
-                  if (selectedPayment != 'Efectivo') ...[
+                  if (selectedPayment == 'Tarjeta' &&
+                      _cardOptions.isNotEmpty) ...[
                     SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: selectedBank,
+                      value: selectedBankOrCard.isNotEmpty
+                          ? selectedBankOrCard
+                          : null,
+                      items: _cardOptions.map((String card) {
+                        return DropdownMenuItem<String>(
+                          value: card,
+                          child: Text(card),
+                        );
+                      }).toList(),
+                      onChanged: (String? newCard) {
+                        setState(() {
+                          selectedBankOrCard = newCard!;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Tarjeta',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                      ),
+                    ),
+                  ],
+                  if (selectedPayment != 'Efectivo' &&
+                      selectedPayment != 'Tarjeta' &&
+                      _banks.isNotEmpty) ...[
+                    SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: selectedBankOrCard.isNotEmpty
+                          ? selectedBankOrCard
+                          : null,
                       items: _banks.map((String bank) {
                         return DropdownMenuItem<String>(
                           value: bank,
@@ -118,7 +155,7 @@ void showPaymentOptionsModal(
                       }).toList(),
                       onChanged: (String? newBank) {
                         setState(() {
-                          selectedBank = newBank!;
+                          selectedBankOrCard = newBank!;
                         });
                       },
                       decoration: InputDecoration(
@@ -127,6 +164,8 @@ void showPaymentOptionsModal(
                         contentPadding: EdgeInsets.symmetric(horizontal: 12),
                       ),
                     ),
+                  ],
+                  if (selectedPayment != 'Efectivo') ...[
                     SizedBox(height: 16),
                     TextField(
                       decoration: InputDecoration(
@@ -166,9 +205,7 @@ void showPaymentOptionsModal(
                       ),
                       ElevatedButton.icon(
                         onPressed: () {
-                          // Validar que el monto no sea menor al total
                           if (amount < total) {
-                            // Mostrar error si el monto es insuficiente
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
@@ -185,7 +222,6 @@ void showPaymentOptionsModal(
                             onSelected(selectedPayment);
                             Navigator.pop(context);
                           } else {
-                            // Validación si el monto es insuficiente o falta referencia
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(

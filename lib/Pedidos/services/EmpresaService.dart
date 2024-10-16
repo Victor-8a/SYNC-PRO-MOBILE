@@ -25,7 +25,8 @@ class ImageModel {
     }
 
     if (keyWithData == null) {
-      throw Exception('No se encontró una clave con datos de imagen en el JSON');
+      throw Exception(
+          'No se encontró una clave con datos de imagen en el JSON');
     }
 
     List<int> imageDataList = List<int>.from(json[keyWithData]['data']);
@@ -56,7 +57,7 @@ Future<Empresa> fetchEmpresa(int id) async {
     }
 
     // Configurar la URL y los headers para la solicitud HTTP
-    var url = ApiRoutes.buildUri('empresa/id/1');
+    var url = ApiRoutes.buildUri('empresa/1');
     var headers = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $token',
@@ -89,7 +90,8 @@ Future<Empresa> fetchEmpresa(int id) async {
     throw error;
   }
 }
-Future<ImageModel> fetchImage() async {
+
+Future<Uint8List> fetchImage() async {
   try {
     String? token = await getTokenFromStorage();
     if (token == null) {
@@ -98,7 +100,7 @@ Future<ImageModel> fetchImage() async {
 
     // Realizar la solicitud HTTP para obtener la imagen
     final response = await http.get(
-      ApiRoutes.buildUri('empresa/imagen'),
+      ApiRoutes.buildUri('empresa/logo/1'),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -106,24 +108,22 @@ Future<ImageModel> fetchImage() async {
 
     // Verificar si la respuesta es exitosa
     if (response.statusCode == 200) {
-      final Map<String, dynamic> jsonResponse = json.decode(response.body);
+      // Aquí recibes los datos binarios de la imagen
+      Uint8List imageData = response.bodyBytes;
 
-      // Imprimir el JSON recibido
-      print('JSON recibido: $jsonResponse');
-
-      // Crear ImageModel usando la clave 'Logo'
-      ImageModel imageModel = ImageModel.fromJson(jsonResponse);
-      print('Imagen recibida: ${imageModel.imageData.sublist(0, 10)}');
-      return imageModel;
+      print('Imagen recibida, tamaño: ${imageData.length}');
+      return imageData; // Retornar los datos binarios
     } else {
-      throw Exception('Failed to load image');
+      throw Exception(
+          'Failed to load image, status code: ${response.statusCode}');
     }
   } catch (e) {
     print('Error al obtener la imagen: $e');
     throw e;
   }
 }
-Future<void> saveImageToFile(ImageModel imageModel) async {
+
+Future<void> saveImageToFile(Uint8List imageData) async {
   try {
     // Obtener el directorio para almacenar la imagen
     final directory = await getApplicationDocumentsDirectory();
@@ -143,14 +143,13 @@ Future<void> saveImageToFile(ImageModel imageModel) async {
 
     // Crear el archivo y escribir los datos de la imagen
     final file = File(filePath);
-    await file.writeAsBytes(imageModel.imageData);
+    await file.writeAsBytes(imageData);
     print('Logo guardado exitosamente en $filePath');
   } catch (e) {
     // Imprimir cualquier error que ocurra durante el proceso
     print('Error al guardar la imagen: $e');
   }
 }
-
 
 Future<String?> getTokenFromStorage() async {
   SharedPreferences prefs = await SharedPreferences.getInstance();
