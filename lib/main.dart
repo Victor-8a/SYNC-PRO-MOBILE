@@ -196,7 +196,6 @@ class _LoginPageState extends State<LoginPage> {
 
         try {
           await fetchImage().then((imageModel) async {
-            await saveImageToFile(imageModel);
             print('Imagen guardada correctamente en el dispositivo.');
           }).catchError((error) {
             print('Error al obtener la imagen: $error');

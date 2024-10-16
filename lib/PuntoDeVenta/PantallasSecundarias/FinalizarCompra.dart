@@ -3,8 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/AperturaCajaActiva.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/FEL.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/MetodoPago.dart';
+// import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/UniCaja.dart';
 import 'package:sync_pro_mobile/db/dbCarrito.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarClientes.dart';
 
@@ -53,9 +55,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
     });
   }
 
-  // Simulación de una función que obtiene el total del carrito
   Future<double> _getTotalCarrito() async {
-    // Aquí puedes quitar el delay, solo es para simular el tiempo de carga
     await Future.delayed(Duration(seconds: 2));
     return _databaseHelper.getTotalCarrito();
   }
@@ -67,13 +67,10 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
     });
   }
 
-  // Función para manejar el cambio de cliente
-
   void _onClientChanged(Cliente newClient) {
     setState(() {
-      _selectedClient = newClient;
-
-      // Si el cliente no tiene crédito, forzamos el valor de _selectedPaymentType a "Contado"
+      _selectedClient =
+          newClient; // Si el cliente no tiene crédito, forzamos el valor de _selectedPaymentType a "Contado"
       if (!_selectedClient.credito) {
         _selectedPaymentType = 'Contado'; // Aseguramos un valor válido
       } else if (_selectedPaymentType == 'Crédito') {
@@ -94,13 +91,8 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Sección fija
             _buildFixedSection(),
-
-            // Separador
             Divider(thickness: 2),
-
-            // Sección desplazable
             Expanded(
               child: _cartItems.isEmpty
                   ? Center(child: Text("No hay productos en el carrito."))
@@ -126,38 +118,55 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
               children: [
                 _buildTotalSection(),
                 SizedBox(width: 30),
-                ElevatedButton(
-                  onPressed: () async {
-                    double total =
-                        await DatabaseHelperCarrito().getTotalCarrito();
-
-                    // Mostrar el modal con el total obtenido
-                    showPaymentOptionsModal(
-                      context,
-                      total,
-                      (String selectedPaymentMethod) {
-                        // Aquí puedes manejar la acción cuando se selecciona el método de pago.
-                        print(
-                            'Método de pago seleccionado: $selectedPaymentMethod');
-                      },
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors.blue, // Cambiar el color de fondo a azul
-                    iconColor:
-                        Colors.white, // Cambiar el color del icono (opcional)
-                  ),
-                  child: Text(
-                    'Método de Pago',
-                    style: TextStyle(
-                      color:
-                          Colors.white, // Asegúrate de que el texto sea legible
-                    ),
-                  ),
-                ),
+                _selectedPaymentType == 'Contado'
+                    ? ElevatedButton(
+                        onPressed: () async {
+                          double total =
+                              await DatabaseHelperCarrito().getTotalCarrito();
+                          showPaymentOptionsModal(
+                            context,
+                            total,
+                            (String selectedPaymentMethod) {
+                              print(
+                                  'Método de pago seleccionado: $selectedPaymentMethod');
+                            },
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Colors.blue, // Cambiar el color de fondo a azul
+                          iconColor: Colors
+                              .white, // Cambiar el color del icono (opcional)
+                        ),
+                        child: Text(
+                          'Método de Pago',
+                          style: TextStyle(
+                            color: Colors
+                                .white, // Asegúrate de que el texto sea legible
+                          ),
+                        ),
+                      )
+                    : ElevatedButton(
+                        onPressed: () {
+                          print('Registrando la venta a crédito...');
+                          _registerSale(); // Aquí puedes implementar la función que realiza el registro de la venta.
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Colors.green, // Cambiar el color de fondo a verde
+                          iconColor: Colors
+                              .white, // Cambiar el color del icono (opcional)
+                        ),
+                        child: Text(
+                          'Registrar Venta',
+                          style: TextStyle(
+                            color: Colors
+                                .white, // Asegúrate de que el texto sea legible
+                          ),
+                        ),
+                      ),
               ],
-            )
+            ),
           ],
         ),
       ),
@@ -254,7 +263,6 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Checkbox con el título
             Expanded(
               child: CheckboxListTile(
                 title: Column(
@@ -278,14 +286,12 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                 controlAffinity: ListTileControlAffinity.leading,
               ),
             ),
-            // Botón para acceder al diálogo
             ElevatedButton(
               onPressed: () {
                 if (_useFEL) {
                   showFELDialog(context, _nitController, _selectedClient)
                       .then((clienteResponse) {
                     if (clienteResponse != null) {
-                      // Actualiza automáticamente el cliente seleccionado
                       _onClientChanged(clienteResponse);
                     }
                   });
@@ -308,7 +314,6 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
     return FutureBuilder<double>(
       future: _totalFuture,
       builder: (context, snapshot) {
-        // Si está esperando los datos, pero tenemos un valor anterior
         if (snapshot.connectionState == ConnectionState.waiting &&
             _lastTotal != null) {
           return Text(
@@ -364,5 +369,11 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
       return '${entry.key}: ${entry.value.toString()}';
     }).toList();
     await prefs.setStringList('selectedClient', selectedClientJson);
+  }
+
+  void _registerSale() {
+    print("Venta registrada con éxito.");
+    // fetchUniCaja();
+    getAperturaCajaActiva();
   }
 }
