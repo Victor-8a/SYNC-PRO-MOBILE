@@ -106,7 +106,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                           child: ListTile(
                             title: Text(product.descripcion),
                             subtitle: Text(
-                                'Cantidad: ${_cartItems[index]['Cantidad']} - Precio: Q${product.precioFinal.toStringAsFixed(2)}'),
+                                'Cantidad: ${_cartItems[index]['Cantidad']} - Precio: Q${_cartItems[index]['Precio']} '),
                           ),
                         );
                       },
@@ -319,7 +319,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
           return Text(
             'Total: Q${_lastTotal!.toStringAsFixed(2)} (Actualizando...)', // Muestra el valor previo con un texto indicativo
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Colors.blue,
             ),
@@ -331,7 +331,7 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
           return Text(
             'Total: Q${total.toStringAsFixed(2)}', // Actualiza el valor cuando llega el nuevo total
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 15,
               fontWeight: FontWeight.bold,
               color: Colors.blue,
             ),

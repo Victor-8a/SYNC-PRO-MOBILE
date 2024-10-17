@@ -13,6 +13,9 @@ class MostrarCarrito extends StatefulWidget {
 
 class _MostrarCarritoState extends State<MostrarCarrito> {
   Map<Product, int> _cart = {};
+  Map<Product, double> _selectedPrices =
+      {}; // Cambiado a un Map<Product, double>
+
   bool _isLoading = false;
   bool _canFinalizePurchase =
       true; // Nueva variable para habilitar/deshabilitar la compra
@@ -36,6 +39,10 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
     for (var item in cartItems) {
       final product = Product.fromMap(item);
       cartMap[product] = item['Cantidad'] as int;
+
+      // Inicializar la selección del precio para el producto
+      _selectedPrices[product] =
+          item['Precio'] as double; // Inicializar con precio final
     }
 
     setState(() {
@@ -59,33 +66,9 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
     }
   }
 
-  // Future<void> _checkAperturaCaja() async {
-  //   dynamic aperturaResult = await getAperturaCajaActiva();
-
-  //   if (aperturaResult == -1) {
-  //     setState(() {
-  //       _canFinalizePurchase = false;
-  //     });
-  //     _mostrarSnackbar(
-  //         'No puedes realizar ventas, no cuentas con apertura de caja.');
-  //   } else {
-  //     setState(() {
-  //       _canFinalizePurchase = true;
-  //     });
-  //   }
-  // }
-
-  // void _mostrarSnackbar(String mensaje) {
-  //   WidgetsBinding.instance.addPostFrameCallback((_) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text(mensaje),
-  //         backgroundColor: Colors.red,
-  //         duration: Duration(seconds: 3),
-  //       ),
-  //     );
-  //   });
-  // }
+  Future<void> _updatePriceInDatabase(int codigo, double price) async {
+    await _databaseHelper.updateCarritoPrice(codigo, price);
+  }
 
   void finalizarCompra() async {
     dynamic aperturaResult = await getAperturaCajaActiva();
@@ -214,11 +197,49 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                         final TextEditingController _controller =
                             TextEditingController(text: quantity.toString());
 
+                        List<double> validPrices = [
+                          product.precioFinal,
+                          product.precioB,
+                          product.precioC,
+                          product.precioD
+                        ].where((price) => price > 0).toList();
+
                         return ListTile(
                           title: Text(product.descripcion,
                               style: TextStyle(fontSize: 18)),
-                          subtitle: Text(
-                              'Q${product.precioFinal.toStringAsFixed(2)} x $quantity'),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Q${_selectedPrices[product]?.toStringAsFixed(2) ?? "0.00"} x $quantity',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              SizedBox(height: 5),
+                              DropdownButton<double>(
+                                value: _selectedPrices[product],
+                                onChanged: (double? newValue) {
+                                  if (newValue != null &&
+                                      validPrices.contains(newValue)) {
+                                    setState(() {
+                                      _selectedPrices[product] = newValue;
+                                    });
+
+                                    // Actualizar el precio en la base de datos
+                                    _updatePriceInDatabase(
+                                        product.codigo, newValue);
+                                  }
+                                },
+                                items: validPrices
+                                    .map<DropdownMenuItem<double>>(
+                                        (double value) {
+                                  return DropdownMenuItem<double>(
+                                    value: value,
+                                    child: Text('Q${value.toStringAsFixed(2)}'),
+                                  );
+                                }).toList(),
+                              ),
+                            ],
+                          ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -230,8 +251,7 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                                     _updateQuantityInDatabase(
                                         product, quantity - 1);
                                   } else {
-                                    _updateQuantityInDatabase(product,
-                                        0); // Eliminar producto si la cantidad es 0
+                                    _updateQuantityInDatabase(product, 0);
                                   }
                                 },
                               ),
@@ -242,17 +262,13 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                                   keyboardType: TextInputType.number,
                                   textAlign: TextAlign.center,
                                   onSubmitted: (value) {
-                                    // Validar la entrada del usuario
                                     int? newQuantity = int.tryParse(value);
                                     if (newQuantity != null &&
-                                        newQuantity > 0) {
+                                        newQuantity >= 0) {
                                       _updateQuantityInDatabase(
                                           product, newQuantity);
-                                    } else if (newQuantity == 0) {
-                                      _updateQuantityInDatabase(
-                                          product, 0); // Eliminar producto
                                     } else {
-                                      // Restaurar el valor anterior si la entrada es inválida
+                                      // Si el valor no es válido, restaurar el texto a la cantidad actual
                                       _controller.text = quantity.toString();
                                     }
                                   },
@@ -282,7 +298,7 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                       children: [
                         Expanded(
                           child: Text(
-                            'Total: Q${_cart.entries.fold(0.0, (double sum, MapEntry<Product, int> entry) => sum + (entry.key.precioFinal) * entry.value).toStringAsFixed(2)}',
+                            'Total: Q${_cart.entries.fold(0.0, (double sum, MapEntry<Product, int> entry) => sum + (_selectedPrices[entry.key]! * entry.value)).toStringAsFixed(2)}',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
