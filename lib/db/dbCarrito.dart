@@ -67,6 +67,16 @@ class DatabaseHelperCarrito {
     );
   }
 
+  Future<int> updateCarritoDiscount(int codigo, double discount) async {
+    final db = await dbProvider.database;
+    return await db.update(
+      'carrito', // Nombre de tu tabla
+      {'PorcDescuento': discount},
+      where: 'idProducto = ?',
+      whereArgs: [codigo],
+    );
+  }
+
   Future<void> insertCarrito(Product product, int cantidad) async {
     final db = await dbProvider.database;
 
