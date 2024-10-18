@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Ruta.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarProducto.dart';
@@ -12,7 +10,6 @@ import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
 import 'package:sync_pro_mobile/db/dbProducto.dart';
 import 'package:sync_pro_mobile/db/dbRangoPrecioProducto.dart';
 import 'package:sync_pro_mobile/db/dbVendedores.dart';
-import 'package:sync_pro_mobile/Pedidos/services/ApiRoutes.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarClientes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -21,8 +18,6 @@ import '../Models/Producto.dart';
 import '../Models/Vendedor.dart';
 import '../../db/dbDetalleRuta.dart' as dbDetalleRuta;
 import '../../db/dbRuta.dart';
-
-//aqui inicia el widget
 
 class PaginaPedidos extends StatefulWidget {
   final Cliente cliente;
@@ -39,31 +34,8 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   bool usarRuta = false;
   Ruta? miRuta;
-
-  void _loadSelectedProducts() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String>? selectedProductsJson =
-        prefs.getStringList('selectedProducts');
-
-    if (selectedProductsJson != null) {
-      setState(() {
-        _selectedProducts = selectedProductsJson.map((jsonString) {
-          Map<String, dynamic> productMap = json.decode(jsonString);
-          return Product.fromJson(productMap);
-        }).toList();
-
-        _selectedProductQuantities = Map.fromIterable(_selectedProducts,
-            key: (product) => product,
-            value: (product) => prefs.getInt(product.codigo.toString()) ?? 1);
-      });
-    }
-  }
-
-  // En la clase _PaginaPedidosState
   void _loadSelectedClientName() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    // String? cliente = prefs.getString('selectedClient');
-
     List<String>? selectedClientJson = prefs.getStringList('selectedClient');
     if (selectedClientJson != null) {
       Map<String, String> clientData = {};
@@ -111,7 +83,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   double _calculateTotalWithDiscount() {
     double total = 0.0;
-    // Itera sobre los productos seleccionados y calcula el precio total con descuento
     _selectedProducts.forEach((product) {
       int quantity = _selectedProductQuantities[product] ?? 0;
       double unitPrice = _selectedProductPrices[product] ?? product.precioFinal;
@@ -123,7 +94,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     return total;
   }
 
-  @override
   @override
   void initState() {
     super.initState();
@@ -137,8 +107,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     }).catchError((error) {});
     if (widget.cliente.codCliente == 0) _loadSelectedClientName();
 
-    _loadSelectedProducts();
-    // Inicializa _selectedProductPrices con precioFinal por defecto
     _selectedProducts.forEach((product) {
       _selectedProductPrices[product] = product.precioFinal;
     }); // Agregar esta línea para cargar los productos seleccionados guardados
@@ -174,11 +142,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   @override
   Widget build(BuildContext context) {
-    // ignore: unused_local_variable
-    double _totalPrice = _calculateTotalPrice();
-    // ignore: unused_local_variable
-    Vendedor? _selectedSalesperson;
-
     return WillPopScope(
         onWillPop: () async {
           bool confirm = await showDialog(
@@ -225,7 +188,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                               height:
                                   1); // Si hay un error, no se muestra nada.
                         } else if (snapshot.hasData && snapshot.data != null) {
-                          // Si hay datos y no son nulos, muestra la información del vendedor.
                           Vendedor _selectedSalesperson = snapshot.data!;
                           _selectedSalespersonId = _selectedSalesperson.value;
                           return Column(
@@ -240,7 +202,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                             ],
                           );
                         } else {
-                          // Si los datos están cargando o son nulos, no se muestra nada.
                           return SizedBox(height: 1); // Espacio mínimo.
                         }
                       },
@@ -260,7 +221,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                           ],
                         ),
                         SizedBox(height: 10.0),
-                        // Otros widgets que necesites
                       ],
                     ),
                     ElevatedButton(
@@ -333,17 +293,13 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),
-                    // Define controladores de texto para cantidades y descuentos
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: _selectedProducts.reversed.map((product) {
-                        // Obtenemos el precio, cantidad y descuento actuales del producto
                         double unitPrice = _selectedProductPrices[product] ??
                             product.precioFinal;
                         int quantity = _selectedProductQuantities[product] ?? 0;
                         double discount = _discounts[product] ?? 0;
-
-                        // Configurar controladores de texto si no existen
                         if (!_quantityControllers.containsKey(product)) {
                           _quantityControllers[product] =
                               TextEditingController(text: quantity.toString());
@@ -352,15 +308,11 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                           _discountControllers[product] =
                               TextEditingController(text: discount.toString());
                         }
-
-                        // Calculamos los valores de subtotal y descuento
                         double subtotalBeforeDiscount = unitPrice * quantity;
                         double discountAmount =
                             subtotalBeforeDiscount * (discount / 100);
                         double subtotal =
                             subtotalBeforeDiscount - discountAmount;
-
-                        // Preparamos la lista de precios disponibles
                         List<double> availablePrices = [
                           product.precioFinal,
                           product.precioB,
@@ -416,7 +368,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                                             unitPrice = newUnitPrice;
                                           }
                                         }
-
                                         setState(() {
                                           _selectedProductPrices[product] =
                                               newPrice!;
@@ -468,7 +419,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                                                       : newValue) ??
                                               1;
                                           if (newQuantity > 0) {
-                                            // Obtenemos el nuevo precio basado en la cantidad
                                             double newUnitPrice =
                                                 await getRangosByProducto(
                                                     product.codigo,
@@ -476,11 +426,8 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                                                     product.precioFinal);
 
                                             setState(() {
-                                              // Actualizamos la cantidad seleccionada
                                               _selectedProductQuantities[
                                                   product] = newQuantity;
-
-                                              // Actualizamos el precio unitario y el subtotal
                                               if (newUnitPrice != 0) {
                                                 _selectedProductPrices[
                                                     product] = newUnitPrice;
@@ -523,12 +470,9 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                                         ],
                                         onChanged: (value) {
                                           setState(() {
-                                            // Actualizamos el descuento del producto
                                             _discounts[product] =
                                                 double.tryParse(value) ?? 0;
                                             discount = _discounts[product]!;
-
-                                            // Recalculamos el subtotal y descuento
                                             subtotalBeforeDiscount =
                                                 unitPrice * quantity;
                                             discountAmount =
@@ -562,7 +506,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                         );
                       }).toList(),
                     ),
-
                     SizedBox(height: 20.0),
                     TextField(
                       onChanged: (value) {
@@ -600,7 +543,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                       ),
                       child: ElevatedButton(
                         onPressed: () async {
-                          // Validar campos obligatorios
                           // ignore: unnecessary_null_comparison
                           if (_selectedClient == null ||
                               _selectedSalespersonId == null ||
@@ -620,8 +562,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                             );
                             return; // Detener la ejecución del método
                           }
-
-                          // Mostrar AlertDialog de confirmación antes de agregar el pedido
                           bool confirm = await showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
@@ -645,7 +585,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                           );
 
                           if (confirm == true) {
-                            // Proceder con el guardado del pedido
                             int? idPedido = await saveOrder(
                               _selectedClient.codCliente,
                               _observations,
@@ -654,7 +593,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                             );
 
                             if (idPedido != null) {
-                              // Guardar detalles del pedido
                               saveOrderDetail(
                                 idPedido,
                                 _selectedProducts,
@@ -663,7 +601,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                                 _discounts,
                               );
 
-                              // Mostrar mensaje de éxito
                               Fluttertoast.showToast(
                                 msg: 'Pedido guardado exitosamente.',
                                 toastLength: Toast.LENGTH_SHORT,
@@ -673,7 +610,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                                 textColor: Colors.white,
                                 fontSize: 16.0,
                               );
-                              // await _loadUsaRuta;
                               bool usaConfigRuta = await dbHelper.getUsaRuta();
                               if (usaConfigRuta)
                                 miRuta = await dbHelperRuta.getRutaActiva();
@@ -683,11 +619,8 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
                                         _selectedClient.codCliente,
                                         idPedido,
                                         miRuta!.id);
-
-                              // Resetear estado después de guardar
                               _resetState();
                             } else {
-                              // Mostrar mensaje de error si falla el guardado del pedido
                               Fluttertoast.showToast(
                                 msg: 'Error al guardar el pedido.',
                                 toastLength: Toast.LENGTH_SHORT,
@@ -780,20 +713,10 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
   }
 
   Future<void> fetchVendedores() async {
-    final response = await http.get(ApiRoutes.buildUri('vendedor'));
-    if (response.statusCode == 200) {
-      List<dynamic> jsonResponse = json.decode(response.body);
-      final vendedores =
-          jsonResponse.map((data) => Vendedor.fromJson(data)).toList();
-      if (mounted) {
-        setState(() {
-          _vendedores = vendedores;
-        });
-      }
-    } else {
-      print("Fallo vendedores $response");
-      throw Exception('Failed to load vendedores');
-    }
+    final vendedores = await DatabaseHelperVendedor().getVendedores();
+    setState(() {
+      _vendedores = vendedores;
+    });
   }
 
   void _navigateToSeleccionarCliente(BuildContext context) {
@@ -814,29 +737,19 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
   Future<void> _saveSelectedClient(Cliente cliente) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    // Serializar el producto junto con su cantidad
     Map<String, dynamic> clientData = cliente.toJson();
-    // List<String> selectedClientJson = json.encode(productData).toList();
-    // Convertir el mapa en una cadena JSON
     List<String> selectedClientJson = clientData.entries.map((entry) {
       return '${entry.key}: ${entry.value.toString()}';
     }).toList();
-
     await prefs.setStringList('selectedClient',
         selectedClientJson); // Guardar el nombre del cliente en SharedPreferences
   }
 
   void navigateToSeleccionarProducto(BuildContext context) async {
     try {
-      // Crear una lista para almacenar los productos
       List<Product> products = [];
-
-      // Obtener los productos de la base de datos local
       DatabaseHelperProducto dbHelper = DatabaseHelperProducto();
       List<Product> productsFromDB = await dbHelper.getProducts();
-
-      // Usar los productos obtenidos de la base de datos local
       if (productsFromDB.isNotEmpty) {
         products = productsFromDB;
       } else {
@@ -850,8 +763,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
 
         return;
       }
-
-      // Navegar a la pantalla de selección de producto con los productos locales
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -862,11 +773,9 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
           setState(() {
             _selectedProducts.add(selectedProduct);
             if (_selectedProductQuantities.containsKey(selectedProduct)) {
-              // Si el producto ya está en la lista, aumentar la cantidad
               _selectedProductQuantities[selectedProduct] =
                   _selectedProductQuantities[selectedProduct]! + 1;
             } else {
-              // Si es un nuevo producto, establecer la cantidad en 1
               _selectedProductQuantities[selectedProduct] = 1;
             }
           });
@@ -875,14 +784,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
     } catch (error) {
       print('Error al cargar los productos: $error');
     }
-  }
-
-  double _calculateTotalPrice() {
-    double total = 0;
-    _selectedProductQuantities.forEach((product, quantity) {
-      total += product.precioFinal * quantity;
-    });
-    return total;
   }
 
   void _resetState() {
@@ -897,7 +798,6 @@ class _PaginaPedidosState extends State<PaginaPedidos> {
         _selectedDate = DateTime.now();
         _selectedProducts = [];
         _selectedProductQuantities = {};
-        // _observations = '';
       });
     _resetInfo();
   }

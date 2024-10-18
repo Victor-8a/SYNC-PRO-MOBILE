@@ -1,16 +1,16 @@
 class Product {
-  final int codigo;
-  final String barras;
-  final String descripcion;
-  final int existencia;
-  final double costo;
-  final double precioFinal;
-  final double precioB;
-  final double precioC;
-  final double precioD;
-  final String marcas;
-  final String categoriaSubCategoria;
-  final String observaciones;
+  int codigo;
+  String barras;
+  String descripcion;
+  int existencia;
+  double costo;
+  double precioFinal;
+  double precioB;
+  double precioC;
+  double precioD;
+  String marcas;
+  String categoriaSubCategoria;
+  String observaciones;
 
   Product({
     required this.codigo,

@@ -14,6 +14,7 @@ class DatabaseHelper {
     _database = await _initDatabase();
     return _database!;
   }
+
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, 'sync_pro_mobile.db');
@@ -37,12 +38,13 @@ class DatabaseHelper {
         await _createCarritoTable(db);
         print('Database created and tables initialized');
       },
-      
+
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 4) {
           // Si la versión anterior es menor a 3, agrega el nuevo campo a la tabla Configuraciones
           await db.execute('''
       ALTER TABLE Configuraciones ADD COLUMN clientesFiltrados INTEGER DEFAULT 0
+
     ''');
           print(
               'Database upgraded to version 5: "clientesFiltrados" column added to Configuraciones');
@@ -52,6 +54,12 @@ class DatabaseHelper {
           // Si la versión anterior es menor a 4, crea la tabla Carrito
           await _createCarritoTable(db);
           print('Database upgraded to version 5: "Carrito" table created');
+        }
+
+        if (oldVersion < 6) {
+          await db.execute('''
+      ALTER TABLE Carrito ADD COLUMN PorcDesc INTEGER
+          ''');
         }
       },
     );
@@ -284,6 +292,7 @@ class DatabaseHelper {
         idProducto INTEGER,
         Cantidad INTEGER,
         Precio REAL,
+        PorcDescuento INTEGER,
         FOREIGN KEY (idProducto) REFERENCES productos(codigo)
       )
     ''');

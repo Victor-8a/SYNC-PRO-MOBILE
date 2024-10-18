@@ -47,7 +47,6 @@ Future<List<Product>> validarExistencias(Map<Product, int> cart) async {
         // Verifica que el productoCarrito no sea nulo
         // ignore: unnecessary_null_comparison
         if (productoCarrito != null && cart[productoCarrito]! > existencia) {
-          // Agrega el producto a la lista si la cantidad en el carrito es mayor que la existencia
           productosInsuficientes.add(productoCarrito);
         }
       }
