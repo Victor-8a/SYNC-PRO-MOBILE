@@ -141,13 +141,7 @@ class _SecondPageState extends State<SecondPage> {
       bottomNavigationBar: CurvedNavigationBar(
         index: _selectedIndex,
         height: 50,
-        items: const <Widget>[
-          // Icon(Icons.inventory),
-          Icon(Icons.store_sharp),
-          // Icon(Icons.person_3_rounded),
-          Icon(Icons.sell),
-          // Icon(Icons.person_add_alt),
-        ],
+        items: const <Widget>[Icon(Icons.store_sharp), Icon(Icons.sell)],
         onTap: _onItemTapped,
         color: Colors.blueAccent,
         backgroundColor: Colors.white,
@@ -158,7 +152,6 @@ class _SecondPageState extends State<SecondPage> {
   }
 }
 
-// La clase LoginPage debe estar definida aquí o importada desde otro archivo
 @override
 Widget build(BuildContext context) {
   return Scaffold(
@@ -168,7 +161,6 @@ Widget build(BuildContext context) {
     body: Center(
       child: ElevatedButton(
         onPressed: () {
-          // Navegar a la SecondPage (esto es solo para ejemplo, reemplazar con tu lógica de inicio de sesión)
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const SecondPage()),

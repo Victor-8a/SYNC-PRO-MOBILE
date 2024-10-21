@@ -61,6 +61,12 @@ class DatabaseHelper {
       ALTER TABLE Carrito ADD COLUMN PorcDesc INTEGER
           ''');
         }
+
+        if (oldVersion < 6) {
+          await db.execute('''
+      ALTER TABLE Configuraciones ADD COLUMN bodegaDescarga INTEGER
+          ''');
+        }
       },
     );
   }
@@ -248,7 +254,8 @@ class DatabaseHelper {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       usaRuta INTEGER DEFAULT 0,
       clientesFiltrados INTEGER DEFAULT 0,
-      usaApertura INTEGER DEFAULT 0
+      usaApertura INTEGER DEFAULT 0,
+      bodegaDescarga INTEGER DEFAULT 0
     )
     ''');
   }
