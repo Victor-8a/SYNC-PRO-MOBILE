@@ -428,7 +428,8 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                   Divider(thickness: 1, color: Colors.grey[300]),
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 8.0),
+                        vertical: 8.0,
+                        horizontal: 4.0), // Reducir padding general
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -438,78 +439,79 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                             Text(
                               'Subtotal: Q${subtotal.toStringAsFixed(2)}',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12, // Reducir tamaño de fuente
                                 fontWeight: FontWeight.bold,
                                 color: Colors.blueGrey,
                               ),
                             ),
-                            SizedBox(
-                                height: 4), // Reducir el tamaño del espaciado
+                            SizedBox(height: 2), // Reducir espacio entre texto
                             Text(
                               'Descuento: Q${totalDescuento.toStringAsFixed(2)}',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12, // Reducir tamaño de fuente
                                 fontWeight: FontWeight.bold,
                                 color: Colors.orange,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            SizedBox(height: 2), // Reducir espacio entre texto
                             Text(
                               'Total: Q${totalFinal.toStringAsFixed(2)}',
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 12, // Reducir tamaño de fuente
                                 fontWeight: FontWeight.bold,
                                 color: Colors.deepPurple,
                               ),
                             ),
+                            // Mantener algo de espacio antes del botón
+                            Center(
+                              child: GestureDetector(
+                                onTap: _cart.isEmpty || !_canFinalizePurchase
+                                    ? null
+                                    : () {
+                                        finalizarCompra();
+                                      },
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 10.0, // Ajustar padding vertical
+                                    horizontal:
+                                        20.0, // Padding horizontal para que no ocupe todo el ancho
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.green.shade400,
+                                        Colors.green.shade600,
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                        12), // Bordes más redondeados
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.green.withOpacity(0.2),
+                                        blurRadius: 5,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Text(
+                                    'Finalizar', // Texto más corto
+                                    style: TextStyle(
+                                      fontSize:
+                                          16, // Mantener un tamaño de fuente adecuado
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
-                        ),
-                        SizedBox(
-                            height:
-                                10), // Mantener algo de separación entre los textos y el botón
-                        GestureDetector(
-                          onTap: _cart.isEmpty || !_canFinalizePurchase
-                              ? null
-                              : () {
-                                  finalizarCompra();
-                                },
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 8.0), // Ajustar el padding del botón
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.green.shade400,
-                                  Colors.green.shade600,
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(30),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.green.withOpacity(0.3),
-                                  blurRadius: 5.0,
-                                  offset: Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: Text(
-                                'Finalizar Compra',
-                                style: TextStyle(
-                                  fontSize:
-                                      16, // Reducir ligeramente el tamaño de la fuente del botón
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
                         ),
                       ],
                     ),
-                  ),
+                  )
                 ],
               ),
       ),

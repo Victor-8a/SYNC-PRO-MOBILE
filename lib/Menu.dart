@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Inicio/SecondPage.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasPrincipales/PaginaCliente.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasPrincipales/PaginaInventario.dart';
-import 'package:sync_pro_mobile/PuntoDeVenta/PantallasPriincipales/PuntoDeVenta.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/PantallasPrincipales/PuntoDeVenta.dart';
 import 'package:sync_pro_mobile/db/dbUsuario.dart';
 import 'package:sync_pro_mobile/Pedidos/services/Configuraciones.dart';
 import 'package:sync_pro_mobile/main.dart';

@@ -3,10 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
+import 'package:sync_pro_mobile/Pedidos/services/BodegaDescarga.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/AperturaCajaActiva.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/FEL.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/MetodoPago.dart';
-// import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/UniCaja.dart';
 import 'package:sync_pro_mobile/db/dbCarrito.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarClientes.dart';
 
@@ -375,5 +375,6 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
     print("Venta registrada con éxito.");
     // fetchUniCaja();
     getAperturaCajaActiva();
+    fetchBodegaDescarga();
   }
 }
