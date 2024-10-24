@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:sync_pro_mobile/Pedidos/services/BancosService.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/VentaService.dart';
 
-void showPaymentOptionsModal(
-    BuildContext context, double total, Function(String) onSelected) {
+void showPaymentOptionsModal(BuildContext context, double total,
+    Map<String, dynamic> datosVenta, Function(String) onSelected) {
   final List<String> _paymentOptions = [
     'Efectivo',
     'Tarjeta',
@@ -205,6 +206,7 @@ void showPaymentOptionsModal(
                       ),
                       ElevatedButton.icon(
                         onPressed: () {
+                          registrarVenta(datosVenta);
                           if (amount < total) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
@@ -250,4 +252,10 @@ void showPaymentOptionsModal(
       );
     },
   );
+}
+
+void registrarVenta(Map<String, dynamic> datosVenta) async {
+  // Llama al servicio para registrar la venta
+  VentaService ventaService = VentaService();
+  await ventaService.registrarVenta(datosVenta);
 }

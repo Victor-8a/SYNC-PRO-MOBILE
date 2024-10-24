@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
+import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/NumerosALetras.dart';
 import 'package:sync_pro_mobile/db/bd.dart';
 
 class DatabaseHelperCarrito {
@@ -17,13 +18,63 @@ class DatabaseHelperCarrito {
   Future<double> getTotalCarrito() async {
     final db = await dbProvider.database;
     final result = await db.rawQuery('''
-    SELECT SUM(Cantidad * Precio) as Total
-    FROM Carrito
-  ''');
+SELECT 
+  SUM(Cantidad * (Precio - (Precio * IFNULL(PorcDescuento, 0) / 100))) as Total
+FROM Carrito''');
 
-    // Verificamos si hay un resultado y lo convertimos a int
+    // Verificamos si hay un resultado y lo convertimos a double
     if (result.isNotEmpty && result.first['Total'] != null) {
       return (result.first['Total'] as num).toDouble();
+    } else {
+      return 0; // Si no hay resultado, devolvemos 0
+    }
+  }
+
+  Future<String> getTotalCarritoEnTexto() async {
+    final db = await dbProvider.database;
+    final result = await db.rawQuery('''
+    SELECT 
+      SUM(Cantidad * (Precio - (Precio * IFNULL(PorcDescuento, 0) / 100))) as Total
+    FROM Carrito''');
+
+    // Verificamos si hay un resultado
+    if (result.isNotEmpty && result.first['Total'] != null) {
+      double total = (result.first['Total'] as num).toDouble();
+      // Convertimos el total a string para pasarlo a la función letras
+      String totalStr = total.toStringAsFixed(2); // Esto mantiene dos decimales
+      final String letrasTotal =
+          letras(totalStr); // Convertimos el número a texto
+      return letrasTotal;
+    } else {
+      return 'cero'; // Si no hay resultado, devolvemos 'cero'
+    }
+  }
+
+  Future<double> getSubTotalCarrito() async {
+    final db = await dbProvider.database;
+    final result = await db.rawQuery('''
+SELECT 
+  SUM(Cantidad * Precio) as SubTotal
+FROM Carrito''');
+
+    // Verificamos si hay un resultado y lo convertimos a double
+    if (result.isNotEmpty && result.first['SubTotal'] != null) {
+      return (result.first['SubTotal'] as num).toDouble();
+    } else {
+      return 0; // Si no hay resultado, devolvemos 0
+    }
+  }
+
+  Future<double> getTotalDescuentoCarrito() async {
+    final db = await dbProvider.database;
+    final result = await db.rawQuery('''
+SELECT 
+  SUM(Cantidad * (Precio * IFNULL(PorcDescuento, 0) / 100)) as TotalDescuento
+FROM Carrito''');
+
+    // Verificamos si hay un resultado y lo convertimos a double
+    if (result.isNotEmpty && result.first['TotalDescuento'] != null) {
+      return (result.first['TotalDescuento'] as num).toDouble();
     } else {
       return 0; // Si no hay resultado, devolvemos 0
     }

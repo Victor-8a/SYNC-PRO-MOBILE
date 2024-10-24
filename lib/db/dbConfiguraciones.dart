@@ -67,6 +67,20 @@ class DatabaseHelperConfiguraciones {
     );
   }
 
+  Future<int> getBodegaDescarga() async {
+    final db = await dbProvider.database;
+    final result = await db.rawQuery('''
+    SELECT bodegaDescarga 
+    FROM Configuraciones 
+    WHERE id = ?''', [1]);
+
+    // Verificamos si hay un resultado y devolvemos el ID de la bodega
+    if (result.isNotEmpty && result.first['bodegaDescarga'] != null) {
+      return (result.first['bodegaDescarga'] as int);
+    }
+    return 0; // Devuelve null si no se encuentra la configuración
+  }
+
   Future<void> insertConfiguracionSiEstaVacia() async {
     final db = await dbProvider.database;
 

@@ -496,7 +496,7 @@ class _MostrarCarritoState extends State<MostrarCarrito> {
                                     ],
                                   ),
                                   child: Text(
-                                    'Finalizar', // Texto más corto
+                                    'Finalizar Compra', // Texto más corto
                                     style: TextStyle(
                                       fontSize:
                                           16, // Mantener un tamaño de fuente adecuado

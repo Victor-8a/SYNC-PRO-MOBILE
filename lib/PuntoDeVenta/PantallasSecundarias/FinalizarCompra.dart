@@ -3,12 +3,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Cliente.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Vendedor.dart';
 import 'package:sync_pro_mobile/Pedidos/Models/Producto.dart';
-import 'package:sync_pro_mobile/Pedidos/services/BodegaDescarga.dart';
+import 'package:sync_pro_mobile/Pedidos/services/LocalStorage.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/AperturaCajaActiva.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/FEL.dart';
 import 'package:sync_pro_mobile/PuntoDeVenta/Servicios/MetodoPago.dart';
 import 'package:sync_pro_mobile/db/dbCarrito.dart';
 import 'package:sync_pro_mobile/Pedidos/PantallasSecundarias/SeleccionarClientes.dart';
+import 'package:sync_pro_mobile/db/dbConfiguraciones.dart';
+import 'package:sync_pro_mobile/main.dart';
 
 class FinalizarCompra extends StatefulWidget {
   const FinalizarCompra({Key? key, required Cliente selectedClient})
@@ -123,9 +125,102 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
                         onPressed: () async {
                           double total =
                               await DatabaseHelperCarrito().getTotalCarrito();
+                          // Carga el cliente desde SharedPreferences
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
+                          String? idVendedor = prefs.getString('idVendedor');
+                          String userId = await getIdFromStorage();
+                          dynamic aperturaResult =
+                              await getAperturaCajaActiva();
+
+                          // Reúne los datos de la venta
+                          Map<String, dynamic> datosVenta = {
+                            'Venta': {
+                              'Tipo': _selectedPaymentType,
+                              'fecha': _selectedDate.toIso8601String(),
+                              'Vence': _selectedDate.toIso8601String(),
+                              'CodCliente': _selectedClient.codCliente,
+                              'nombre': _selectedClient.nombre,
+                              'idUsuario': userId,
+                              'FacturaCancelado':
+                                  _selectedPaymentType == 'Contado'
+                                      ? false
+                                      : true,
+                              'Anulado': false,
+                              'NumApertura': aperturaResult == aperturaResult
+                                  ? 0
+                                  : aperturaResult,
+                              'CodMoneda': 1,
+                              'TipoCambio': 1,
+                              'Exonerar': 0,
+                              'Observaciones': '',
+                              'IdVendedor': idVendedor,
+                              'SubTotal':
+                                  await _databaseHelper.getSubTotalCarrito(),
+                              'TotalDescuento': await _databaseHelper
+                                  .getTotalDescuentoCarrito(),
+                              'TotalImpuesto': 0,
+                              'SubTotalGravado': 0,
+                              'SubTotalExcento':
+                                  await _databaseHelper.getTotalCarrito(),
+                              'Total': await _databaseHelper.getTotalCarrito(),
+                              'IdBodega': await DatabaseHelperConfiguraciones()
+                                  .getBodegaDescarga(),
+                              'TotalLetras': await _databaseHelper
+                                  .getTotalCarritoEnTexto(),
+                              'Contacto': _selectedClient.contacto,
+                              'NombrePaciente': '',
+                              'NITFacturado':
+                                  _useFEL == true ? _nitController.text : '',
+                              'NombreFacturado':
+                                  _useFEL == true ? _selectedClient.nombre : '',
+                              'DPI': 0,
+                              'NoGuia': 0,
+                              'Notas': '',
+                              'IdTransporte': 0,
+                            },
+                            'DetalleVenta': [
+                              for (Map<String, dynamic> item in _cartItems)
+                                {
+                                  {
+                                    'id': item['idProducto'],
+                                    'cantidad': item['Cantidad'],
+                                    'precio': item['Precio'],
+                                    'Descripcion': item['descripcion'],
+                                    'Cantidad': item['Cantidad'],
+                                    'Costo': item['costo'],
+                                    'PrecioVenta': item['Precio'],
+                                    'PorcDescuento': item['PorcDescuento'],
+                                    'TotalImpuesto': 0,
+                                    'SubtotalGravado': 0,
+                                    'SubtotalExento': (item['Cantidad'] ?? 0) *
+                                            (item['Precio'] ?? 0) -
+                                        ((item['Precio'] ?? 0) *
+                                            (item['PorcDescuento'] ?? 0) /
+                                            100),
+                                    'Total': (item['Cantidad'] ?? 0) *
+                                            (item['Precio'] ?? 0) -
+                                        ((item['Precio'] ?? 0) *
+                                            (item['PorcDescuento'] ?? 0) /
+                                            100),
+                                    'IdBodega':
+                                        await DatabaseHelperConfiguraciones()
+                                            .getBodegaDescarga(),
+                                    'CodMoneda': 1,
+                                    'MaxDesc': item['maxDesc'],
+                                    'Regalias': 0,
+                                    'PorcComision': 0,
+                                    'IdLote': item['idLote'],
+                                    'IdUsuario': userId,
+                                    'Compuesto': item['compuesto'],
+                                  }
+                                }
+                            ]
+                          };
                           showPaymentOptionsModal(
                             context,
                             total,
+                            datosVenta,
                             (String selectedPaymentMethod) {
                               print(
                                   'Método de pago seleccionado: $selectedPaymentMethod');
@@ -349,32 +444,12 @@ class _FinalizarCompraState extends State<FinalizarCompra> {
       MaterialPageRoute(builder: (context) => SeleccionarCliente(clientes: [])),
     ).then((selectedClient) {
       if (selectedClient != null) {
-        _saveSelectedClient(selectedClient);
         _onClientChanged(selectedClient); // Actualizar cliente aquí
       }
     });
   }
+}
 
-  Future<Vendedor> loadSalesperson() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? idVendedor = prefs.getString('idVendedor');
-    String? vendedorName = prefs.getString('vendedorName');
-    return Vendedor(value: int.parse(idVendedor!), nombre: vendedorName!);
-  }
-
-  Future<void> _saveSelectedClient(Cliente cliente) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    Map<String, dynamic> clientData = cliente.toJson();
-    List<String> selectedClientJson = clientData.entries.map((entry) {
-      return '${entry.key}: ${entry.value.toString()}';
-    }).toList();
-    await prefs.setStringList('selectedClient', selectedClientJson);
-  }
-
-  void _registerSale() {
-    print("Venta registrada con éxito.");
-    // fetchUniCaja();
-    getAperturaCajaActiva();
-    fetchBodegaDescarga();
-  }
+void _registerSale() {
+  print("Venta registrada con éxito.");
 }

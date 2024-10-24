@@ -32,7 +32,9 @@ class Product {
       codigo: json['Codigo'] ?? 0,
       barras: json['Barras'] ?? '',
       descripcion: json['Descripcion'] ?? '',
-      existencia: json['Existencia'] ?? 0,
+      existencia: (json['Existencia'] is int)
+          ? json['Existencia']
+          : (json['Existencia'] as double?)?.toInt() ?? 0,
       costo: json['Costo']?.toDouble() ?? 0,
       precioFinal: json['PrecioFinal']?.toDouble() ?? 0,
       precioB: json['PRECIOB']?.toDouble() ?? 0,

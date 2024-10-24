@@ -520,6 +520,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.5.0"
+  num_to_words:
+    dependency: "direct main"
+    description:
+      name: num_to_words
+      sha256: a095b8fe7afcc09fd3263b492476e11f81f12b34367d80e074e9b3fc0d8a2a64
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   octo_image:
     dependency: transitive
     description:

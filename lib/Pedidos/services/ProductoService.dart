@@ -37,6 +37,7 @@ class ProductService {
       ).timeout(Duration(seconds: 5));
 
       if (response.statusCode == 200) {
+        print(response.body);
         final List<dynamic> data = jsonDecode(response.body);
         final products = data.map((json) => Product.fromJson(json)).toList();
         await saveProductsToLocalDatabase(products);

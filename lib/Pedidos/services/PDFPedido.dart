@@ -155,10 +155,11 @@ void showOrderDetailsDialog(
                                             fontWeight: pw.FontWeight.bold)),
                                     pw.SizedBox(height: 12),
 
-                                    pw.Text('DESCRIPCION PRODUCTO',
+                                    pw.Text(
+                                        'DESCRIPCION PRODUCTO |BARRAS | MARCA |',
                                         style: pw.TextStyle(fontSize: 10)),
                                     pw.Text(
-                                        'BARRAS | MARCA | CANT | PRECIO UNIT | DESC | IMPORTE',
+                                        'CANT | PRECIO UNIT | DESC | IMPORTE',
                                         style: pw.TextStyle(fontSize: 10)),
                                     pw.Center(
                                       child: pw.Text(

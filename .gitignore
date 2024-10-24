@@ -54,3 +54,5 @@ app.*.map.json
 // static const String baseUrl = 'http://85.10.196.212:4004'; //IM1
  // static const String baseUrl = 'http://85.10.196.212:4005'; //GalaxyCELL
   // static const String baseUrl = 'http://85.10.196.212:4006'; //Farmacia San Antonio
+  // static const String baseUrl = 'http://85.10.196.212:4007'; //Soluciones Agricolas 
+    // static const String baseUrl = 'http://85.10.196.212:4008'; //MultiNorte

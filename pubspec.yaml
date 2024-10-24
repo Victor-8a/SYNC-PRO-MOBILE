@@ -32,6 +32,7 @@ dependencies:
   path_provider: ^2.1.4
   printing: ^5.13.2
   fluttertoast: ^8.2.8
+  num_to_words: ^1.1.0
 printing: ^5.13.2
 dev_dependencies:
   flutter_test:
